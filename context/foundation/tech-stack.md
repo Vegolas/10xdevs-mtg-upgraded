@@ -5,7 +5,7 @@ project_name: deck-delta
 hints:
   language_family: js
   team_size: solo
-  deployment_target: cloudflare-pages
+  deployment_target: cloudflare-workers
   ci_provider: github-actions
   ci_default_flow: auto-deploy-on-merge
   bootstrapper_confidence: first-class
@@ -21,4 +21,4 @@ hints:
 
 ## Why this stack
 
-DeckDelta is a solo, after-hours web app on a 3-week timeline with zero technology-forcing features — no auth, payments, realtime, AI, or background jobs. The 10x Astro Starter is the recommended default for (web-app, js): TypeScript-first, React 19 for interactive components, Tailwind CSS 4 for styling, and Cloudflare Pages for zero-config edge deploy. It passes all four agent-friendly quality gates and ships with conventions a stranger (or agent) can navigate immediately. The included Supabase integration goes unused for this project but adds no runtime cost. CI runs on GitHub Actions with auto-deploy on merge.
+DeckDelta is a solo, after-hours web app on a 3-week timeline with zero technology-forcing features — no auth, payments, realtime, AI, or background jobs. The 10x Astro Starter is the recommended default for (web-app, js): TypeScript-first, React 19 for interactive components, Tailwind CSS 4 for styling, and Cloudflare Workers (with Static Assets) for edge deploy. It passes all four agent-friendly quality gates and ships with conventions a stranger (or agent) can navigate immediately. The included Supabase integration goes unused for this project but adds no runtime cost. CI runs on GitHub Actions with auto-deploy on merge.
