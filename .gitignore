@@ -1,0 +1,54 @@
+# ---- Dependencies ----
+node_modules/
+.pnpm-store/
+.yarn/cache/
+.npm/
+
+# ---- Build output ----
+dist/
+.output/
+
+# ---- Astro (generated types & cache) ----
+.astro/
+
+# ---- Cloudflare / Wrangler ----
+.dev.vars
+.dev.vars.*
+.wrangler/
+
+# ---- Environment variables (NEVER commit secrets) ----
+.env
+.env.*
+# keep the committed template
+!.env.example
+
+# ---- TypeScript ----
+*.tsbuildinfo
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Caches & coverage ----
+.cache/
+coverage/
+
+# ---- Editors ----
+# JetBrains
+.idea/
+# editor swap files
+*.swp
+*.swo
+# NOTE: .vscode/ is intentionally tracked (shared launch/settings/extensions)
+
+# ---- OS files ----
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

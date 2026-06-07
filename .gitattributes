@@ -1,0 +1,18 @@
+# Normalize line endings to LF in the repository for cross-platform consistency.
+# Prevents CRLF churn when working on Windows.
+* text=auto eol=lf
+
+# Shell scripts must stay LF
+*.sh text eol=lf
+
+# Binary assets — never normalize
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg text
+*.woff binary
+*.woff2 binary
+*.exe binary
