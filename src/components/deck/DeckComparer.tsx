@@ -4,6 +4,7 @@ import { generateUpgradePlan } from "@/lib/deck";
 import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "./CardGroupColumn";
+import { CostSummary } from "./CostSummary";
 import { UnresolvedNotice } from "./UnresolvedNotice";
 import { SharedCardsDisclosure } from "./SharedCardsDisclosure";
 
@@ -142,6 +143,8 @@ export default function DeckComparer() {
 
         {bothFilled && view.status === "ready" ? (
           <div className="space-y-6">
+            {view.plan.add.length > 0 ? <CostSummary add={view.plan.add} /> : null}
+
             {view.unresolved.length > 0 ? <UnresolvedNotice entries={view.unresolved} /> : null}
 
             {view.plan.remove.length === 0 && view.plan.add.length === 0 ? (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DeckCard } from "@/lib/deck";
 import { thumbnailSrc } from "./cardImage";
+import { formatUsd } from "./labels";
 
 interface CardRowProps {
   entry: DeckCard;
@@ -69,6 +70,7 @@ export function CardRow({ entry }: CardRowProps) {
         </span>
       )}
       <span>{label}</span>
+      <span className="ml-auto text-blue-100/50 tabular-nums">{formatUsd(card.priceUsd)}</span>
     </li>
   );
 }

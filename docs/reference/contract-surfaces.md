@@ -31,3 +31,11 @@ update every consumer and this entry. One row per surface.
 | `attachQuantities`    | function | `src/lib/deck/quantity.ts` | `(resolved: Card[], entries: DeckEntry[]) => DeckCard[]`. Joins resolved cards to their parsed quantities, summing duplicate lines and merging DFC name forms by `resolutionKey` (fallback quantity 1). _(Added in `deck-diff-quantities`.)_                                            |
 
 > Module entry point: import these from `@/lib/deck`.
+
+## Prices & total (roadmap S-03 · `upgrade-cost-and-prices`)
+
+| Surface       | Kind     | Location                        | Purpose                                                                                                                                                                                                  |
+| ------------- | -------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `planAddCost` | function | `src/lib/deck/cost.ts`          | `(add: CardGroup[]) => PlanCost`. Quantity-aware sum of the additions' `priceUsd × quantity`, excluding null-priced cards from the total and counting them separately (FR-007). Imported from `@/lib/deck`. |
+| `PlanCost`    | type     | `src/lib/deck/cost.ts`          | `{ total: number; pricedCount: number; missingCount: number }`. The honest-total breakdown `CostSummary` renders. Imported from `@/lib/deck`.                                                            |
+| `formatUsd`   | function | `src/components/deck/labels.ts` | `(value: number \| null) => string`. The single USD display formatter: `null` → `"—"`, a number → `"~$N.NN"`. Shared by the per-card row and the headline total so money reads identically (FR-006/FR-007). |

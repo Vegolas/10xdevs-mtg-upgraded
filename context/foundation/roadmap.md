@@ -32,7 +32,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | F-01  | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands | —             | Guardrails (accuracy), NFR (lookups) | ready    |
 | S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done     |
 | S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | done     |
-| S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | proposed |
+| S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | ready    |
 | S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | proposed |
 
 ## Streams
@@ -111,7 +111,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Does the selected card-data source expose per-card prices with adequate coverage (the PRD frames prices as approximate/indicative, EU vs US differ)? — Owner: user. Block: no.
 - **Risk:** Thin enrichment over S-01 surfacing the price field from F-01's lookup, plus a summed total. Pricing is explicitly approximate per the PRD, so coverage gaps degrade gracefully rather than blocking. Parallel with S-02 — separate fields, no shared state.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-04: On-device comparison history
 
@@ -132,7 +132,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | F-01       | card-data-resolution    | Select card-data source and build name→type resolution  | yes                   | Confirm the source meets the accuracy/price-coverage Guardrail during planning. |
 | S-01       | grouped-upgrade-plan    | Paste two decks → grouped add/remove/shared by card type | no                    | Needs F-01 done first (north star). |
 | S-02       | card-images-in-plan     | Show card images in the upgrade plan                    | no                    | Needs S-01. Parallel with S-03/S-04. |
-| S-03       | upgrade-cost-and-prices | Show per-card prices and total upgrade cost             | no                    | Needs S-01. Parallel with S-02/S-04. |
+| S-03       | upgrade-cost-and-prices | Show per-card prices and total upgrade cost             | yes                   | S-01 done; change folder open. Parallel with S-04. |
 | S-04       | on-device-history       | Save and revisit past comparisons on-device             | no                    | Needs S-01. Lowest priority (nice-to-have). |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One row per `F-NN` / `S-NN`.

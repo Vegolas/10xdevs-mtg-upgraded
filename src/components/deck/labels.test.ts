@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { CardCategory } from "@/lib/card-data";
 import type { CardGroup, DeckCard } from "@/lib/deck";
-import { categoryLabel, groupCopies } from "./labels";
+import { categoryLabel, formatUsd, groupCopies } from "./labels";
 
 /** Build a minimal {@link DeckCard}; only name and quantity matter to groupCopies. */
 function deckCard(name: string, quantity = 1): DeckCard {
@@ -38,5 +38,23 @@ describe("categoryLabel", () => {
   it("maps a category to its plural display label", () => {
     expect(categoryLabel("land")).toBe("Lands");
     expect(categoryLabel("sorcery")).toBe("Sorceries");
+  });
+});
+
+describe("formatUsd", () => {
+  it("renders the em-dash marker for a null price", () => {
+    expect(formatUsd(null)).toBe("—");
+  });
+
+  it("renders an integer with two decimals and the approximate prefix", () => {
+    expect(formatUsd(12)).toBe("~$12.00");
+  });
+
+  it("renders a fractional value to two decimals", () => {
+    expect(formatUsd(1.5)).toBe("~$1.50");
+  });
+
+  it("renders zero as an explicit ~$0.00", () => {
+    expect(formatUsd(0)).toBe("~$0.00");
   });
 });
