@@ -195,23 +195,23 @@ None — no persisted data. `CardGroup.cards` changes type, but the only consume
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test`
-- [x] 1.2 `diff.test.ts` covers delta cases (8v6→remove 2; 4v4→shared 4; 0v3→add 3) and card-in-both
-- [x] 1.3 `quantity.test.ts` covers `attachQuantities` (summed lines, DFC join, fallback 1)
-- [x] 1.4 Existing resolver tests stay green after `resolutionKey` extraction
-- [x] 1.5 Type checking passes: `npm run build`
-- [x] 1.6 Linting passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm run test` — 193d24f
+- [x] 1.2 `diff.test.ts` covers delta cases (8v6→remove 2; 4v4→shared 4; 0v3→add 3) and card-in-both — 193d24f
+- [x] 1.3 `quantity.test.ts` covers `attachQuantities` (summed lines, DFC join, fallback 1) — 193d24f
+- [x] 1.4 Existing resolver tests stay green after `resolutionKey` extraction — 193d24f
+- [x] 1.5 Type checking passes: `npm run build` — 193d24f
+- [x] 1.6 Linting passes: `npm run lint` — 193d24f
 
 ### Phase 2: Quantity in the UI
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run build`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 8-vs-6-Mountain pair shows `Mountain ×2` (Remove) and `Mountain ×6` (Shared)
-- [ ] 2.4 Quantity 1 renders bare; only > 1 shows `×N`
-- [ ] 2.5 Per-group and column counts reflect summed copies
-- [ ] 2.6 No regression for singleton-only decks
+- [x] 2.3 8-vs-6-Mountain pair shows `Mountain ×2` (Remove) and `Mountain ×6` (Shared)
+- [x] 2.4 Quantity 1 renders bare; only > 1 shows `×N`
+- [x] 2.5 Per-group and column counts reflect summed copies
+- [x] 2.6 No regression for singleton-only decks

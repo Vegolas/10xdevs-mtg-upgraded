@@ -1,7 +1,7 @@
 ---
 change_id: deck-diff-quantities
 title: Quantity-aware deck diff so basic-land count deltas surface
-status: implementing
+status: implemented
 created: 2026-06-15
 updated: 2026-06-15
 archived_at: null
