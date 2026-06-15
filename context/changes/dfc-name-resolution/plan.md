@@ -204,26 +204,26 @@ None — no persisted data or schema. The session cache is in-memory; its key de
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test`
-- [x] 1.2 New resolver tests (front-only-sent, original-echoed-on-miss) present and green
-- [x] 1.3 Type checking passes: `npm run build`
-- [x] 1.4 Linting passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm run test` — b801b1f
+- [x] 1.2 New resolver tests (front-only-sent, original-echoed-on-miss) present and green — b801b1f
+- [x] 1.3 Type checking passes: `npm run build` — b801b1f
+- [x] 1.4 Linting passes: `npm run lint` — b801b1f
 
 #### Manual
 
-- [x] 1.5 Real mixed-form DFC decklist pair: all DFCs resolve, none unresolved, shared DFCs in "Shared"
-- [x] 1.6 Remove/add counts plausible (no DFC-driven inflation)
-- [x] 1.7 Misspelled card still suggests "did you mean" using the typed spelling
+- [x] 1.5 Real mixed-form DFC decklist pair: all DFCs resolve, none unresolved, shared DFCs in "Shared" — b801b1f
+- [x] 1.6 Remove/add counts plausible (no DFC-driven inflation) — b801b1f
+- [x] 1.7 Misspelled card still suggests "did you mean" using the typed spelling — b801b1f
 
 ### Phase 2: UI — per-group count badges
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run build`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Each group in Remove/Add/Shared shows a count matching its listed cards
-- [ ] 2.4 Badge styling matches the existing column-total style
-- [ ] 2.5 Empty groups still omitted (no `(0)` badges)
+- [x] 2.3 Each group in Remove/Add/Shared shows a count matching its listed cards
+- [x] 2.4 Badge styling matches the existing column-total style
+- [x] 2.5 Empty groups still omitted (no `(0)` badges)

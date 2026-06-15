@@ -26,8 +26,9 @@ export function CardGroupColumn({ title, groups }: CardGroupColumnProps) {
         <div className="space-y-4">
           {groups.map((group) => (
             <div key={group.category}>
-              <h4 className="mb-1 text-xs font-medium tracking-wide text-purple-300 uppercase">
+              <h4 className="mb-1 flex items-baseline gap-2 text-xs font-medium tracking-wide text-purple-300 uppercase">
                 {categoryLabel(group.category)}
+                <span className="text-xs font-normal text-blue-100/50">{group.cards.length}</span>
               </h4>
               <ul className="space-y-0.5">
                 {group.cards.map((card) => (
