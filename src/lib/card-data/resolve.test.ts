@@ -183,6 +183,43 @@ describe("resolveCards", () => {
     expect(card.imageUrl).toBe("https://cards.scryfall.io/normal/delver-front.jpg");
   });
 
+  it("sends only the front face for a full `// ` name and keeps the canonical name", async () => {
+    installFetch({ collection: scryfallResponder });
+    const result = await resolveCards(["Delver of Secrets // Insectile Aberration"]);
+
+    // Front-only is what reaches Scryfall; the full `//` form would 404.
+    expect(requestedBatches).toHaveLength(1);
+    expect(requestedBatches[0]).toEqual(["Delver of Secrets"]);
+    // Scryfall still returns the canonical full name, so the diff key stays canonical.
+    expect(result.resolved.map((card) => card.name)).toEqual(["Delver of Secrets // Insectile Aberration"]);
+    expect(result.unresolved).toHaveLength(0);
+    expect(fuzzyQueries).toHaveLength(0);
+  });
+
+  it("reports the original `// ` spelling on a genuine miss and fuzzes the front face", async () => {
+    installFetch({
+      collection: scryfallResponder,
+      fuzzy: (query) => ({ status: 404, payload: notFoundError(query) }),
+    });
+    const result = await resolveCards(["Madeup Card // Fake Back"]);
+
+    expect(result.resolved).toHaveLength(0);
+    // The caller sees the spelling they pasted, not the truncated front face.
+    expect(result.unresolved).toEqual([{ name: "Madeup Card // Fake Back", reason: "not-found", suggestion: null }]);
+    // The fuzzy lookup runs on the front face for a sharper suggestion.
+    expect(fuzzyQueries).toEqual(["Madeup Card"]);
+  });
+
+  it("treats an empty front face (`// Back`) as malformed without an API call", async () => {
+    installFetch({ collection: scryfallResponder });
+    const result = await resolveCards(["// Back", "Sol Ring"]);
+
+    expect(result.unresolved).toEqual([{ name: "// Back", reason: "malformed", suggestion: null }]);
+    expect(result.resolved.map((card) => card.name)).toEqual(["Sol Ring"]);
+    expect(requestedBatches[0]).toEqual(["Sol Ring"]);
+    expect(fuzzyQueries).toHaveLength(0);
+  });
+
   it("splits more than 75 names into multiple batches", async () => {
     installFetch({ collection: (identifiers) => ({ data: identifiers.map(cardPayload), not_found: [] }) });
     const names = Array.from({ length: 76 }, (_unused, index) => `Test Card ${index + 1}`);

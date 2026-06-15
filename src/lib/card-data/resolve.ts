@@ -17,6 +17,16 @@ function normalizeKey(name: string): string {
   return name.trim().toLowerCase();
 }
 
+/**
+ * Reduce a `Front // Back` name (double-faced, split, adventure, MDFC) to its
+ * front face. Scryfall's `/cards/collection` matches a `name` identifier only
+ * against the front face, so the full `//` form returns `not_found`. A name
+ * without `//` is returned trimmed and unchanged.
+ */
+function frontFace(name: string): string {
+  return name.split("//")[0].trim();
+}
+
 /** Split a list into consecutive chunks of at most `size` items. */
 function chunk<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -48,28 +58,32 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
   const resolved: Card[] = [];
   const unresolved: UnresolvedCard[] = [];
 
-  // Dedup input while preserving first-seen order; remember the original
-  // spelling per key so misses report the name the caller actually passed.
+  // Dedup input on the front-face form while preserving first-seen order, so the
+  // front-only and full `//` spellings of one card collapse to a single lookup.
+  // Remember the original spelling per key so misses report the name the caller
+  // actually passed. A blank name — or an input whose front face is empty, e.g.
+  // "// Back" — is malformed and never hits the API.
   const uniqueByKey = new Map<string, string>();
   for (const name of names) {
-    if (name.trim() === "") {
+    const front = frontFace(name);
+    if (front === "") {
       unresolved.push({ name, reason: "malformed", suggestion: null });
       continue;
     }
-    const key = normalizeKey(name);
+    const key = normalizeKey(front);
     if (!uniqueByKey.has(key)) {
       uniqueByKey.set(key, name);
     }
   }
 
-  // Serve cache hits; queue the rest for fetching.
+  // Serve cache hits; queue the front face of the rest for fetching.
   const toFetch: string[] = [];
   for (const [key, name] of uniqueByKey) {
     const cached = sessionCache.get(key);
     if (cached) {
       resolved.push(cached);
     } else {
-      toFetch.push(name);
+      toFetch.push(frontFace(name));
     }
   }
 
@@ -88,7 +102,9 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     for (const raw of response.data) {
       const card = normalizeCard(raw);
       resolved.push(card);
-      sessionCache.set(normalizeKey(card.name), card);
+      // Key on the front face of the canonical name so a later lookup by either
+      // the front-only or the full `//` form hits this entry.
+      sessionCache.set(normalizeKey(frontFace(card.name)), card);
     }
 
     // Scryfall echoes back the identifiers it could not match; collect them for
@@ -100,6 +116,8 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
 
   // Enrich each unmatched name with a fuzzy suggestion and a refined reason.
   // Sequential + throttled; malformed names (handled above) are never queried.
+  // `missName` is the front face we sent: fuzz on it for a sharper suggestion,
+  // but report the original spelling the caller passed.
   for (const missName of missedNames) {
     if (requestsMade > 0) {
       await delay(REQUEST_THROTTLE_MS);
@@ -107,7 +125,8 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     requestsMade += 1;
 
     const fuzzy = await fetchFuzzyName(missName);
-    unresolved.push(toUnresolvedCard(missName, fuzzy));
+    const original = uniqueByKey.get(normalizeKey(missName)) ?? missName;
+    unresolved.push(toUnresolvedCard(original, fuzzy));
   }
 
   return { resolved, unresolved };
