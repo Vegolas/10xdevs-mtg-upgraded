@@ -16,3 +16,15 @@ update every consumer and this entry. One row per surface.
 | `resolveCards` | function | `src/lib/card-data/resolve.ts` | `(names: string[]) => Promise<ResolutionResult>`. Public resolver via the card-data source. _(Implemented in F-01 Phase 2.)_ |
 
 > Module entry point: import these from `@/lib/card-data`.
+
+## Deck diff (roadmap S-01 · `grouped-upgrade-plan`)
+
+| Surface | Kind | Location | Purpose |
+| --- | --- | --- | --- |
+| `parseDeckList` | function | `src/lib/deck/parse.ts` | `(text: string) => ParsedDeck`. Tolerant deck-list parser: drops blanks/comments/section headers, extracts `{name, quantity}` entries, collects unreadable lines as `malformed`. |
+| `diffDecks` | function | `src/lib/deck/diff.ts` | `(base: Card[], target: Card[]) => UpgradePlan`. Set-difference by canonical `Card.name`, each partition grouped by `category` in `CATEGORY_ORDER` (empty buckets omitted). |
+| `UpgradePlan` | type | `src/lib/deck/diff.ts` | The computed plan: `{ remove, add, shared }`, each a `CardGroup[]`. Enriched by S-02 (images) / S-03 (prices) on the same shape. |
+| `CardGroup` | type | `src/lib/deck/diff.ts` | One category's cards: `{ category: CardCategory; cards: Card[] }`. The render unit for a typed subsection. |
+| `generateUpgradePlan` | function | `src/lib/deck/plan.ts` | `(baseText, targetText) => Promise<PlanOutcome>`. Orchestrates parse → `resolveCards` → `diffDecks`; returns `ok` / `empty` / `error`, with deck-tagged `unresolved` entries. |
+
+> Module entry point: import these from `@/lib/deck`.

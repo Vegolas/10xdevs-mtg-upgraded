@@ -1,0 +1,11 @@
+/**
+ * Public entry point for the deck module (roadmap S-01).
+ * Consumers import from `@/lib/deck`. Mirrors `card-data/index.ts`.
+ */
+
+export { parseDeckList } from "./parse";
+export type { DeckEntry, ParsedDeck } from "./parse";
+export { diffDecks, CATEGORY_ORDER } from "./diff";
+export type { CardGroup, UpgradePlan } from "./diff";
+export { generateUpgradePlan } from "./plan";
+export type { PlanOutcome, UnresolvedEntry, DeckSide } from "./plan";

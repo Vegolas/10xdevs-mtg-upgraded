@@ -278,25 +278,25 @@ No data or schema migration. The only removals are starter-only `Welcome.astro`/
 
 #### Automated
 
-- [x] 1.1 Parser unit tests pass: `npm run test`
-- [x] 1.2 Type checking passes: `npx astro check`
-- [x] 1.3 Linting passes: `npm run lint`
+- [x] 1.1 Parser unit tests pass: `npm run test` — 5f87dbf
+- [x] 1.2 Type checking passes: `npx astro check` — 5f87dbf
+- [x] 1.3 Linting passes: `npm run lint` — 5f87dbf
 
 #### Manual
 
-- [x] 1.4 Real Moxfield/Archidekt paste yields only real card names (no header/comment entries)
+- [x] 1.4 Real Moxfield/Archidekt paste yields only real card names (no header/comment entries) — 5f87dbf
 
 ### Phase 2: Diff, grouping & plan orchestration
 
 #### Automated
 
-- [ ] 2.1 Diff unit tests pass: `npm run test`
-- [ ] 2.2 Type checking passes: `npx astro check`
-- [ ] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Diff unit tests pass: `npm run test`
+- [x] 2.2 Type checking passes: `npx astro check`
+- [x] 2.3 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 `contract-surfaces.md` lists the new S-01 surfaces consistently with F-01
+- [x] 2.4 `contract-surfaces.md` lists the new S-01 surfaces consistently with F-01
 
 ### Phase 3: UI — home page + React island
 
