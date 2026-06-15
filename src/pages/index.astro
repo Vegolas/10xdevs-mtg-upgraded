@@ -1,8 +1,24 @@
 ---
-import Welcome from "@/components/Welcome.astro";
 import Layout from "@/layouts/Layout.astro";
+import DeckComparer from "@/components/deck/DeckComparer";
 ---
 
-<Layout>
-  <Welcome />
+<Layout title="DeckDelta">
+  <div class="bg-cosmic min-h-screen w-full">
+    <main class="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
+      <header class="mb-8">
+        <h1
+          class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl"
+        >
+          DeckDelta
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm text-blue-100/70 sm:text-base">
+          Paste your current deck and a target deck. DeckDelta shows what to remove, what to add, and what stays —
+          grouped by card type.
+        </p>
+      </header>
+
+      <DeckComparer client:load />
+    </main>
+  </div>
 </Layout>

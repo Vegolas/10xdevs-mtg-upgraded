@@ -290,29 +290,29 @@ No data or schema migration. The only removals are starter-only `Welcome.astro`/
 
 #### Automated
 
-- [x] 2.1 Diff unit tests pass: `npm run test`
-- [x] 2.2 Type checking passes: `npx astro check`
-- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Diff unit tests pass: `npm run test` — 03adccf
+- [x] 2.2 Type checking passes: `npx astro check` — 03adccf
+- [x] 2.3 Linting passes: `npm run lint` — 03adccf
 
 #### Manual
 
-- [x] 2.4 `contract-surfaces.md` lists the new S-01 surfaces consistently with F-01
+- [x] 2.4 `contract-surfaces.md` lists the new S-01 surfaces consistently with F-01 — 03adccf
 
 ### Phase 3: UI — home page + React island
 
 #### Automated
 
-- [ ] 3.1 Full test suite passes: `npm run test`
-- [ ] 3.2 Type checking passes: `npx astro check`
-- [ ] 3.3 Linting passes: `npm run lint`
-- [ ] 3.4 Production build succeeds: `npm run build`
+- [x] 3.1 Full test suite passes: `npm run test`
+- [x] 3.2 Type checking passes: `npx astro check`
+- [x] 3.3 Linting passes: `npm run lint`
+- [x] 3.4 Production build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 3.5 Plan auto-builds ~0.7s after edits settle, no compare button
-- [ ] 3.6 Two-column Remove|Add grouped by type in fixed order; empty types hidden
-- [ ] 3.7 Shared cards collapsed by default, expand with correct count
-- [ ] 3.8 Typo shows in unresolved notice with "did you mean" while plan still renders
-- [ ] 3.9 Failed lookup shows retry banner; Retry rebuilds on recovery
-- [ ] 3.10 Rapid edits never leave a stale plan (newer result wins)
-- [ ] 3.11 Identical lists show the "identical lists" note with all cards under Shared
+- [x] 3.5 Plan auto-builds ~0.7s after edits settle, no compare button
+- [x] 3.6 Two-column Remove|Add grouped by type in fixed order; empty types hidden
+- [x] 3.7 Shared cards collapsed by default, expand with correct count
+- [x] 3.8 Typo shows in unresolved notice with "did you mean" while plan still renders
+- [x] 3.9 Failed lookup shows retry banner; Retry rebuilds on recovery
+- [x] 3.10 Rapid edits never leave a stale plan (newer result wins)
+- [x] 3.11 Identical lists show the "identical lists" note with all cards under Shared
