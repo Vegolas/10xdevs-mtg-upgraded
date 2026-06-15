@@ -1,7 +1,7 @@
 ---
 change_id: dfc-name-resolution
 title: Fix double-faced card resolution and add per-group counts to the upgrade plan
-status: implementing
+status: implemented
 created: 2026-06-15
 updated: 2026-06-15
 archived_at: null

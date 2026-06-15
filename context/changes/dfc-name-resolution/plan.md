@@ -219,11 +219,11 @@ None — no persisted data or schema. The session cache is in-memory; its key de
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run build`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build` — 2d722cb
+- [x] 2.2 Linting passes: `npm run lint` — 2d722cb
 
 #### Manual
 
-- [x] 2.3 Each group in Remove/Add/Shared shows a count matching its listed cards
-- [x] 2.4 Badge styling matches the existing column-total style
-- [x] 2.5 Empty groups still omitted (no `(0)` badges)
+- [x] 2.3 Each group in Remove/Add/Shared shows a count matching its listed cards — 2d722cb
+- [x] 2.4 Badge styling matches the existing column-total style — 2d722cb
+- [x] 2.5 Empty groups still omitted (no `(0)` badges) — 2d722cb
