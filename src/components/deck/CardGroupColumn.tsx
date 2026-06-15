@@ -1,5 +1,6 @@
 import type { CardGroup } from "@/lib/deck";
 import { categoryLabel, groupCopies } from "./labels";
+import { CardRow } from "./CardRow";
 
 interface CardGroupColumnProps {
   title: string;
@@ -30,11 +31,9 @@ export function CardGroupColumn({ title, groups }: CardGroupColumnProps) {
                 {categoryLabel(group.category)}
                 <span className="text-xs font-normal text-blue-100/50">{groupCopies(group)}</span>
               </h4>
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {group.cards.map((entry) => (
-                  <li key={entry.card.name} className="text-sm text-blue-100/80">
-                    {entry.quantity > 1 ? `${entry.quantity}× ${entry.card.name}` : entry.card.name}
-                  </li>
+                  <CardRow key={entry.card.name} entry={entry} />
                 ))}
               </ul>
             </div>

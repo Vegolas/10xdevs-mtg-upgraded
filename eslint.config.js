@@ -69,6 +69,9 @@ const astroConfig = tseslint.config({
 });
 
 export default tseslint.config(
+  // Never lint nested git worktrees / IDE artifacts under .claude (e.g. leftover
+  // worktrees), which carry their own stale checkouts and produce spurious errors.
+  { ignores: [".claude/**"] },
   includeIgnoreFile(gitignorePath),
   baseConfig,
   reactConfig,
