@@ -1,7 +1,7 @@
 ---
 change_id: grouped-upgrade-plan
 title: Grouped upgrade plan (types only)
-status: implementing
+status: implemented
 created: 2026-06-15
 updated: 2026-06-15
 archived_at: null

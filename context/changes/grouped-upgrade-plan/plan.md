@@ -302,17 +302,17 @@ No data or schema migration. The only removals are starter-only `Welcome.astro`/
 
 #### Automated
 
-- [x] 3.1 Full test suite passes: `npm run test`
-- [x] 3.2 Type checking passes: `npx astro check`
-- [x] 3.3 Linting passes: `npm run lint`
-- [x] 3.4 Production build succeeds: `npm run build`
+- [x] 3.1 Full test suite passes: `npm run test` — 105566c
+- [x] 3.2 Type checking passes: `npx astro check` — 105566c
+- [x] 3.3 Linting passes: `npm run lint` — 105566c
+- [x] 3.4 Production build succeeds: `npm run build` — 105566c
 
 #### Manual
 
-- [x] 3.5 Plan auto-builds ~0.7s after edits settle, no compare button
-- [x] 3.6 Two-column Remove|Add grouped by type in fixed order; empty types hidden
-- [x] 3.7 Shared cards collapsed by default, expand with correct count
-- [x] 3.8 Typo shows in unresolved notice with "did you mean" while plan still renders
-- [x] 3.9 Failed lookup shows retry banner; Retry rebuilds on recovery
-- [x] 3.10 Rapid edits never leave a stale plan (newer result wins)
-- [x] 3.11 Identical lists show the "identical lists" note with all cards under Shared
+- [x] 3.5 Plan auto-builds ~0.7s after edits settle, no compare button — 105566c
+- [x] 3.6 Two-column Remove|Add grouped by type in fixed order; empty types hidden — 105566c
+- [x] 3.7 Shared cards collapsed by default, expand with correct count — 105566c
+- [x] 3.8 Typo shows in unresolved notice with "did you mean" while plan still renders — 105566c
+- [x] 3.9 Failed lookup shows retry banner; Retry rebuilds on recovery — 105566c
+- [x] 3.10 Rapid edits never leave a stale plan (newer result wins) — 105566c
+- [x] 3.11 Identical lists show the "identical lists" note with all cards under Shared — 105566c
