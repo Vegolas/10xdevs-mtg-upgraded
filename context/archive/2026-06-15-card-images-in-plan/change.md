@@ -1,10 +1,10 @@
 ---
 change_id: card-images-in-plan
 title: Card images in the upgrade plan
-status: impl_reviewed
+status: archived
 created: 2026-06-15
 updated: 2026-06-16
-archived_at: null
+archived_at: 2026-06-15T22:07:36Z
 ---
 
 ## Notes

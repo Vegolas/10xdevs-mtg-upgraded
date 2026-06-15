@@ -3,7 +3,7 @@ project: DeckDelta
 version: 1
 status: draft
 created: 2026-06-09
-updated: 2026-06-15
+updated: 2026-06-16
 prd_version: 1
 main_goal: low-complexity
 top_blocker: external
@@ -31,7 +31,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | ----- | ----------------------- | ------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
 | F-01  | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands | —             | Guardrails (accuracy), NFR (lookups) | ready    |
 | S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done     |
-| S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | proposed |
+| S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | done     |
 | S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | proposed |
 | S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | proposed |
 
@@ -98,7 +98,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Image-heavy rendering (100+ cards) performance approach — load strategy for MVP? — Owner: team. Block: no.
 - **Risk:** Thin enrichment over S-01's grouped plan, surfacing the image field already exposed by F-01's lookup. Low risk; the only watch-item is the Cloudflare image-service footgun flagged in `tech-stack.md` (set `imageService` explicitly), which is an implementation concern for `/10x-plan`.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Prices and total upgrade cost
 
@@ -152,3 +152,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 (Empty on first generation. `/10x-archive` appends here — and flips the matching item's `Status` to `done` — when a change whose `Change ID` matches an item is archived. Do NOT pre-populate.)
 
 - **S-01: user can paste a base list and a target list and automatically see cards to add, cards to remove, and shared cards — each grouped by card type (lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers).** — Archived 2026-06-15 → `context/archive/2026-06-15-grouped-upgrade-plan/`. Lesson: —.
+- **S-02: user can see a card image for each card in the upgrade plan.** — Archived 2026-06-16 → `context/archive/2026-06-15-card-images-in-plan/`. Lesson: —.
