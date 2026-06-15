@@ -7,8 +7,10 @@ import type { Card, ResolutionResult, UnresolvedCard } from "./types";
 const REQUEST_THROTTLE_MS = 100;
 
 /**
- * In-session cache: normalized input name -> resolved Card, persisting across
- * calls so re-pastes and repeated basic lands cost a single lookup.
+ * In-session cache: normalized front-face name -> resolved Card, persisting across
+ * calls so re-pastes and repeated basic lands cost a single lookup. Keying on the
+ * front face lets either the front-only or the full `//` form of a card hit the
+ * same entry.
  */
 const sessionCache = new Map<string, Card>();
 
@@ -44,15 +46,23 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Resolve a list of (already-clean) card names against the card-data source.
+ * Resolve a list of card names against the card-data source.
+ *
+ * A `Front // Back` name (double-faced, split, adventure, MDFC) is reduced to its
+ * front face before the lookup, since Scryfall's `/cards/collection` matches only
+ * the front face. The canonical full name still comes back, so `Card.name` (the
+ * diff key) stays canonical. Dedup and the session cache key on the front face, so
+ * the front-only and full `//` spellings of one card collapse to a single lookup.
  *
  * Never throws on an unknown name: returns partial success with `resolved` cards
- * and `unresolved` misses. Blank/whitespace names short-circuit to `malformed`
- * with no API call. Repeated names are deduplicated within the call and resolved
- * cards are memoized in a session-level cache.
+ * and `unresolved` misses. A blank name — or one whose front face is empty, e.g.
+ * "// Back" — short-circuits to `malformed` with no API call. Repeated names are
+ * deduplicated within the call and resolved cards are memoized in a session-level
+ * cache.
  *
  * Misses are collected from the batch pass, then each unmatched name is enriched
- * with a fuzzy "did you mean" suggestion and a refined reason.
+ * with a fuzzy "did you mean" suggestion and a refined reason; the original
+ * spelling the caller passed is what gets reported.
  */
 export async function resolveCards(names: string[]): Promise<ResolutionResult> {
   const resolved: Card[] = [];

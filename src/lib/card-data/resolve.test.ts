@@ -183,7 +183,7 @@ describe("resolveCards", () => {
     expect(card.imageUrl).toBe("https://cards.scryfall.io/normal/delver-front.jpg");
   });
 
-  it("sends only the front face for a full `// ` name and keeps the canonical name", async () => {
+  it("sends only the front face for a full `//` name and keeps the canonical name", async () => {
     installFetch({ collection: scryfallResponder });
     const result = await resolveCards(["Delver of Secrets // Insectile Aberration"]);
 
@@ -196,7 +196,7 @@ describe("resolveCards", () => {
     expect(fuzzyQueries).toHaveLength(0);
   });
 
-  it("reports the original `// ` spelling on a genuine miss and fuzzes the front face", async () => {
+  it("reports the original `//` spelling on a genuine miss and fuzzes the front face", async () => {
     installFetch({
       collection: scryfallResponder,
       fuzzy: (query) => ({ status: 404, payload: notFoundError(query) }),
