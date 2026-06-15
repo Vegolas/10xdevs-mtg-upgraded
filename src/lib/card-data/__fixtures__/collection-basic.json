@@ -1,0 +1,42 @@
+{
+  "object": "list",
+  "not_found": [],
+  "data": [
+    {
+      "object": "card",
+      "name": "Sol Ring",
+      "layout": "normal",
+      "type_line": "Artifact",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/sol-ring.jpg",
+        "normal": "https://cards.scryfall.io/normal/sol-ring.jpg",
+        "large": "https://cards.scryfall.io/large/sol-ring.jpg"
+      },
+      "prices": {
+        "usd": "1.23",
+        "usd_foil": "5.00",
+        "eur": "0.98",
+        "eur_foil": "4.10",
+        "tix": "0.50"
+      }
+    },
+    {
+      "object": "card",
+      "name": "Llanowar Elves",
+      "layout": "normal",
+      "type_line": "Creature — Elf Druid",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/llanowar-elves.jpg",
+        "normal": "https://cards.scryfall.io/normal/llanowar-elves.jpg",
+        "large": "https://cards.scryfall.io/large/llanowar-elves.jpg"
+      },
+      "prices": {
+        "usd": "0.15",
+        "usd_foil": null,
+        "eur": "0.10",
+        "eur_foil": null,
+        "tix": "0.03"
+      }
+    }
+  ]
+}

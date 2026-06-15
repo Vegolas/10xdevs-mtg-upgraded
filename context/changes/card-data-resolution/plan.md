@@ -341,28 +341,28 @@ None — this is net-new code with no existing data or consumers. The architectu
 
 #### Automated
 
-- [x] 1.1 Vitest installs and runs: `npm run test`
-- [x] 1.2 Classifier tests pass (all 7 buckets + overlaps + fallbacks): `npm run test`
-- [x] 1.3 Type checking passes: `npx astro check`
-- [x] 1.4 Linting passes: `npm run lint`
+- [x] 1.1 Vitest installs and runs: `npm run test` — 9fcbae6
+- [x] 1.2 Classifier tests pass (all 7 buckets + overlaps + fallbacks): `npm run test` — 9fcbae6
+- [x] 1.3 Type checking passes: `npx astro check` — 9fcbae6
+- [x] 1.4 Linting passes: `npm run lint` — 9fcbae6
 
 #### Manual
 
-- [x] 1.5 `src/lib/card-data/` exists with `types.ts`, `classify.ts`, `index.ts`, `classify.test.ts`
-- [x] 1.6 `docs/reference/contract-surfaces.md` lists the F-01 contract surfaces
+- [x] 1.5 `src/lib/card-data/` exists with `types.ts`, `classify.ts`, `index.ts`, `classify.test.ts` — 9fcbae6
+- [x] 1.6 `docs/reference/contract-surfaces.md` lists the F-01 contract surfaces — 9fcbae6
 
 ### Phase 2: Scryfall batch resolution + normalization
 
 #### Automated
 
-- [ ] 2.1 Resolution + normalization tests pass (mocked fetch): `npm run test`
-- [ ] 2.2 Type checking passes: `npx astro check`
-- [ ] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Resolution + normalization tests pass (mocked fetch): `npm run test`
+- [x] 2.2 Type checking passes: `npx astro check`
+- [x] 2.3 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 `resolveCards(["Sol Ring","Llanowar Elves"])` against live Scryfall returns two resolved cards with category/image/price
-- [ ] 2.5 A known DFC resolves to its front face with a non-null `imageUrl`
+- [x] 2.4 `resolveCards(["Sol Ring","Llanowar Elves"])` against live Scryfall returns two resolved cards with category/image/price
+- [x] 2.5 A known DFC resolves to its front face with a non-null `imageUrl`
 
 ### Phase 3: Unrecognized-name handling + fuzzy suggestions
 

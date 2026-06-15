@@ -1,0 +1,41 @@
+{
+  "object": "list",
+  "not_found": [],
+  "data": [
+    {
+      "object": "card",
+      "name": "Delver of Secrets // Insectile Aberration",
+      "layout": "transform",
+      "type_line": "Creature — Human Wizard // Creature — Human Insect",
+      "prices": {
+        "usd": "0.20",
+        "usd_foil": "1.50",
+        "eur": "0.18",
+        "eur_foil": "1.20",
+        "tix": "0.02"
+      },
+      "card_faces": [
+        {
+          "object": "card_face",
+          "name": "Delver of Secrets",
+          "type_line": "Creature — Human Wizard",
+          "image_uris": {
+            "small": "https://cards.scryfall.io/small/delver-front.jpg",
+            "normal": "https://cards.scryfall.io/normal/delver-front.jpg",
+            "large": "https://cards.scryfall.io/large/delver-front.jpg"
+          }
+        },
+        {
+          "object": "card_face",
+          "name": "Insectile Aberration",
+          "type_line": "Creature — Human Insect",
+          "image_uris": {
+            "small": "https://cards.scryfall.io/small/delver-back.jpg",
+            "normal": "https://cards.scryfall.io/normal/delver-back.jpg",
+            "large": "https://cards.scryfall.io/large/delver-back.jpg"
+          }
+        }
+      ]
+    }
+  ]
+}
