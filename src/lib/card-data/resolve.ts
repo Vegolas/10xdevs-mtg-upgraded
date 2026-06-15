@@ -1,5 +1,6 @@
-import { fetchCardCollection, SCRYFALL_COLLECTION_MAX_IDENTIFIERS } from "./scryfall";
+import { fetchCardCollection, fetchFuzzyName, SCRYFALL_COLLECTION_MAX_IDENTIFIERS } from "./scryfall";
 import { normalizeCard } from "./normalize";
+import type { FuzzyMatch } from "./scryfall";
 import type { Card, ResolutionResult, UnresolvedCard } from "./types";
 
 /** Delay between sequential Scryfall requests (ms) — keeps us a good citizen. */
@@ -40,8 +41,8 @@ function delay(ms: number): Promise<void> {
  * with no API call. Repeated names are deduplicated within the call and resolved
  * cards are memoized in a session-level cache.
  *
- * Phase 2 collects misses as `not-found` with `suggestion: null`; Phase 3 will
- * enrich them with fuzzy suggestions and refine the reason.
+ * Misses are collected from the batch pass, then each unmatched name is enriched
+ * with a fuzzy "did you mean" suggestion and a refined reason.
  */
 export async function resolveCards(names: string[]): Promise<ResolutionResult> {
   const resolved: Card[] = [];
@@ -73,12 +74,14 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
   }
 
   const batches = chunk(toFetch, SCRYFALL_COLLECTION_MAX_IDENTIFIERS);
-  let isFirstBatch = true;
+  const missedNames: string[] = [];
+  let requestsMade = 0;
+
   for (const batch of batches) {
-    if (!isFirstBatch) {
+    if (requestsMade > 0) {
       await delay(REQUEST_THROTTLE_MS);
     }
-    isFirstBatch = false;
+    requestsMade += 1;
 
     const response = await fetchCardCollection(batch);
 
@@ -88,14 +91,37 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
       sessionCache.set(normalizeKey(card.name), card);
     }
 
-    // Scryfall echoes back the identifiers it could not match; reason is
-    // `not-found` here, refined and given a suggestion in Phase 3.
+    // Scryfall echoes back the identifiers it could not match; collect them for
+    // fuzzy enrichment below.
     for (const miss of response.not_found) {
-      unresolved.push({ name: miss.name ?? "", reason: "not-found", suggestion: null });
+      missedNames.push(miss.name ?? "");
     }
   }
 
+  // Enrich each unmatched name with a fuzzy suggestion and a refined reason.
+  // Sequential + throttled; malformed names (handled above) are never queried.
+  for (const missName of missedNames) {
+    if (requestsMade > 0) {
+      await delay(REQUEST_THROTTLE_MS);
+    }
+    requestsMade += 1;
+
+    const fuzzy = await fetchFuzzyName(missName);
+    unresolved.push(toUnresolvedCard(missName, fuzzy));
+  }
+
   return { resolved, unresolved };
+}
+
+/** Map a fuzzy lookup outcome to the unresolved-card reason taxonomy. */
+function toUnresolvedCard(name: string, fuzzy: FuzzyMatch): UnresolvedCard {
+  if (fuzzy.kind === "match") {
+    return { name, reason: "not-found", suggestion: fuzzy.name };
+  }
+  if (fuzzy.kind === "ambiguous") {
+    return { name, reason: "ambiguous", suggestion: null };
+  }
+  return { name, reason: "not-found", suggestion: null };
 }
 
 /** Test seam: clear the in-session cache. Not part of the public barrel. */

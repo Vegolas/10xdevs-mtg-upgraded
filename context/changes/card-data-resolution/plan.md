@@ -355,25 +355,25 @@ None — this is net-new code with no existing data or consumers. The architectu
 
 #### Automated
 
-- [x] 2.1 Resolution + normalization tests pass (mocked fetch): `npm run test`
-- [x] 2.2 Type checking passes: `npx astro check`
-- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.1 Resolution + normalization tests pass (mocked fetch): `npm run test` — 268cbd9
+- [x] 2.2 Type checking passes: `npx astro check` — 268cbd9
+- [x] 2.3 Linting passes: `npm run lint` — 268cbd9
 
 #### Manual
 
-- [x] 2.4 `resolveCards(["Sol Ring","Llanowar Elves"])` against live Scryfall returns two resolved cards with category/image/price
-- [x] 2.5 A known DFC resolves to its front face with a non-null `imageUrl`
+- [x] 2.4 `resolveCards(["Sol Ring","Llanowar Elves"])` against live Scryfall returns two resolved cards with category/image/price — 268cbd9
+- [x] 2.5 A known DFC resolves to its front face with a non-null `imageUrl` — 268cbd9
 
 ### Phase 3: Unrecognized-name handling + fuzzy suggestions
 
 #### Automated
 
-- [ ] 3.1 Miss/fuzzy fixture tests pass: `npm run test`
-- [ ] 3.2 The live test is skipped by default (no network in `npm run test`)
-- [ ] 3.3 Type checking passes: `npx astro check`
-- [ ] 3.4 Linting passes: `npm run lint`
+- [x] 3.1 Miss/fuzzy fixture tests pass: `npm run test`
+- [x] 3.2 The live test is skipped by default (no network in `npm run test`)
+- [x] 3.3 Type checking passes: `npx astro check`
+- [x] 3.4 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.5 Gated live test (`RUN_LIVE=1`) succeeds against real Scryfall
-- [ ] 3.6 Resolving a list with a deliberate typo returns the correct `suggestion` plus resolved valid names
+- [x] 3.5 Gated live test (`RUN_LIVE=1`) succeeds against real Scryfall
+- [x] 3.6 Resolving a list with a deliberate typo returns the correct `suggestion` plus resolved valid names
