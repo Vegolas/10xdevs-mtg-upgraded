@@ -3,7 +3,7 @@ project: DeckDelta
 version: 1
 status: draft
 created: 2026-06-09
-updated: 2026-06-09
+updated: 2026-06-15
 prd_version: 1
 main_goal: low-complexity
 top_blocker: external
@@ -30,7 +30,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | ID    | Change ID               | Outcome (user can …)                                          | Prerequisites | PRD refs                          | Status   |
 | ----- | ----------------------- | ------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
 | F-01  | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands | —             | Guardrails (accuracy), NFR (lookups) | ready    |
-| S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | proposed |
+| S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done     |
 | S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | proposed |
 | S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | proposed |
 | S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | proposed |
@@ -85,7 +85,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - How robust must paste-parsing be across format variants (MTGO/Arena/Moxfield) for MVP? — Owner: user. Block: no.
 - **Risk:** The north star and the largest single slice, but justified — the PRD has one core workflow and grouping-by-function IS the hypothesis, so it can't be split below "paste → group" without losing the user-visible proof. Shared cards render collapsed/expandable (FR-008 UX note) so they don't bury the diff.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Card images in the plan
 
@@ -150,3 +150,5 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 ## Done
 
 (Empty on first generation. `/10x-archive` appends here — and flips the matching item's `Status` to `done` — when a change whose `Change ID` matches an item is archived. Do NOT pre-populate.)
+
+- **S-01: user can paste a base list and a target list and automatically see cards to add, cards to remove, and shared cards — each grouped by card type (lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers).** — Archived 2026-06-15 → `context/archive/2026-06-15-grouped-upgrade-plan/`. Lesson: —.
