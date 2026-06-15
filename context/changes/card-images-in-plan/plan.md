@@ -200,29 +200,29 @@ None — additive rendering only. No data, schema, or stored-state changes.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test`
-- [x] 1.2 Linting passes (including `jsx-a11y`): `npm run lint`
-- [x] 1.3 Type checking passes: `npx astro check`
-- [x] 1.4 Production build succeeds: `npm run build`
+- [x] 1.1 Unit tests pass: `npm run test` — 11b0a06
+- [x] 1.2 Linting passes (including `jsx-a11y`): `npm run lint` — 11b0a06
+- [x] 1.3 Type checking passes: `npx astro check` — 11b0a06
+- [x] 1.4 Production build succeeds: `npm run build` — 11b0a06
 
 #### Manual
 
-- [x] 1.5 Every card in Remove/Add shows a thumbnail; quantities still prefix names correctly
-- [x] 1.6 Null-image card shows the placeholder tile with alignment preserved (no broken image, no dropped card)
-- [x] 1.7 Expanding "Shared cards" shows thumbnails; off-screen/collapsed images are deferred (lazy)
-- [x] 1.8 No regressions: auto-build, unresolved notice, and identical-lists message still render
+- [x] 1.5 Every card in Remove/Add shows a thumbnail; quantities still prefix names correctly — 11b0a06
+- [x] 1.6 Null-image card shows the placeholder tile with alignment preserved (no broken image, no dropped card) — 11b0a06
+- [x] 1.7 Expanding "Shared cards" shows thumbnails; off-screen/collapsed images are deferred (lazy) — 11b0a06
+- [x] 1.8 No regressions: auto-build, unresolved notice, and identical-lists message still render — 11b0a06
 
 ### Phase 2: Hover/focus enlarge
 
 #### Automated
 
-- [ ] 2.1 Linting passes, including `jsx-a11y` keyboard rules: `npm run lint`
-- [ ] 2.2 Type checking passes: `npx astro check`
-- [ ] 2.3 Production build succeeds: `npm run build`
+- [x] 2.1 Linting passes, including `jsx-a11y` keyboard rules: `npm run lint`
+- [x] 2.2 Type checking passes: `npx astro check`
+- [x] 2.3 Production build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 Hovering a thumbnail shows a readable full-size card
-- [ ] 2.5 Keyboard focus shows the preview; blur hides it
-- [ ] 2.6 Full-size image fetched only on first hover/focus, not on initial render
-- [ ] 2.7 Preview doesn't clip at column/viewport edges and dismisses cleanly
+- [x] 2.4 Hovering a thumbnail shows a readable full-size card
+- [x] 2.5 Keyboard focus shows the preview; blur hides it
+- [x] 2.6 Full-size image fetched only on first hover/focus, not on initial render
+- [x] 2.7 Preview doesn't clip at column/viewport edges and dismisses cleanly
