@@ -42,13 +42,20 @@ export function CardRow({ entry }: CardRowProps) {
           onBlur={() => {
             setPreview(false);
           }}
-          className="relative shrink-0 cursor-default rounded-sm p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+          className="relative shrink-0 cursor-zoom-in rounded-sm p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
         >
-          <img src={thumb} alt="" loading="lazy" className="h-14 w-10 rounded-sm bg-white/5 object-cover" />
+          <img
+            src={thumb}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="h-14 w-10 rounded-sm bg-white/5 object-cover"
+          />
           {preview && card.imageUrl !== null ? (
             <img
               src={card.imageUrl}
               alt=""
+              aria-hidden="true"
               className="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-80 max-w-none rounded-lg shadow-xl ring-1 ring-black/40"
             />
           ) : null}
