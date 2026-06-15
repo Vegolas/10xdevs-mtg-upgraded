@@ -14,11 +14,6 @@ const REQUEST_THROTTLE_MS = 100;
  */
 const sessionCache = new Map<string, Card>();
 
-/** Normalize a name for cache keys and within-call dedup. */
-function normalizeKey(name: string): string {
-  return name.trim().toLowerCase();
-}
-
 /**
  * Reduce a `Front // Back` name (double-faced, split, adventure, MDFC) to its
  * front face. Scryfall's `/cards/collection` matches a `name` identifier only
@@ -27,6 +22,17 @@ function normalizeKey(name: string): string {
  */
 function frontFace(name: string): string {
   return name.split("//")[0].trim();
+}
+
+/**
+ * Identity key for a card name: its front face, lowercased. The front-only and
+ * full `//` spellings of one card collapse to the same key. This is the key the
+ * resolver dedups and caches on, AND the key the deck layer joins quantities on
+ * (see `@/lib/deck`) — the two MUST share this one definition or the forms won't
+ * line up. Returns "" for a blank or front-less name (e.g. "// Back").
+ */
+export function resolutionKey(name: string): string {
+  return frontFace(name).toLowerCase();
 }
 
 /** Split a list into consecutive chunks of at most `size` items. */
@@ -75,12 +81,11 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
   // "// Back" — is malformed and never hits the API.
   const uniqueByKey = new Map<string, string>();
   for (const name of names) {
-    const front = frontFace(name);
-    if (front === "") {
+    const key = resolutionKey(name);
+    if (key === "") {
       unresolved.push({ name, reason: "malformed", suggestion: null });
       continue;
     }
-    const key = normalizeKey(front);
     if (!uniqueByKey.has(key)) {
       uniqueByKey.set(key, name);
     }
@@ -114,7 +119,7 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
       resolved.push(card);
       // Key on the front face of the canonical name so a later lookup by either
       // the front-only or the full `//` form hits this entry.
-      sessionCache.set(normalizeKey(frontFace(card.name)), card);
+      sessionCache.set(resolutionKey(card.name), card);
     }
 
     // Scryfall echoes back the identifiers it could not match; collect them for
@@ -135,7 +140,7 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     requestsMade += 1;
 
     const fuzzy = await fetchFuzzyName(missName);
-    const original = uniqueByKey.get(normalizeKey(missName)) ?? missName;
+    const original = uniqueByKey.get(resolutionKey(missName)) ?? missName;
     unresolved.push(toUnresolvedCard(original, fuzzy));
   }
 

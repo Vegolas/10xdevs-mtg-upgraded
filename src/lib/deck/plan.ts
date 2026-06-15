@@ -19,6 +19,7 @@ import { parseDeckList } from "./parse";
 import type { ParsedDeck } from "./parse";
 import { diffDecks } from "./diff";
 import type { UpgradePlan } from "./diff";
+import { attachQuantities } from "./quantity";
 
 /** Which side of the comparison an input name came from. */
 export type DeckSide = "base" | "target";
@@ -71,7 +72,9 @@ export async function generateUpgradePlan(baseText: string, targetText: string):
     const baseResolution = await resolveCards(baseNames);
     const targetResolution = await resolveCards(targetNames);
 
-    const plan = diffDecks(baseResolution.resolved, targetResolution.resolved);
+    const baseDeck = attachQuantities(baseResolution.resolved, baseParsed.entries);
+    const targetDeck = attachQuantities(targetResolution.resolved, targetParsed.entries);
+    const plan = diffDecks(baseDeck, targetDeck);
 
     const unresolved: UnresolvedEntry[] = [
       ...malformedEntries(baseParsed, "base"),

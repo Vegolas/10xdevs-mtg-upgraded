@@ -1,9 +1,9 @@
 /**
- * Deck diff + grouping (roadmap S-01).
+ * Deck diff + grouping (roadmap S-01; quantity-aware per deck-diff-quantities).
  *
- * Given two already-resolved decks, compute the upgrade plan: cards to remove
- * (base only), cards to add (target only), and shared cards (in both) — each
- * partition grouped by card type in a fixed display order.
+ * Given two already-resolved, quantity-tagged decks, compute the upgrade plan as
+ * per-card quantity deltas: copies to remove, copies to add, and shared copies —
+ * each partition grouped by card type in a fixed display order.
  *
  * The diff is keyed on the canonical {@link Card.name} the resolver returns, not
  * on the raw pasted strings: `resolveCards` normalizes names (e.g. DFC faces are
@@ -14,19 +14,25 @@
 
 import type { Card, CardCategory } from "@/lib/card-data";
 
+/** A card paired with a copy count — a deck's holding, or a diff partition's delta. */
+export interface DeckCard {
+  card: Card;
+  quantity: number;
+}
+
 /** A set of cards sharing one category, ready to render as a labeled subsection. */
 export interface CardGroup {
   category: CardCategory;
-  cards: Card[];
+  cards: DeckCard[];
 }
 
 /** The computed upgrade plan: each partition grouped by card type. */
 export interface UpgradePlan {
-  /** Cards in the base deck but not the target — drop these. */
+  /** Copies in the base deck beyond the target — drop these. */
   remove: CardGroup[];
-  /** Cards in the target deck but not the base — acquire these. */
+  /** Copies in the target deck beyond the base — acquire these. */
   add: CardGroup[];
-  /** Cards present in both decks. */
+  /** Copies present in both decks (the overlap that stays). */
   shared: CardGroup[];
 }
 
@@ -47,27 +53,28 @@ export const CATEGORY_ORDER: readonly CardCategory[] = [
   "other",
 ];
 
-/** Index a deck by canonical card name for set-difference by identity. */
-function byName(cards: Card[]): Map<string, Card> {
-  const map = new Map<string, Card>();
-  for (const card of cards) {
-    map.set(card.name, card);
+/** Index a deck by canonical card name for quantity-aware set difference. */
+function byName(deck: DeckCard[]): Map<string, DeckCard> {
+  const map = new Map<string, DeckCard>();
+  for (const entry of deck) {
+    map.set(entry.card.name, entry);
   }
   return map;
 }
 
 /**
- * Group a flat card list into {@link CardGroup}s ordered by {@link CATEGORY_ORDER},
- * omitting categories with no cards. Within each group, cards are sorted by name.
+ * Group a flat {@link DeckCard} list into {@link CardGroup}s ordered by
+ * {@link CATEGORY_ORDER}, omitting categories with no cards. Within each group,
+ * cards are sorted by name.
  */
-function groupByCategory(cards: Card[]): CardGroup[] {
-  const buckets = new Map<CardCategory, Card[]>();
-  for (const card of cards) {
-    const bucket = buckets.get(card.category);
+function groupByCategory(cards: DeckCard[]): CardGroup[] {
+  const buckets = new Map<CardCategory, DeckCard[]>();
+  for (const entry of cards) {
+    const bucket = buckets.get(entry.card.category);
     if (bucket) {
-      bucket.push(card);
+      bucket.push(entry);
     } else {
-      buckets.set(card.category, [card]);
+      buckets.set(entry.card.category, [entry]);
     }
   }
 
@@ -75,7 +82,7 @@ function groupByCategory(cards: Card[]): CardGroup[] {
   for (const category of CATEGORY_ORDER) {
     const bucket = buckets.get(category);
     if (bucket && bucket.length > 0) {
-      bucket.sort((a, b) => a.name.localeCompare(b.name));
+      bucket.sort((a, b) => a.card.name.localeCompare(b.card.name));
       groups.push({ category, cards: bucket });
     }
   }
@@ -83,31 +90,42 @@ function groupByCategory(cards: Card[]): CardGroup[] {
 }
 
 /**
- * Diff two resolved decks into an {@link UpgradePlan}.
+ * Diff two resolved, quantity-tagged decks into an {@link UpgradePlan}.
  *
- * Set difference is computed by canonical {@link Card.name}: `remove` is base
- * names not in target, `add` is target names not in base, `shared` is the
- * intersection (the base copy is kept for shared cards). Each partition is then
- * grouped by category via {@link groupByCategory}.
+ * Matched by canonical {@link Card.name}, per card: `shared` = min(base, target),
+ * `remove` = max(0, base − target), `add` = max(0, target − base). A partially
+ * changed card therefore appears in both `shared` and `remove`/`add`; a partition
+ * with quantity 0 contributes nothing, so unchanged-count cards never reach
+ * remove/add and empty categories stay omitted. The base card object is kept for
+ * remove/shared, the target's for add. Each partition is then grouped by category
+ * via {@link groupByCategory}.
  */
-export function diffDecks(base: Card[], target: Card[]): UpgradePlan {
+export function diffDecks(base: DeckCard[], target: DeckCard[]): UpgradePlan {
   const baseByName = byName(base);
   const targetByName = byName(target);
 
-  const remove: Card[] = [];
-  const shared: Card[] = [];
-  for (const [name, card] of baseByName) {
-    if (targetByName.has(name)) {
-      shared.push(card);
-    } else {
-      remove.push(card);
+  const remove: DeckCard[] = [];
+  const shared: DeckCard[] = [];
+  for (const [name, baseEntry] of baseByName) {
+    const targetQuantity = targetByName.get(name)?.quantity ?? 0;
+
+    const sharedQuantity = Math.min(baseEntry.quantity, targetQuantity);
+    if (sharedQuantity > 0) {
+      shared.push({ card: baseEntry.card, quantity: sharedQuantity });
+    }
+
+    const removeQuantity = baseEntry.quantity - targetQuantity;
+    if (removeQuantity > 0) {
+      remove.push({ card: baseEntry.card, quantity: removeQuantity });
     }
   }
 
-  const add: Card[] = [];
-  for (const [name, card] of targetByName) {
-    if (!baseByName.has(name)) {
-      add.push(card);
+  const add: DeckCard[] = [];
+  for (const [name, targetEntry] of targetByName) {
+    const baseQuantity = baseByName.get(name)?.quantity ?? 0;
+    const addQuantity = targetEntry.quantity - baseQuantity;
+    if (addQuantity > 0) {
+      add.push({ card: targetEntry.card, quantity: addQuantity });
     }
   }
 

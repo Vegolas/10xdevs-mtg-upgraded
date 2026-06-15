@@ -1,5 +1,5 @@
 import type { CardGroup } from "@/lib/deck";
-import { categoryLabel } from "./labels";
+import { categoryLabel, groupCopies } from "./labels";
 
 interface CardGroupColumnProps {
   title: string;
@@ -11,7 +11,7 @@ interface CardGroupColumnProps {
  * subsection per card-type group, or a muted "No changes" line when empty.
  */
 export function CardGroupColumn({ title, groups }: CardGroupColumnProps) {
-  const total = groups.reduce((sum, group) => sum + group.cards.length, 0);
+  const total = groups.reduce((sum, group) => sum + groupCopies(group), 0);
 
   return (
     <section className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -28,12 +28,12 @@ export function CardGroupColumn({ title, groups }: CardGroupColumnProps) {
             <div key={group.category}>
               <h4 className="mb-1 flex items-baseline gap-2 text-xs font-medium tracking-wide text-purple-300 uppercase">
                 {categoryLabel(group.category)}
-                <span className="text-xs font-normal text-blue-100/50">{group.cards.length}</span>
+                <span className="text-xs font-normal text-blue-100/50">{groupCopies(group)}</span>
               </h4>
               <ul className="space-y-0.5">
-                {group.cards.map((card) => (
-                  <li key={card.name} className="text-sm text-blue-100/80">
-                    {card.name}
+                {group.cards.map((entry) => (
+                  <li key={entry.card.name} className="text-sm text-blue-100/80">
+                    {entry.quantity > 1 ? `${entry.quantity}× ${entry.card.name}` : entry.card.name}
                   </li>
                 ))}
               </ul>

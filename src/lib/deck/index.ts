@@ -6,6 +6,7 @@
 export { parseDeckList } from "./parse";
 export type { DeckEntry, ParsedDeck } from "./parse";
 export { diffDecks, CATEGORY_ORDER } from "./diff";
-export type { CardGroup, UpgradePlan } from "./diff";
+export type { CardGroup, UpgradePlan, DeckCard } from "./diff";
 export { generateUpgradePlan } from "./plan";
 export type { PlanOutcome, UnresolvedEntry, DeckSide } from "./plan";
+export { attachQuantities } from "./quantity";
