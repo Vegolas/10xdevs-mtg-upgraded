@@ -216,13 +216,13 @@ None — additive rendering only. No data, schema, or stored-state changes.
 
 #### Automated
 
-- [x] 2.1 Linting passes, including `jsx-a11y` keyboard rules: `npm run lint`
-- [x] 2.2 Type checking passes: `npx astro check`
-- [x] 2.3 Production build succeeds: `npm run build`
+- [x] 2.1 Linting passes, including `jsx-a11y` keyboard rules: `npm run lint` — 28485c3
+- [x] 2.2 Type checking passes: `npx astro check` — 28485c3
+- [x] 2.3 Production build succeeds: `npm run build` — 28485c3
 
 #### Manual
 
-- [x] 2.4 Hovering a thumbnail shows a readable full-size card
-- [x] 2.5 Keyboard focus shows the preview; blur hides it
-- [x] 2.6 Full-size image fetched only on first hover/focus, not on initial render
-- [x] 2.7 Preview doesn't clip at column/viewport edges and dismisses cleanly
+- [x] 2.4 Hovering a thumbnail shows a readable full-size card — 28485c3
+- [x] 2.5 Keyboard focus shows the preview; blur hides it — 28485c3
+- [x] 2.6 Full-size image fetched only on first hover/focus, not on initial render — 28485c3
+- [x] 2.7 Preview doesn't clip at column/viewport edges and dismisses cleanly — 28485c3
