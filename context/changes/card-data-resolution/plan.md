@@ -368,12 +368,12 @@ None — this is net-new code with no existing data or consumers. The architectu
 
 #### Automated
 
-- [x] 3.1 Miss/fuzzy fixture tests pass: `npm run test`
-- [x] 3.2 The live test is skipped by default (no network in `npm run test`)
-- [x] 3.3 Type checking passes: `npx astro check`
-- [x] 3.4 Linting passes: `npm run lint`
+- [x] 3.1 Miss/fuzzy fixture tests pass: `npm run test` — 742e8cc
+- [x] 3.2 The live test is skipped by default (no network in `npm run test`) — 742e8cc
+- [x] 3.3 Type checking passes: `npx astro check` — 742e8cc
+- [x] 3.4 Linting passes: `npm run lint` — 742e8cc
 
 #### Manual
 
-- [x] 3.5 Gated live test (`RUN_LIVE=1`) succeeds against real Scryfall
-- [x] 3.6 Resolving a list with a deliberate typo returns the correct `suggestion` plus resolved valid names
+- [x] 3.5 Gated live test (`RUN_LIVE=1`) succeeds against real Scryfall — 742e8cc
+- [x] 3.6 Resolving a list with a deliberate typo returns the correct `suggestion` plus resolved valid names — 742e8cc
