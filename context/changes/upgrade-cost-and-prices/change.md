@@ -1,7 +1,7 @@
 ---
 change_id: upgrade-cost-and-prices
 title: Show per-card prices and total upgrade cost
-status: implementing
+status: implemented
 created: 2026-06-16
 updated: 2026-06-16
 archived_at: null

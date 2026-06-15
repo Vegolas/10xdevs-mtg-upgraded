@@ -208,14 +208,14 @@ None — additive rendering plus one pure helper. No data, schema, stored-state,
 
 #### Automated
 
-- [x] 1.1 Unit tests pass (`formatUsd` + `planAddCost`): `npm run test`
-- [x] 1.2 Type checking passes: `npx astro check`
-- [x] 1.3 Linting passes (including `jsx-a11y`): `npm run lint`
-- [x] 1.4 Production build succeeds: `npm run build`
+- [x] 1.1 Unit tests pass (`formatUsd` + `planAddCost`): `npm run test` — 3feb3f7
+- [x] 1.2 Type checking passes: `npx astro check` — 3feb3f7
+- [x] 1.3 Linting passes (including `jsx-a11y`): `npm run lint` — 3feb3f7
+- [x] 1.4 Production build succeeds: `npm run build` — 3feb3f7
 
 #### Manual
 
-- [x] 1.5 Every Remove/Add/Shared row shows `~$X.XX`; null-price cards show `—`
-- [x] 1.6 Cost summary atop results; total equals Add `price × copies` (multi-copy add verified)
-- [x] 1.7 Partial coverage: rest sums with an `N card(s) without price data` note; all-unpriced shows `—`, not `~$0.00`
-- [x] 1.8 Approximate disclaimer visible; identical lists show no cost summary; no S-02/S-01 regressions
+- [x] 1.5 Every Remove/Add/Shared row shows `~$X.XX`; null-price cards show `—` — 3feb3f7
+- [x] 1.6 Cost summary atop results; total equals Add `price × copies` (multi-copy add verified) — 3feb3f7
+- [x] 1.7 Partial coverage: rest sums with an `N card(s) without price data` note; all-unpriced shows `—`, not `~$0.00` — 3feb3f7
+- [x] 1.8 Approximate disclaimer visible; identical lists show no cost summary; no S-02/S-01 regressions — 3feb3f7
