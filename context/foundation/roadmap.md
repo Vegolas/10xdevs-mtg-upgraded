@@ -32,7 +32,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | F-01  | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands | —             | Guardrails (accuracy), NFR (lookups) | ready    |
 | S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done     |
 | S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | done     |
-| S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | ready    |
+| S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | done     |
 | S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | proposed |
 
 ## Streams
@@ -111,7 +111,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Does the selected card-data source expose per-card prices with adequate coverage (the PRD frames prices as approximate/indicative, EU vs US differ)? — Owner: user. Block: no.
 - **Risk:** Thin enrichment over S-01 surfacing the price field from F-01's lookup, plus a summed total. Pricing is explicitly approximate per the PRD, so coverage gaps degrade gracefully rather than blocking. Parallel with S-02 — separate fields, no shared state.
-- **Status:** ready
+- **Status:** done
 
 ### S-04: On-device comparison history
 
@@ -153,3 +153,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 
 - **S-01: user can paste a base list and a target list and automatically see cards to add, cards to remove, and shared cards — each grouped by card type (lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers).** — Archived 2026-06-15 → `context/archive/2026-06-15-grouped-upgrade-plan/`. Lesson: —.
 - **S-02: user can see a card image for each card in the upgrade plan.** — Archived 2026-06-16 → `context/archive/2026-06-15-card-images-in-plan/`. Lesson: —.
+- **S-03: user can see an approximate price for each card and the total approximate upgrade cost.** — Archived 2026-06-16 → `context/archive/2026-06-16-upgrade-cost-and-prices/`. Lesson: —.
