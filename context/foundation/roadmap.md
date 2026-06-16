@@ -27,26 +27,26 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 
 ## At a glance
 
-| ID    | Change ID               | Outcome (user can …)                                          | Prerequisites | PRD refs                          | Status   |
-| ----- | ----------------------- | ------------------------------------------------------------- | ------------- | --------------------------------- | -------- |
-| F-01  | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands | —             | Guardrails (accuracy), NFR (lookups) | ready    |
-| S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done     |
-| S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | done     |
-| S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | done     |
-| S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | done     |
-| S-05  | did-you-mean-accept     | accept a "did you mean …?" suggestion in one click to fix an unresolved card name | S-01          | Guardrails (input handling), US-01 | ready    |
-| S-06  | sortable-card-rows      | sort the cards in the plan by name, type, or price           | S-01 (S-03 for price) | US-01, FR-004, FR-008             | done     |
-| S-07  | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor | S-03          | US-01, FR-006, FR-007             | ready    |
+| ID   | Change ID               | Outcome (user can …)                                                              | Prerequisites         | PRD refs                                      | Status |
+| ---- | ----------------------- | --------------------------------------------------------------------------------- | --------------------- | --------------------------------------------- | ------ |
+| F-01 | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands                | —                     | Guardrails (accuracy), NFR (lookups)          | ready  |
+| S-01 | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type                  | F-01                  | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done   |
+| S-02 | card-images-in-plan     | see a card image for each card in the upgrade plan                                | S-01                  | US-01, FR-005                                 | done   |
+| S-03 | upgrade-cost-and-prices | see per-card prices and the total upgrade cost                                    | S-01                  | US-01, FR-006, FR-007                         | done   |
+| S-04 | on-device-history       | save and revisit past comparisons from on-device storage                          | S-01                  | FR-009                                        | done   |
+| S-05 | did-you-mean-accept     | accept a "did you mean …?" suggestion in one click to fix an unresolved card name | S-01                  | Guardrails (input handling), US-01            | done   |
+| S-06 | sortable-card-rows      | sort the cards in the plan by name, type, or price                                | S-01 (S-03 for price) | US-01, FR-004, FR-008                         | done   |
+| S-07 | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor             | S-03                  | US-01, FR-006, FR-007                         | ready  |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme               | Chain                                         | Note                                                                 |
-| ------ | ------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
-| A      | Upgrade-plan core   | `F-01` → `S-01` → `S-02` / `S-03` (parallel)  | The critical path. `S-02` and `S-03` enrich the same plan in parallel once `S-01` lands; matches the `low-complexity` goal (smallest core first). |
-| B      | On-device history   | `S-04`                                        | Standalone enricher; joins Stream A at `S-01`. Lowest priority (nice-to-have). |
-| C      | Post-MVP enrichers  | `S-05` / `S-06` / `S-07` (parallel)           | Optional polish on top of the now-complete MVP. Each builds on a done slice (`S-05`→`S-01`, `S-06`→`S-01`/`S-03`, `S-07`→`S-03`) and is independent of the others, so pick in any order. Suggested order by effort: `S-05` → `S-06` → `S-07`. |
+| Stream | Theme              | Chain                                        | Note                                                                                                                                                                                                                                          |
+| ------ | ------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | Upgrade-plan core  | `F-01` → `S-01` → `S-02` / `S-03` (parallel) | The critical path. `S-02` and `S-03` enrich the same plan in parallel once `S-01` lands; matches the `low-complexity` goal (smallest core first).                                                                                             |
+| B      | On-device history  | `S-04`                                       | Standalone enricher; joins Stream A at `S-01`. Lowest priority (nice-to-have).                                                                                                                                                                |
+| C      | Post-MVP enrichers | `S-05` / `S-06` / `S-07` (parallel)          | Optional polish on top of the now-complete MVP. Each builds on a done slice (`S-05`→`S-01`, `S-06`→`S-01`/`S-03`, `S-07`→`S-03`) and is independent of the others, so pick in any order. Suggested order by effort: `S-05` → `S-06` → `S-07`. |
 
 ## Baseline
 
@@ -140,7 +140,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - ~~Should accepting a suggestion edit the source paste text in place, or apply a substitution overlay that leaves the original textarea untouched?~~ **Resolved 2026-06-16 (via `/10x-shape`): edit the source paste text in place** — rides the existing auto-rebuild and leaves history save/restore untouched; the overlay path's second source of truth isn't worth it for a thin enricher. Accept scope: per-card + "accept all". See `context/changes/did-you-mean-accept/shape-notes.md`. — Owner: user. Block: no.
 - **Risk:** Thin trust enricher over the existing unresolved-notice. The `UnresolvedCard.suggestion` field already exists (F-01), so the new work is the accept action plus re-running `generateUpgradePlan` with the substituted name without discarding the rest of the input. Improves the existential card-data-accuracy Guardrail, so sequenced first among the enrichers despite being a nice-to-have.
-- **Status:** ready
+- **Status:** done
 
 ### S-06: Sortable card rows
 
@@ -170,16 +170,16 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID               | Suggested issue title                                   | Ready for `/10x-plan` | Notes |
-| ---------- | ----------------------- | ------------------------------------------------------- | --------------------- | ----- |
-| F-01       | card-data-resolution    | Select card-data source and build name→type resolution  | yes                   | Confirm the source meets the accuracy/price-coverage Guardrail during planning. |
-| S-01       | grouped-upgrade-plan    | Paste two decks → grouped add/remove/shared by card type | no                    | Needs F-01 done first (north star). |
-| S-02       | card-images-in-plan     | Show card images in the upgrade plan                    | no                    | Needs S-01. Parallel with S-03/S-04. |
-| S-03       | upgrade-cost-and-prices | Show per-card prices and total upgrade cost             | yes                   | S-01 done; change folder open. Parallel with S-04. |
-| S-04       | on-device-history       | Save and revisit past comparisons on-device             | no                    | Needs S-01. Lowest priority (nice-to-have). |
-| S-05       | did-you-mean-accept     | One-click accept for "did you mean …?" card suggestions | yes                   | Needs S-01 (done). Shaped 2026-06-16 (in-place edit; per-card + accept-all — see change folder). Parallel with S-06/S-07. |
-| S-06       | sortable-card-rows      | Sort plan cards by name, type, or price                 | yes                   | Needs S-01 (done). Shaped 2026-06-16 (opt-in flat-list toggle; grouped default preserved; one global control; sort persisted — see change folder). Parallel with S-05/S-07. |
-| S-07       | alt-cost-vendors        | Show prices/total in EUR or from an alternative vendor  | no                    | Needs S-03 (done). Confirm EUR source vs second integration during shaping. Parallel with S-05/S-06. |
+| Roadmap ID | Change ID               | Suggested issue title                                    | Ready for `/10x-plan` | Notes                                                                                                                                                                       |
+| ---------- | ----------------------- | -------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-01       | card-data-resolution    | Select card-data source and build name→type resolution   | yes                   | Confirm the source meets the accuracy/price-coverage Guardrail during planning.                                                                                             |
+| S-01       | grouped-upgrade-plan    | Paste two decks → grouped add/remove/shared by card type | no                    | Needs F-01 done first (north star).                                                                                                                                         |
+| S-02       | card-images-in-plan     | Show card images in the upgrade plan                     | no                    | Needs S-01. Parallel with S-03/S-04.                                                                                                                                        |
+| S-03       | upgrade-cost-and-prices | Show per-card prices and total upgrade cost              | yes                   | S-01 done; change folder open. Parallel with S-04.                                                                                                                          |
+| S-04       | on-device-history       | Save and revisit past comparisons on-device              | no                    | Needs S-01. Lowest priority (nice-to-have).                                                                                                                                 |
+| S-05       | did-you-mean-accept     | One-click accept for "did you mean …?" card suggestions  | yes                   | Needs S-01 (done). Shaped 2026-06-16 (in-place edit; per-card + accept-all — see change folder). Parallel with S-06/S-07.                                                   |
+| S-06       | sortable-card-rows      | Sort plan cards by name, type, or price                  | yes                   | Needs S-01 (done). Shaped 2026-06-16 (opt-in flat-list toggle; grouped default preserved; one global control; sort persisted — see change folder). Parallel with S-05/S-07. |
+| S-07       | alt-cost-vendors        | Show prices/total in EUR or from an alternative vendor   | no                    | Needs S-03 (done). Confirm EUR source vs second integration during shaping. Parallel with S-05/S-06.                                                                        |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One row per `F-NN` / `S-NN`.
 
@@ -203,4 +203,5 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 - **S-02: user can see a card image for each card in the upgrade plan.** — Archived 2026-06-16 → `context/archive/2026-06-15-card-images-in-plan/`. Lesson: —.
 - **S-03: user can see an approximate price for each card and the total approximate upgrade cost.** — Archived 2026-06-16 → `context/archive/2026-06-16-upgrade-cost-and-prices/`. Lesson: —.
 - **S-04: user can save a comparison and revisit a past upgrade plan without re-pasting the lists.** — Archived 2026-06-16 → `context/archive/2026-06-16-on-device-history/`. Lesson: —.
+- **S-05: when a pasted card name doesn't resolve but the card-data source returns a near-match `suggestion`, the user can accept it in one click to substitute the corrected name in place and re-generate the plan — instead of only seeing the hint and retyping by hand.** — Archived 2026-06-16 → `context/archive/2026-06-16-did-you-mean-accept/`. Lesson: —.
 - **S-06: user can sort the cards within the upgrade plan by name, type, or price, rather than the fixed category-bucket-then-name order.** — Archived 2026-06-16 → `context/archive/2026-06-16-sortable-card-rows/`. Lesson: —.

@@ -3,7 +3,7 @@
 ## Overview
 
 When a pasted card name doesn't resolve but Scryfall's fuzzy lookup returns a
-near-match `suggestion`, the user can today only *read* the hint ("did you mean
+near-match `suggestion`, the user can today only _read_ the hint ("did you mean
 Sol Ring?") and retype by hand. This change adds a one-click **Accept** that
 substitutes the corrected name directly into the source paste text, plus an
 **Accept all** for fixing every suggestion at once. Because the deck-list text is
@@ -14,8 +14,8 @@ debounce does the rest.
 ## Current State Analysis
 
 - **The notice is display-only.** `UnresolvedNotice` ([src/components/deck/UnresolvedNotice.tsx:36-41](src/components/deck/UnresolvedNotice.tsx)) renders the suggestion as static text with no action. Entries with `suggestion: null` (ambiguous / malformed) correctly show nothing actionable.
-- **Text is the single source of truth.** `DeckComparer` owns `baseText` / `targetText`; a 700ms debounce effect re-runs `generateUpgradePlan` after edits settle ([DeckComparer.tsx:67-82](src/components/deck/DeckComparer.tsx)), and history save/restore persists *only the texts* ([DeckComparer.tsx:98-125](src/components/deck/DeckComparer.tsx)), rebuilding plans from them. So mutating the text rides every existing data path for free.
-- **The resolver dedups unresolved names by `resolutionKey`** ([src/lib/card-data/resolve.ts:82-92,136-145](src/lib/card-data/resolve.ts)), reporting the first-seen spelling. **Consequence:** one `UnresolvedEntry` can correspond to *several* source lines (the same typo listed twice, possibly in different case). Base and target are resolved in separate calls, so cross-deck duplicates stay distinct and correctly `deck`-tagged.
+- **Text is the single source of truth.** `DeckComparer` owns `baseText` / `targetText`; a 700ms debounce effect re-runs `generateUpgradePlan` after edits settle ([DeckComparer.tsx:67-82](src/components/deck/DeckComparer.tsx)), and history save/restore persists _only the texts_ ([DeckComparer.tsx:98-125](src/components/deck/DeckComparer.tsx)), rebuilding plans from them. So mutating the text rides every existing data path for free.
+- **The resolver dedups unresolved names by `resolutionKey`** ([src/lib/card-data/resolve.ts:82-92,136-145](src/lib/card-data/resolve.ts)), reporting the first-seen spelling. **Consequence:** one `UnresolvedEntry` can correspond to _several_ source lines (the same typo listed twice, possibly in different case). Base and target are resolved in separate calls, so cross-deck duplicates stay distinct and correctly `deck`-tagged.
 - **The parser strips the count and trims the name** ([src/lib/deck/parse.ts:83-91](src/lib/deck/parse.ts)); set-code / collector suffixes are deliberately left on the name ([parse.ts:8-12](src/lib/deck/parse.ts)). `UnresolvedEntry.name` is exactly that parsed name (it's `entries.map(e => e.name)` fed to `resolveCards`).
 - **`UnresolvedEntry`** carries `{ name, reason, suggestion, deck }` only — no line index, no raw line ([src/lib/deck/plan.ts:27-33](src/lib/deck/plan.ts)).
 - **Test convention:** vitest, colocated `*.test.ts`. Component-folder tests cover only **pure helpers** ([labels.test.ts](src/components/deck/labels.test.ts), [cardImage.test.ts](src/components/deck/cardImage.test.ts)) — there is no React Testing Library. The established pattern is: put logic in a pure function, unit-test it; verify UI wiring manually.
@@ -43,7 +43,7 @@ manual flow above behaves as described.
 
 ## What We're NOT Doing
 
-- **No fuzzy-match *generation* changes** — we consume the existing
+- **No fuzzy-match _generation_ changes** — we consume the existing
   `UnresolvedCard.suggestion` field (populated by F-01); we don't change how
   suggestions are produced.
 - **No undo/redo beyond editing the textarea** — in-place text editing already
@@ -86,7 +86,7 @@ reappears in the notice — no loop, no special handling.
 **Preserving the exact count prefix.** `parseDeckList` trims the line and splits
 count from name with `/^(\d+)\s*x?\s+(.+)$/i`, discarding the literal separator.
 To rewrite a line as `<original count prefix><suggestion>` (so `4x Sol Rng` →
-`4x Sol Ring`, not `4 Sol Ring`), the rewrite needs the *literal* prefix. Capture
+`4x Sol Ring`, not `4 Sol Ring`), the rewrite needs the _literal_ prefix. Capture
 it as a group rather than reconstructing it — e.g. `/^(\d+\s*x?\s+)(.+)$/i`, where
 group 1 is the verbatim prefix and group 2 the name; a bare name (no count) has an
 empty prefix. Keep this rule in **one place** shared with `parseDeckList` (extract
@@ -133,6 +133,7 @@ stay in sync. Use a prefix-capturing form of the counted-line regex:
 name in place, for one card or for many at once. Pure, no React.
 
 **Contract**:
+
 - `applySuggestion(text: string, targetName: string, suggestion: string): string`
   — split `text` on `/\r?\n/`; for each line, use `splitCardLine` and rewrite the
   line to `${prefix}${suggestion}` when `resolutionKey(name) === resolutionKey(targetName)`;
@@ -236,6 +237,7 @@ text; the debounce effect rebuilds the plan. No call to `runPlan` and no `setVie
 ([DeckComparer.tsx:114-125](src/components/deck/DeckComparer.tsx)).
 
 **Contract**:
+
 - Import `applySuggestion`, `acceptAllSuggestions` from `@/lib/deck`.
 - `handleAccept(entry)`: route by `entry.deck` — `setBaseText(applySuggestion(baseText, entry.name, entry.suggestion))` or the `targetText` equivalent. Wrap in `useCallback` with `[baseText, targetText]` deps, consistent with the file's other handlers.
 - `handleAcceptAll()`: `const next = acceptAllSuggestions(baseText, targetText, view.unresolved)` (guard `view.status === "ready"`), then `setBaseText(next.baseText); setTargetText(next.targetText)`. The two setState calls batch (React 19 automatic batching) into a single debounce run → one rebuild.
@@ -281,7 +283,7 @@ confirmation of the manual testing above before marking the change complete.
 
 1. Paste `1 Sol Rng` (base) + a valid target deck; confirm the hint + Accept button, click Accept, confirm the line becomes `1 Sol Ring` and the plan rebuilds.
 2. Use `4x Sol Rng`; confirm the prefix survives as `4x Sol Ring`.
-3. Put a fixable typo in *both* decks; confirm "Accept all (2)" appears and fixes both in one rebuild.
+3. Put a fixable typo in _both_ decks; confirm "Accept all (2)" appears and fixes both in one rebuild.
 4. Single typo only; confirm no "Accept all" button.
 5. Paste an ambiguous/not-found name with no suggestion; confirm no Accept button.
 6. Accept a fix, Save, then Restore from history; confirm the restored plan is the corrected one.
@@ -313,27 +315,27 @@ fully compatible.
 
 #### Automated
 
-- [ ] 1.1 Unit tests pass: `npm run test`
-- [ ] 1.2 Linting passes: `npm run lint`
-- [ ] 1.3 Build / type-check passes: `npm run build`
+- [x] 1.1 Unit tests pass: `npm run test` — 5460108
+- [x] 1.2 Linting passes: `npm run lint` — 5460108
+- [x] 1.3 Build / type-check passes: `npm run build` — 5460108
 
 #### Manual
 
-- [ ] 1.4 `applySuggestion` / `acceptAllSuggestions` importable from `@/lib/deck`
+- [x] 1.4 `applySuggestion` / `acceptAllSuggestions` importable from `@/lib/deck` — 5460108
 
 ### Phase 2: Wire accept into the UI
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Build / type-check passes: `npm run build`
-- [ ] 2.3 Existing tests still pass: `npm run test`
+- [x] 2.1 Linting passes: `npm run lint` — a11c019
+- [x] 2.2 Build / type-check passes: `npm run build` — a11c019
+- [x] 2.3 Existing tests still pass: `npm run test` — a11c019
 
 #### Manual
 
-- [ ] 2.4 Per-card Accept rewrites the line and rebuilds the plan
-- [ ] 2.5 Count prefix preserved on accept (`4x Sol Rng` → `4x Sol Ring`)
-- [ ] 2.6 "Accept all (N)" appears with 2+ suggestions and fixes all in one rebuild
-- [ ] 2.7 No "Accept all" with exactly one suggestion
-- [ ] 2.8 No-suggestion entries stay inert (no Accept button)
-- [ ] 2.9 Save → restore reproduces the corrected plan
+- [x] 2.4 Per-card Accept rewrites the line and rebuilds the plan — a11c019
+- [x] 2.5 Count prefix preserved on accept (`4x Sol Rng` → `4x Sol Ring`) — a11c019
+- [x] 2.6 "Accept all (N)" appears with 2+ suggestions and fixes all in one rebuild — a11c019
+- [x] 2.7 No "Accept all" with exactly one suggestion — a11c019
+- [x] 2.8 No-suggestion entries stay inert (no Accept button) — a11c019
+- [x] 2.9 Save → restore reproduces the corrected plan — a11c019

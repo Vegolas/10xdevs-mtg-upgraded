@@ -35,7 +35,8 @@ in the source textarea** (`baseText` / `targetText`), preserving the quantity
 prefix on that line.
 
 **Why (grounded in the current code):**
-- The textarea text is already the *single source of truth*. The plan
+
+- The textarea text is already the _single source of truth_. The plan
   auto-rebuilds 700ms after the text settles (`DeckComparer.tsx:67-82`), and
   history save/restore persists **only the texts**
   (`handleSave`/`handleRestore`), rebuilding the plan from them.
@@ -96,7 +97,7 @@ Verify against `docs/reference/contract-surfaces.md` before changing
 
 ## Non-goals for this slice
 
-- No fuzzy-match *generation* changes — consumes the existing
+- No fuzzy-match _generation_ changes — consumes the existing
   `UnresolvedCard.suggestion` field (already populated by F-01).
 - No undo/history of accepted corrections beyond what in-place text editing
   already gives (the user can edit the textarea back).

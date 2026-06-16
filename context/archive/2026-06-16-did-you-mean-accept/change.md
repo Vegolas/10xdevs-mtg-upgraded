@@ -1,9 +1,10 @@
 ---
 change_id: did-you-mean-accept
 title: "Did you mean …?" inline accept
-status: planned
+status: archived
 created: 2026-06-16
 updated: 2026-06-16
+archived_at: 2026-06-16T10:06:53Z
 ---
 
 ## Notes
