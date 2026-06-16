@@ -29,13 +29,13 @@ corrected plan.
 
 ## Key Decisions Made
 
-| Decision | Choice | Why (1 sentence) | Source |
-| --- | --- | --- | --- |
-| Accept model | Edit the paste text in place | Rides the existing debounce + save/restore with no second source of truth. | Shape |
-| Accept scope | Per-card + "accept all" | A bulk action for multi-typo pastes, per-card for precision. | Shape |
-| Write-back mechanism | Pure `applySuggestion` helper, match by `resolutionKey` | Touches no contract-surface type and fixes all deduped duplicate lines — simpler and more correct than threading a line index. | Plan |
-| "Accept all" visibility | Only when 2+ suggestions exist | A lone suggestion is already handled by its per-card button. | Plan |
-| Name-extraction rules | Reuse the parser's line-splitter | Keeps "what is a card line / where the name starts" in one place. | Plan |
+| Decision                | Choice                                                  | Why (1 sentence)                                                                                                               | Source |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| Accept model            | Edit the paste text in place                            | Rides the existing debounce + save/restore with no second source of truth.                                                     | Shape  |
+| Accept scope            | Per-card + "accept all"                                 | A bulk action for multi-typo pastes, per-card for precision.                                                                   | Shape  |
+| Write-back mechanism    | Pure `applySuggestion` helper, match by `resolutionKey` | Touches no contract-surface type and fixes all deduped duplicate lines — simpler and more correct than threading a line index. | Plan   |
+| "Accept all" visibility | Only when 2+ suggestions exist                          | A lone suggestion is already handled by its per-card button.                                                                   | Plan   |
+| Name-extraction rules   | Reuse the parser's line-splitter                        | Keeps "what is a card line / where the name starts" in one place.                                                              | Plan   |
 
 ## Scope
 
@@ -60,10 +60,10 @@ React Testing Library).
 
 ## Phases at a Glance
 
-| Phase | What it delivers | Key risk |
-| --- | --- | --- |
+| Phase                                | What it delivers                                                       | Key risk                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | 1. Substitution helpers (pure logic) | `applySuggestion` / `acceptAllSuggestions` + tests + barrel + registry | Preserving the exact count prefix; keeping the line-split rule shared with the parser |
-| 2. Wire accept into the UI | Per-card + conditional "Accept all" buttons; `DeckComparer` handlers | Accept-all firing one rebuild, not two; a11y labels on the new buttons |
+| 2. Wire accept into the UI           | Per-card + conditional "Accept all" buttons; `DeckComparer` handlers   | Accept-all firing one rebuild, not two; a11y labels on the new buttons                |
 
 **Prerequisites:** S-01 (done); the resolver's `suggestion` field (F-01, done).
 **Estimated effort:** ~1 session across 2 phases.
