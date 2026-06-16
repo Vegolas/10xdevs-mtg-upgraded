@@ -33,7 +33,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | S-01  | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type | F-01          | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done     |
 | S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | done     |
 | S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | done     |
-| S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | proposed |
+| S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | done     |
 
 ## Streams
 
@@ -123,7 +123,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Nice-to-have (FR-009) and the Secondary success criterion; sequenced last under the `low-complexity` goal. On-device storage only — the PRD accepts that clearing browser data loses history (no false durability promise). Independent of images/prices, so it can be picked up whenever capacity allows after S-01.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -154,3 +154,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 - **S-01: user can paste a base list and a target list and automatically see cards to add, cards to remove, and shared cards — each grouped by card type (lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers).** — Archived 2026-06-15 → `context/archive/2026-06-15-grouped-upgrade-plan/`. Lesson: —.
 - **S-02: user can see a card image for each card in the upgrade plan.** — Archived 2026-06-16 → `context/archive/2026-06-15-card-images-in-plan/`. Lesson: —.
 - **S-03: user can see an approximate price for each card and the total approximate upgrade cost.** — Archived 2026-06-16 → `context/archive/2026-06-16-upgrade-cost-and-prices/`. Lesson: —.
+- **S-04: user can save a comparison and revisit a past upgrade plan without re-pasting the lists.** — Archived 2026-06-16 → `context/archive/2026-06-16-on-device-history/`. Lesson: —.
