@@ -337,9 +337,9 @@ No data migration. The new `deckdelta.sort.v1` key is independent of
 
 #### Automated
 
-- [ ] 1.1 Unit tests pass: `npm test`
-- [ ] 1.2 Type check passes: `npx astro check`
-- [ ] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm test`
+- [x] 1.2 Type check passes: `npx astro check`
+- [x] 1.3 Lint passes: `npm run lint`
 
 ### Phase 2: Wire the global control into the UI
 
