@@ -9,6 +9,8 @@ import { UnresolvedNotice } from "./UnresolvedNotice";
 import { SharedCardsDisclosure } from "./SharedCardsDisclosure";
 import { HistoryDrawer } from "./HistoryDrawer";
 import { useDeckHistory } from "./useDeckHistory";
+import { SortControl } from "./SortControl";
+import { useSortMode } from "./useSortMode";
 
 /** Delay after the last keystroke before a plan auto-builds (FR-003 trigger). */
 const DEBOUNCE_MS = 700;
@@ -38,6 +40,10 @@ export default function DeckComparer() {
   const [savedFlash, setSavedFlash] = useState(false);
 
   const history = useDeckHistory();
+  // External store keeps the preference out of render/effects: grouped on SSR and
+  // first paint, the stored value adopted after mount (hydration-safe), and
+  // persisted on change. Mirrors useDeckHistory.
+  const { mode: sortMode, setMode: handleSortChange } = useSortMode();
 
   // Monotonic token: only the latest run is allowed to write the view.
   const requestToken = useRef(0);
@@ -209,18 +215,21 @@ export default function DeckComparer() {
 
         {bothFilled && view.status === "ready" ? (
           <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
-                onClick={handleSave}
-              >
-                <Save className="size-4" />
-                Save this comparison
-              </Button>
-              {savedFlash ? <span className="text-sm text-green-300">Saved ✓</span> : null}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+                  onClick={handleSave}
+                >
+                  <Save className="size-4" />
+                  Save this comparison
+                </Button>
+                {savedFlash ? <span className="text-sm text-green-300">Saved ✓</span> : null}
+              </div>
+              <SortControl value={sortMode} onChange={handleSortChange} />
             </div>
 
             {view.plan.add.length > 0 ? <CostSummary add={view.plan.add} /> : null}
@@ -233,13 +242,14 @@ export default function DeckComparer() {
               </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
-                <CardGroupColumn title="Remove" groups={view.plan.remove} />
-                <CardGroupColumn title="Add" groups={view.plan.add} />
+                <CardGroupColumn title="Remove" groups={view.plan.remove} sortMode={sortMode} />
+                <CardGroupColumn title="Add" groups={view.plan.add} sortMode={sortMode} />
               </div>
             )}
 
             <SharedCardsDisclosure
               groups={view.plan.shared}
+              sortMode={sortMode}
               open={sharedOpen}
               onToggle={() => {
                 setSharedOpen((prev) => !prev);

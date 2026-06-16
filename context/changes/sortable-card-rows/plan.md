@@ -337,27 +337,27 @@ No data migration. The new `deckdelta.sort.v1` key is independent of
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm test` — b007a2b
+- [x] 1.2 Type check passes: `npx astro check` — b007a2b
+- [x] 1.3 Lint passes: `npm run lint` — b007a2b
 
 ### Phase 2: Wire the global control into the UI
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx astro check`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Build succeeds: `npm run build`
-- [ ] 2.4 Existing tests still pass: `npm test`
+- [x] 2.1 Type check passes: `npx astro check`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Build succeeds: `npm run build`
+- [x] 2.4 Existing tests still pass: `npm test`
 
 #### Manual
 
-- [ ] 2.5 Default unchanged: grouped-by-type, name A→Z within each section
-- [ ] 2.6 Flat toggle: Remove/Add/Shared each render as one headerless list
-- [ ] 2.7 Name sort A→Z and Z→A order correctly across sections
-- [ ] 2.8 Price sort high→low / low→high; `—`-priced cards sort last both ways
-- [ ] 2.9 Cost total identical in grouped vs flat and vs pre-change
-- [ ] 2.10 Persistence: chosen flat layout/key/direction restored after reload
-- [ ] 2.11 Shared disclosure respects the active sort; collapse/expand works
-- [ ] 2.12 History save/restore unaffected; sort preference not altered by restore
-- [ ] 2.13 No hydration warning in the console on load
+- [x] 2.5 Default unchanged: grouped-by-type, name A→Z within each section
+- [x] 2.6 Flat toggle: Remove/Add/Shared each render as one headerless list
+- [x] 2.7 Name sort A→Z and Z→A order correctly across sections
+- [x] 2.8 Price sort high→low / low→high; `—`-priced cards sort last both ways
+- [x] 2.9 Cost total identical in grouped vs flat and vs pre-change
+- [x] 2.10 Persistence: chosen flat layout/key/direction restored after reload
+- [x] 2.11 Shared disclosure respects the active sort; collapse/expand works
+- [x] 2.12 History save/restore unaffected; sort preference not altered by restore
+- [x] 2.13 No hydration warning in the console on load
