@@ -327,15 +327,15 @@ fully compatible.
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Build / type-check passes: `npm run build`
-- [x] 2.3 Existing tests still pass: `npm run test`
+- [x] 2.1 Linting passes: `npm run lint` — a11c019
+- [x] 2.2 Build / type-check passes: `npm run build` — a11c019
+- [x] 2.3 Existing tests still pass: `npm run test` — a11c019
 
 #### Manual
 
-- [x] 2.4 Per-card Accept rewrites the line and rebuilds the plan
-- [x] 2.5 Count prefix preserved on accept (`4x Sol Rng` → `4x Sol Ring`)
-- [x] 2.6 "Accept all (N)" appears with 2+ suggestions and fixes all in one rebuild
-- [x] 2.7 No "Accept all" with exactly one suggestion
-- [x] 2.8 No-suggestion entries stay inert (no Accept button)
-- [x] 2.9 Save → restore reproduces the corrected plan
+- [x] 2.4 Per-card Accept rewrites the line and rebuilds the plan — a11c019
+- [x] 2.5 Count prefix preserved on accept (`4x Sol Rng` → `4x Sol Ring`) — a11c019
+- [x] 2.6 "Accept all (N)" appears with 2+ suggestions and fixes all in one rebuild — a11c019
+- [x] 2.7 No "Accept all" with exactly one suggestion — a11c019
+- [x] 2.8 No-suggestion entries stay inert (no Accept button) — a11c019
+- [x] 2.9 Save → restore reproduces the corrected plan — a11c019
