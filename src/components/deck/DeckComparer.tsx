@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RotateCw } from "lucide-react";
+import { History, RotateCw, Save } from "lucide-react";
 import { generateUpgradePlan } from "@/lib/deck";
 import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { CardGroupColumn } from "./CardGroupColumn";
 import { CostSummary } from "./CostSummary";
 import { UnresolvedNotice } from "./UnresolvedNotice";
 import { SharedCardsDisclosure } from "./SharedCardsDisclosure";
+import { HistoryDrawer } from "./HistoryDrawer";
+import { useDeckHistory } from "./useDeckHistory";
 
 /** Delay after the last keystroke before a plan auto-builds (FR-003 trigger). */
 const DEBOUNCE_MS = 700;
@@ -32,9 +34,15 @@ export default function DeckComparer() {
   const [targetText, setTargetText] = useState("");
   const [view, setView] = useState<View>({ status: "idle" });
   const [sharedOpen, setSharedOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  const history = useDeckHistory();
 
   // Monotonic token: only the latest run is allowed to write the view.
   const requestToken = useRef(0);
+  // Holds the timer that clears the transient "Saved ✓" confirmation.
+  const savedFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bothFilled = baseText.trim() !== "" && targetText.trim() !== "";
 
@@ -73,8 +81,66 @@ export default function DeckComparer() {
     };
   }, [baseText, targetText, bothFilled, runPlan]);
 
+  useEffect(() => {
+    return () => {
+      if (savedFlashTimer.current !== null) {
+        clearTimeout(savedFlashTimer.current);
+      }
+    };
+  }, []);
+
+  const closeHistory = useCallback(() => {
+    setHistoryOpen(false);
+  }, []);
+
+  // Save the current ready plan as an inputs-only history entry, with brief
+  // on-screen confirmation. The plan itself is never persisted — only the texts.
+  const handleSave = useCallback(() => {
+    if (view.status !== "ready") {
+      return;
+    }
+    history.save(baseText, targetText, view.plan);
+    setSavedFlash(true);
+    if (savedFlashTimer.current !== null) {
+      clearTimeout(savedFlashTimer.current);
+    }
+    savedFlashTimer.current = setTimeout(() => {
+      setSavedFlash(false);
+    }, 1800);
+  }, [history, baseText, targetText, view]);
+
+  // Revisit a saved comparison: refill both texts and let the debounce effect
+  // rebuild the plan. Deliberately does not call runPlan or set the view.
+  const handleRestore = useCallback(
+    (id: string) => {
+      const entry = history.items.find((item) => item.id === id);
+      if (!entry) {
+        return;
+      }
+      setBaseText(entry.baseText);
+      setTargetText(entry.targetText);
+      setHistoryOpen(false);
+    },
+    [history.items],
+  );
+
   return (
     <div>
+      <div className="mb-3 flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+          onClick={() => {
+            setHistoryOpen(true);
+          }}
+        >
+          <History className="size-4" />
+          History ({history.items.length})
+        </Button>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="base-deck" className="mb-1 block text-sm font-medium text-blue-100/80">
@@ -143,6 +209,20 @@ export default function DeckComparer() {
 
         {bothFilled && view.status === "ready" ? (
           <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+                onClick={handleSave}
+              >
+                <Save className="size-4" />
+                Save this comparison
+              </Button>
+              {savedFlash ? <span className="text-sm text-green-300">Saved ✓</span> : null}
+            </div>
+
             {view.plan.add.length > 0 ? <CostSummary add={view.plan.add} /> : null}
 
             {view.unresolved.length > 0 ? <UnresolvedNotice entries={view.unresolved} /> : null}
@@ -168,6 +248,17 @@ export default function DeckComparer() {
           </div>
         ) : null}
       </div>
+
+      {historyOpen ? (
+        <HistoryDrawer
+          open={historyOpen}
+          items={history.items}
+          onClose={closeHistory}
+          onRestore={handleRestore}
+          onDelete={history.remove}
+          onClearAll={history.clear}
+        />
+      ) : null}
     </div>
   );
 }

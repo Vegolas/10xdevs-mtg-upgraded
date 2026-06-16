@@ -253,24 +253,24 @@ No existing data. The versioned envelope (`version: 1`) plus defensive `parseHis
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Type checking / build passes: `npm run build`
+- [x] 1.1 Unit tests pass: `npm run test` — 8914780
+- [x] 1.2 Linting passes: `npm run lint` — 8914780
+- [x] 1.3 Type checking / build passes: `npm run build` — 8914780
 
 ### Phase 2: Drawer UI + Save / Restore wiring
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Type checking / build passes: `npm run build`
-- [ ] 2.3 Existing unit tests still pass: `npm run test`
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Type checking / build passes: `npm run build`
+- [x] 2.3 Existing unit tests still pass: `npm run test`
 
 #### Manual
 
-- [ ] 2.4 Save → History count increments with saved feedback
-- [ ] 2.5 Reload → entry persists with correct date/time + `+adds / −removes` label
-- [ ] 2.6 Click entry → textareas refill and plan rebuilds (single build, no stale view)
-- [ ] 2.7 Re-save identical lists → entry updates/moves to top (no duplicate)
-- [ ] 2.8 Exceed cap → list holds at 30, oldest dropped
-- [ ] 2.9 Per-entry delete + Clear all (confirm) work and persist across reload
-- [ ] 2.10 Escape / backdrop close, focus sane, no console or hydration warnings
+- [x] 2.4 Save → History count increments with saved feedback
+- [x] 2.5 Reload → entry persists with correct date/time + `+adds / −removes` label
+- [x] 2.6 Click entry → textareas refill and plan rebuilds (single build, no stale view)
+- [x] 2.7 Re-save identical lists → entry updates/moves to top (no duplicate)
+- [x] 2.8 Exceed cap → list holds at 30, oldest dropped
+- [x] 2.9 Per-entry delete + Clear all (confirm) work and persist across reload
+- [x] 2.10 Escape / backdrop close, focus sane, no console or hydration warnings
