@@ -35,7 +35,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | done     |
 | S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | done     |
 | S-05  | did-you-mean-accept     | accept a "did you mean …?" suggestion in one click to fix an unresolved card name | S-01          | Guardrails (input handling), US-01 | ready    |
-| S-06  | sortable-card-rows      | sort the cards in the plan by name, type, or price           | S-01 (S-03 for price) | US-01, FR-004, FR-008             | ready    |
+| S-06  | sortable-card-rows      | sort the cards in the plan by name, type, or price           | S-01 (S-03 for price) | US-01, FR-004, FR-008             | done     |
 | S-07  | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor | S-03          | US-01, FR-006, FR-007             | ready    |
 
 ## Streams
@@ -153,7 +153,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - ~~Does sorting reorder cards within each card-type bucket, or flatten the by-type grouping into one sorted list?~~ **Resolved 2026-06-16 (via `/10x-shape`): an opt-in flat-list toggle on top of the preserved grouped default** — the grouped-by-type view (FR-004) stays the default; a single global control flattens Remove/Add/Shared into one list sorted by name (A→Z/Z→A), price (high→low/low→high), or type. Sort is display-only (cost total untouched) and the chosen sort persists across sessions. See `context/changes/sortable-card-rows/shape-notes.md`. — Owner: user. Block: no.
 - **Risk:** UI-only enricher over S-01's render layer (`CardGroup` / `CardRow`), no data-layer change; sort-by-price just reads the prices S-03 already attaches. Low risk; the only real decision is the grouping-vs-sorting interaction above, which `/10x-shape` should settle before `/10x-plan`.
-- **Status:** ready
+- **Status:** done
 
 ### S-07: Alternative cost vendors / EUR pricing
 
@@ -203,3 +203,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 - **S-02: user can see a card image for each card in the upgrade plan.** — Archived 2026-06-16 → `context/archive/2026-06-15-card-images-in-plan/`. Lesson: —.
 - **S-03: user can see an approximate price for each card and the total approximate upgrade cost.** — Archived 2026-06-16 → `context/archive/2026-06-16-upgrade-cost-and-prices/`. Lesson: —.
 - **S-04: user can save a comparison and revisit a past upgrade plan without re-pasting the lists.** — Archived 2026-06-16 → `context/archive/2026-06-16-on-device-history/`. Lesson: —.
+- **S-06: user can sort the cards within the upgrade plan by name, type, or price, rather than the fixed category-bucket-then-name order.** — Archived 2026-06-16 → `context/archive/2026-06-16-sortable-card-rows/`. Lesson: —.
