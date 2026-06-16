@@ -1,7 +1,7 @@
 ---
 change_id: did-you-mean-accept
 title: "Did you mean …?" inline accept
-status: planned
+status: implementing
 created: 2026-06-16
 updated: 2026-06-16
 ---
