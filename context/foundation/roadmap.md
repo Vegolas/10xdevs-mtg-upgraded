@@ -34,6 +34,9 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | S-02  | card-images-in-plan     | see a card image for each card in the upgrade plan            | S-01          | US-01, FR-005                     | done     |
 | S-03  | upgrade-cost-and-prices | see per-card prices and the total upgrade cost               | S-01          | US-01, FR-006, FR-007             | done     |
 | S-04  | on-device-history       | save and revisit past comparisons from on-device storage     | S-01          | FR-009                            | done     |
+| S-05  | did-you-mean-accept     | accept a "did you mean …?" suggestion in one click to fix an unresolved card name | S-01          | Guardrails (input handling), US-01 | ready    |
+| S-06  | sortable-card-rows      | sort the cards in the plan by name, type, or price           | S-01 (S-03 for price) | US-01, FR-004, FR-008             | ready    |
+| S-07  | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor | S-03          | US-01, FR-006, FR-007             | ready    |
 
 ## Streams
 
@@ -43,6 +46,7 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 | ------ | ------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
 | A      | Upgrade-plan core   | `F-01` → `S-01` → `S-02` / `S-03` (parallel)  | The critical path. `S-02` and `S-03` enrich the same plan in parallel once `S-01` lands; matches the `low-complexity` goal (smallest core first). |
 | B      | On-device history   | `S-04`                                        | Standalone enricher; joins Stream A at `S-01`. Lowest priority (nice-to-have). |
+| C      | Post-MVP enrichers  | `S-05` / `S-06` / `S-07` (parallel)           | Optional polish on top of the now-complete MVP. Each builds on a done slice (`S-05`→`S-01`, `S-06`→`S-01`/`S-03`, `S-07`→`S-03`) and is independent of the others, so pick in any order. Suggested order by effort: `S-05` → `S-06` → `S-07`. |
 
 ## Baseline
 
@@ -125,6 +129,45 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Risk:** Nice-to-have (FR-009) and the Secondary success criterion; sequenced last under the `low-complexity` goal. On-device storage only — the PRD accepts that clearing browser data loses history (no false durability promise). Independent of images/prices, so it can be picked up whenever capacity allows after S-01.
 - **Status:** done
 
+### S-05: "Did you mean …?" inline accept
+
+- **Outcome:** when a pasted card name doesn't resolve but the card-data source returns a near-match `suggestion`, the user can accept it in one click to substitute the corrected name in place and re-generate the plan — instead of only seeing the hint and retyping by hand.
+- **Change ID:** did-you-mean-accept
+- **PRD refs:** Success Criteria §Guardrails (graceful input handling), US-01 AC (unrecognized names show a clear error, not silent omission), builds on FR-001/FR-002
+- **Prerequisites:** S-01
+- **Parallel with:** S-06, S-07
+- **Blockers:** —
+- **Unknowns:**
+  - ~~Should accepting a suggestion edit the source paste text in place, or apply a substitution overlay that leaves the original textarea untouched?~~ **Resolved 2026-06-16 (via `/10x-shape`): edit the source paste text in place** — rides the existing auto-rebuild and leaves history save/restore untouched; the overlay path's second source of truth isn't worth it for a thin enricher. Accept scope: per-card + "accept all". See `context/changes/did-you-mean-accept/shape-notes.md`. — Owner: user. Block: no.
+- **Risk:** Thin trust enricher over the existing unresolved-notice. The `UnresolvedCard.suggestion` field already exists (F-01), so the new work is the accept action plus re-running `generateUpgradePlan` with the substituted name without discarding the rest of the input. Improves the existential card-data-accuracy Guardrail, so sequenced first among the enrichers despite being a nice-to-have.
+- **Status:** ready
+
+### S-06: Sortable card rows
+
+- **Outcome:** user can sort the cards within the upgrade plan by name, type, or price, rather than the fixed category-bucket-then-name order.
+- **Change ID:** sortable-card-rows
+- **PRD refs:** US-01, FR-004 (grouped display), FR-008 (display); display enhancement beyond the MVP FRs
+- **Prerequisites:** S-01 (sort-by-price also needs S-03)
+- **Parallel with:** S-05, S-07
+- **Blockers:** —
+- **Unknowns:**
+  - ~~Does sorting reorder cards within each card-type bucket, or flatten the by-type grouping into one sorted list?~~ **Resolved 2026-06-16 (via `/10x-shape`): an opt-in flat-list toggle on top of the preserved grouped default** — the grouped-by-type view (FR-004) stays the default; a single global control flattens Remove/Add/Shared into one list sorted by name (A→Z/Z→A), price (high→low/low→high), or type. Sort is display-only (cost total untouched) and the chosen sort persists across sessions. See `context/changes/sortable-card-rows/shape-notes.md`. — Owner: user. Block: no.
+- **Risk:** UI-only enricher over S-01's render layer (`CardGroup` / `CardRow`), no data-layer change; sort-by-price just reads the prices S-03 already attaches. Low risk; the only real decision is the grouping-vs-sorting interaction above, which `/10x-shape` should settle before `/10x-plan`.
+- **Status:** ready
+
+### S-07: Alternative cost vendors / EUR pricing
+
+- **Outcome:** user can see per-card prices and the total in EUR (or from an alternative vendor such as Cardmarket), instead of / alongside the current approximate Scryfall USD.
+- **Change ID:** alt-cost-vendors
+- **PRD refs:** US-01, FR-006, FR-007 (FR-007 explicitly flags EU vs US price divergence as its rationale)
+- **Prerequisites:** S-03 (pricing, total, `CostSummary`); also F-01 (resolution exposes the price fields)
+- **Parallel with:** S-05, S-06
+- **Blockers:** —
+- **Unknowns:**
+  - Does the selected card-data source already expose EUR (filling the deliberately-unused `Card.priceEur`), or does an alternative-vendor price require a second external integration? — Owner: user. Block: no (decided during shaping; see Open Roadmap Question 2).
+- **Risk:** Largest of the three enrichers — it adds a price dimension (currency/vendor) and a display toggle threaded through `planAddCost` / `formatUsd` / `CostSummary`. `Card.priceEur` already exists on the type but is unused, so the field is reserved; EUR-from-the-existing-source is the smaller first step, while a true second vendor (Cardmarket/Allegro) is a new external integration the PRD §Non-Goals spirit keeps minimal. Sequenced last.
+- **Status:** ready
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID               | Suggested issue title                                   | Ready for `/10x-plan` | Notes |
@@ -134,12 +177,17 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-02       | card-images-in-plan     | Show card images in the upgrade plan                    | no                    | Needs S-01. Parallel with S-03/S-04. |
 | S-03       | upgrade-cost-and-prices | Show per-card prices and total upgrade cost             | yes                   | S-01 done; change folder open. Parallel with S-04. |
 | S-04       | on-device-history       | Save and revisit past comparisons on-device             | no                    | Needs S-01. Lowest priority (nice-to-have). |
+| S-05       | did-you-mean-accept     | One-click accept for "did you mean …?" card suggestions | yes                   | Needs S-01 (done). Shaped 2026-06-16 (in-place edit; per-card + accept-all — see change folder). Parallel with S-06/S-07. |
+| S-06       | sortable-card-rows      | Sort plan cards by name, type, or price                 | yes                   | Needs S-01 (done). Shaped 2026-06-16 (opt-in flat-list toggle; grouped default preserved; one global control; sort persisted — see change folder). Parallel with S-05/S-07. |
+| S-07       | alt-cost-vendors        | Show prices/total in EUR or from an alternative vendor  | no                    | Needs S-03 (done). Confirm EUR source vs second integration during shaping. Parallel with S-05/S-06. |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One row per `F-NN` / `S-NN`.
 
 ## Open Roadmap Questions
 
 1. **Which authoritative card-data source does DeckDelta use, and does it meet the accuracy + price-coverage Guardrails?** — Owner: user. Block: F-01 (quality), and informs S-02 (image availability) and S-03 (price coverage). This is the `external` top-blocker; the roadmap surfaces it here rather than letting it slip into implementation. It does not hard-gate planning F-01 (the source is chosen during F-01 planning), but a source with poor name-matching or no price data would change S-03's scope.
+
+2. **For S-07, does the card-data source expose EUR pricing directly, or is an alternative-vendor price (Cardmarket, Allegro) a separate integration?** — Owner: user. Block: scopes S-07 (`alt-cost-vendors`) only. FR-007 already frames pricing as approximate and EU/US-divergent, and `Card.priceEur` is reserved on the `Card` type but currently unused. EUR-from-the-existing-source is the low-cost path; a second vendor is a new external integration the PRD §Non-Goals spirit discourages for now. Decided during S-07 shaping; does not gate the other enrichers.
 
 ## Parked
 
