@@ -261,16 +261,16 @@ No existing data. The versioned envelope (`version: 1`) plus defensive `parseHis
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Type checking / build passes: `npm run build`
-- [x] 2.3 Existing unit tests still pass: `npm run test`
+- [x] 2.1 Linting passes: `npm run lint` — a8f5522
+- [x] 2.2 Type checking / build passes: `npm run build` — a8f5522
+- [x] 2.3 Existing unit tests still pass: `npm run test` — a8f5522
 
 #### Manual
 
-- [x] 2.4 Save → History count increments with saved feedback
-- [x] 2.5 Reload → entry persists with correct date/time + `+adds / −removes` label
-- [x] 2.6 Click entry → textareas refill and plan rebuilds (single build, no stale view)
-- [x] 2.7 Re-save identical lists → entry updates/moves to top (no duplicate)
-- [x] 2.8 Exceed cap → list holds at 30, oldest dropped
-- [x] 2.9 Per-entry delete + Clear all (confirm) work and persist across reload
-- [x] 2.10 Escape / backdrop close, focus sane, no console or hydration warnings
+- [x] 2.4 Save → History count increments with saved feedback — a8f5522
+- [x] 2.5 Reload → entry persists with correct date/time + `+adds / −removes` label — a8f5522
+- [x] 2.6 Click entry → textareas refill and plan rebuilds (single build, no stale view) — a8f5522
+- [x] 2.7 Re-save identical lists → entry updates/moves to top (no duplicate) — a8f5522
+- [x] 2.8 Exceed cap → list holds at 30, oldest dropped — a8f5522
+- [x] 2.9 Per-entry delete + Clear all (confirm) work and persist across reload — a8f5522
+- [x] 2.10 Escape / backdrop close, focus sane, no console or hydration warnings — a8f5522
