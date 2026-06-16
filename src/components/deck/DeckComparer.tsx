@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { History, RotateCw, Save } from "lucide-react";
-import { generateUpgradePlan } from "@/lib/deck";
+import { generateUpgradePlan, applySuggestion, acceptAllSuggestions } from "@/lib/deck";
 import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "./CardGroupColumn";
@@ -124,6 +124,34 @@ export default function DeckComparer() {
     [history.items],
   );
 
+  // Accept one fuzzy suggestion: rewrite the matching line(s) in the right deck's
+  // text and let the debounce effect rebuild the plan. Mirrors handleRestore's
+  // "set text, let the effect rebuild" pattern — no runPlan, no setView.
+  const handleAccept = useCallback(
+    (entry: UnresolvedEntry) => {
+      if (entry.suggestion === null) {
+        return;
+      }
+      if (entry.deck === "base") {
+        setBaseText(applySuggestion(baseText, entry.name, entry.suggestion));
+      } else {
+        setTargetText(applySuggestion(targetText, entry.name, entry.suggestion));
+      }
+    },
+    [baseText, targetText],
+  );
+
+  // Accept every suggestion at once. The two setState calls batch (React 19
+  // automatic batching) into a single debounce run → one rebuild, no flicker.
+  const handleAcceptAll = useCallback(() => {
+    if (view.status !== "ready") {
+      return;
+    }
+    const next = acceptAllSuggestions(baseText, targetText, view.unresolved);
+    setBaseText(next.baseText);
+    setTargetText(next.targetText);
+  }, [view, baseText, targetText]);
+
   return (
     <div>
       <div className="mb-3 flex justify-end">
@@ -225,7 +253,9 @@ export default function DeckComparer() {
 
             {view.plan.add.length > 0 ? <CostSummary add={view.plan.add} /> : null}
 
-            {view.unresolved.length > 0 ? <UnresolvedNotice entries={view.unresolved} /> : null}
+            {view.unresolved.length > 0 ? (
+              <UnresolvedNotice entries={view.unresolved} onAccept={handleAccept} onAcceptAll={handleAcceptAll} />
+            ) : null}
 
             {view.plan.remove.length === 0 && view.plan.add.length === 0 ? (
               <p className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-blue-100/70">

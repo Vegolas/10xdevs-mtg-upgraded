@@ -315,27 +315,27 @@ fully compatible.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Build / type-check passes: `npm run build`
+- [x] 1.1 Unit tests pass: `npm run test` — 5460108
+- [x] 1.2 Linting passes: `npm run lint` — 5460108
+- [x] 1.3 Build / type-check passes: `npm run build` — 5460108
 
 #### Manual
 
-- [x] 1.4 `applySuggestion` / `acceptAllSuggestions` importable from `@/lib/deck`
+- [x] 1.4 `applySuggestion` / `acceptAllSuggestions` importable from `@/lib/deck` — 5460108
 
 ### Phase 2: Wire accept into the UI
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Build / type-check passes: `npm run build`
-- [ ] 2.3 Existing tests still pass: `npm run test`
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Build / type-check passes: `npm run build`
+- [x] 2.3 Existing tests still pass: `npm run test`
 
 #### Manual
 
-- [ ] 2.4 Per-card Accept rewrites the line and rebuilds the plan
-- [ ] 2.5 Count prefix preserved on accept (`4x Sol Rng` → `4x Sol Ring`)
-- [ ] 2.6 "Accept all (N)" appears with 2+ suggestions and fixes all in one rebuild
-- [ ] 2.7 No "Accept all" with exactly one suggestion
-- [ ] 2.8 No-suggestion entries stay inert (no Accept button)
-- [ ] 2.9 Save → restore reproduces the corrected plan
+- [x] 2.4 Per-card Accept rewrites the line and rebuilds the plan
+- [x] 2.5 Count prefix preserved on accept (`4x Sol Rng` → `4x Sol Ring`)
+- [x] 2.6 "Accept all (N)" appears with 2+ suggestions and fixes all in one rebuild
+- [x] 2.7 No "Accept all" with exactly one suggestion
+- [x] 2.8 No-suggestion entries stay inert (no Accept button)
+- [x] 2.9 Save → restore reproduces the corrected plan
