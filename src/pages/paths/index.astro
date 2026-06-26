@@ -1,0 +1,59 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import NewPathForm from "@/components/path/NewPathForm";
+import { createClient } from "@/lib/supabase";
+import { toUpgradePath } from "@/lib/api/paths";
+import type { UpgradePath } from "@/lib/path";
+
+// Middleware guards `/paths`, so a session exists; the cookie-bound client scopes
+// the query to the owner via RLS.
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+
+let paths: UpgradePath[] = [];
+if (supabase) {
+  const { data } = await supabase.from("upgrade_paths").select("*").order("created_at", { ascending: false });
+  paths = (data ?? []).map(toUpgradePath);
+}
+---
+
+<Layout title="My Paths">
+  <div class="bg-cosmic min-h-screen w-full">
+    <main class="mx-auto max-w-3xl px-4 py-12 sm:px-8 sm:py-16">
+      <header class="mb-8">
+        <h1
+          class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl"
+        >
+          My Paths
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm text-blue-100/70 sm:text-base">
+          Build a deck upgrade as a chain of named checkpoints — each one diffed against the step before it.
+        </p>
+      </header>
+
+      <div class="mb-8">
+        <NewPathForm client:load />
+      </div>
+
+      {
+        paths.length === 0 ? (
+          <p class="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-blue-100/70">
+            No paths yet. Create one above to get started.
+          </p>
+        ) : (
+          <ul class="space-y-2">
+            {paths.map((path) => (
+              <li>
+                <a
+                  href={`/paths/${path.id}`}
+                  class="block rounded-xl border border-white/10 bg-white/5 p-4 text-white transition-colors hover:bg-white/10"
+                >
+                  <span class="font-semibold">{path.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </main>
+  </div>
+</Layout>

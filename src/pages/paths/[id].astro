@@ -1,0 +1,51 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import PathEditor from "@/components/path/PathEditor";
+import { createClient } from "@/lib/supabase";
+import { toUpgradePath, toPathStep } from "@/lib/api/paths";
+import type { PathStep, UpgradePath } from "@/lib/path";
+
+// Middleware guards `/paths`, so a session exists; the cookie-bound client scopes
+// the read to the owner via RLS — another user's path is simply not found.
+const { id } = Astro.params;
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+
+let path: UpgradePath | null = null;
+let steps: PathStep[] = [];
+
+if (supabase && id) {
+  const { data: pathRow } = await supabase.from("upgrade_paths").select("*").eq("id", id).maybeSingle();
+  if (pathRow) {
+    path = toUpgradePath(pathRow);
+    const { data: stepRows } = await supabase
+      .from("path_steps")
+      .select("*")
+      .eq("path_id", id)
+      .order("position", { ascending: true });
+    steps = (stepRows ?? []).map(toPathStep);
+  }
+}
+---
+
+<Layout title={path ? path.title : "Path not found"}>
+  <div class="bg-cosmic min-h-screen w-full">
+    <main class="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
+      {
+        path ? (
+          <PathEditor path={path} initialSteps={steps} client:load />
+        ) : (
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-white">
+            <h1 class="mb-2 text-2xl font-bold">Path not found</h1>
+            <p class="text-sm text-blue-100/70">
+              This path doesn&apos;t exist or isn&apos;t yours.{" "}
+              <a href="/paths" class="text-purple-300 hover:underline">
+                Back to My Paths
+              </a>
+              .
+            </p>
+          </div>
+        )
+      }
+    </main>
+  </div>
+</Layout>

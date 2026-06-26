@@ -338,30 +338,30 @@ Connect auth to the product surface (header + redirect) and remove the browser o
 ### Phase 3: Server data API
 
 #### Automated
-- [x] 3.1 Type check passes: `npx astro check`
-- [x] 3.2 Lint passes: `npm run lint`
-- [x] 3.3 Snapshot-validation unit test passes (malformed body rejected): `npm test`
+- [x] 3.1 Type check passes: `npx astro check` — 0f4ae5b
+- [x] 3.2 Lint passes: `npm run lint` — 0f4ae5b
+- [x] 3.3 Snapshot-validation unit test passes (malformed body rejected): `npm test` — 0f4ae5b
 
 #### Manual
-- [x] 3.4 Create path + append two steps + fetch → ordered steps with snapshots
-- [x] 3.5 Malformed snapshot body → 400
-- [x] 3.6 Unauthenticated `/api/paths/*` → 401
-- [x] 3.7 Second account cannot GET/PATCH/DELETE the first's path (RLS)
-- [x] 3.8 Delete-last removes only the last step; positions stay contiguous
+- [x] 3.4 Create path + append two steps + fetch → ordered steps with snapshots — 0f4ae5b
+- [x] 3.5 Malformed snapshot body → 400 — 0f4ae5b
+- [x] 3.6 Unauthenticated `/api/paths/*` → 401 — 0f4ae5b
+- [x] 3.7 Second account cannot GET/PATCH/DELETE the first's path (RLS) — 0f4ae5b
+- [x] 3.8 Delete-last removes only the last step; positions stay contiguous — 0f4ae5b
 
 ### Phase 4: Path builder UI
 
 #### Automated
-- [ ] 4.1 Type check passes: `npx astro check`
-- [ ] 4.2 Lint passes: `npm run lint`
-- [ ] 4.3 Build succeeds: `npm run build`
+- [x] 4.1 Type check passes: `npx astro check`
+- [x] 4.2 Lint passes: `npm run lint`
+- [x] 4.3 Build succeeds: `npm run build`
 
 #### Manual
-- [ ] 4.4 Create path; add base + "$50 upgrade" + "bracket 3"; per-step plans + per-step cost + cumulative cost correct
-- [ ] 4.5 Reopen in a fresh session → all steps render from snapshot, no re-paste
-- [ ] 4.6 Step with an unrecognized card → resolved subset saved + unresolved notice
-- [ ] 4.7 Delete-last / rename / delete path work
-- [ ] 4.8 Verified under `wrangler dev`
+- [x] 4.4 Create path; add base + "$50 upgrade" + "bracket 3"; per-step plans + per-step cost + cumulative cost correct
+- [x] 4.5 Reopen in a fresh session → all steps render from snapshot, no re-paste
+- [x] 4.6 Step with an unrecognized card → resolved subset saved + unresolved notice
+- [x] 4.7 Delete-last / rename / delete path work
+- [x] 4.8 Verified under `wrangler dev`
 
 ### Phase 5: Auth-to-product wiring & retire on-device history
 
