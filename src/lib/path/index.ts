@@ -7,3 +7,5 @@ export type { StepSnapshot, UnresolvedLite, PathStep, UpgradePath } from "./type
 export { serializeSnapshot, parseSnapshot } from "./snapshot";
 export { stepPlan, cumulativePathCost, isUpgradePlan } from "./chain";
 export type { BaseStepPlan } from "./chain";
+export { parseTitleInput, parseStepInput } from "./request";
+export type { StepInput } from "./request";

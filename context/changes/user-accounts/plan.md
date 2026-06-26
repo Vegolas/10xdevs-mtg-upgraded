@@ -327,27 +327,27 @@ Connect auth to the product surface (header + redirect) and remove the browser o
 ### Phase 2: Engine-reuse helpers (pure logic)
 
 #### Automated
-- [x] 2.1 New unit tests pass (`resolveDeck`, `parseSnapshot`, `stepPlan`, `cumulativePathCost`): `npm test`
-- [x] 2.2 Existing deck tests still pass unchanged: `npm test`
-- [x] 2.3 Type check passes: `npx astro check`
-- [x] 2.4 Lint passes: `npm run lint`
+- [x] 2.1 New unit tests pass (`resolveDeck`, `parseSnapshot`, `stepPlan`, `cumulativePathCost`): `npm test` — 7c5a891
+- [x] 2.2 Existing deck tests still pass unchanged: `npm test` — 7c5a891
+- [x] 2.3 Type check passes: `npx astro check` — 7c5a891
+- [x] 2.4 Lint passes: `npm run lint` — 7c5a891
 
 #### Manual
-- [x] 2.5 3-snapshot chain matches pairwise `/` comparer output
+- [x] 2.5 3-snapshot chain matches pairwise `/` comparer output — 7c5a891
 
 ### Phase 3: Server data API
 
 #### Automated
-- [ ] 3.1 Type check passes: `npx astro check`
-- [ ] 3.2 Lint passes: `npm run lint`
-- [ ] 3.3 Snapshot-validation unit test passes (malformed body rejected): `npm test`
+- [x] 3.1 Type check passes: `npx astro check`
+- [x] 3.2 Lint passes: `npm run lint`
+- [x] 3.3 Snapshot-validation unit test passes (malformed body rejected): `npm test`
 
 #### Manual
-- [ ] 3.4 Create path + append two steps + fetch → ordered steps with snapshots
-- [ ] 3.5 Malformed snapshot body → 400
-- [ ] 3.6 Unauthenticated `/api/paths/*` → 401
-- [ ] 3.7 Second account cannot GET/PATCH/DELETE the first's path (RLS)
-- [ ] 3.8 Delete-last removes only the last step; positions stay contiguous
+- [x] 3.4 Create path + append two steps + fetch → ordered steps with snapshots
+- [x] 3.5 Malformed snapshot body → 400
+- [x] 3.6 Unauthenticated `/api/paths/*` → 401
+- [x] 3.7 Second account cannot GET/PATCH/DELETE the first's path (RLS)
+- [x] 3.8 Delete-last removes only the last step; positions stay contiguous
 
 ### Phase 4: Path builder UI
 
