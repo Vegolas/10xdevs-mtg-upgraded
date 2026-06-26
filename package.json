@@ -12,7 +12,10 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:new": "supabase migration new"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
