@@ -352,26 +352,26 @@ Connect auth to the product surface (header + redirect) and remove the browser o
 ### Phase 4: Path builder UI
 
 #### Automated
-- [x] 4.1 Type check passes: `npx astro check`
-- [x] 4.2 Lint passes: `npm run lint`
-- [x] 4.3 Build succeeds: `npm run build`
+- [x] 4.1 Type check passes: `npx astro check` — 8925ecc
+- [x] 4.2 Lint passes: `npm run lint` — 8925ecc
+- [x] 4.3 Build succeeds: `npm run build` — 8925ecc
 
 #### Manual
-- [x] 4.4 Create path; add base + "$50 upgrade" + "bracket 3"; per-step plans + per-step cost + cumulative cost correct
-- [x] 4.5 Reopen in a fresh session → all steps render from snapshot, no re-paste
-- [x] 4.6 Step with an unrecognized card → resolved subset saved + unresolved notice
-- [x] 4.7 Delete-last / rename / delete path work
-- [x] 4.8 Verified under `wrangler dev`
+- [x] 4.4 Create path; add base + "$50 upgrade" + "bracket 3"; per-step plans + per-step cost + cumulative cost correct — 8925ecc
+- [x] 4.5 Reopen in a fresh session → all steps render from snapshot, no re-paste — 8925ecc
+- [x] 4.6 Step with an unrecognized card → resolved subset saved + unresolved notice — 8925ecc
+- [x] 4.7 Delete-last / rename / delete path work — 8925ecc
+- [x] 4.8 Verified under `wrangler dev` — 8925ecc
 
 ### Phase 5: Auth-to-product wiring & retire on-device history
 
 #### Automated
-- [ ] 5.1 Type check passes (no dangling history imports): `npx astro check`
-- [ ] 5.2 Lint passes: `npm run lint`
-- [ ] 5.3 Test suite passes with history tests removed: `npm test`
-- [ ] 5.4 Build succeeds: `npm run build`
+- [x] 5.1 Type check passes (no dangling history imports): `npx astro check`
+- [x] 5.2 Lint passes: `npm run lint`
+- [x] 5.3 Test suite passes with history tests removed: `npm test`
+- [x] 5.4 Build succeeds: `npm run build`
 
 #### Manual
-- [ ] 5.5 Logged out: `/` builds a plan; no Save/History controls
-- [ ] 5.6 Header state correct signed in/out; "My Paths" reaches `/paths`; sign-out works; sign-in lands on `/paths`
-- [ ] 5.7 No console errors referencing removed history modules
+- [x] 5.5 Logged out: `/` builds a plan; no Save/History controls
+- [x] 5.6 Header state correct signed in/out; "My Paths" reaches `/paths`; sign-out works; sign-in lands on `/paths`
+- [x] 5.7 No console errors referencing removed history modules

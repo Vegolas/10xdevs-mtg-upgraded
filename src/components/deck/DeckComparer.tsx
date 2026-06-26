@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { History, RotateCw, Save } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import { generateUpgradePlan, applySuggestion, acceptAllSuggestions } from "@/lib/deck";
 import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,6 @@ import { CardGroupColumn } from "./CardGroupColumn";
 import { CostSummary } from "./CostSummary";
 import { UnresolvedNotice } from "./UnresolvedNotice";
 import { SharedCardsDisclosure } from "./SharedCardsDisclosure";
-import { HistoryDrawer } from "./HistoryDrawer";
-import { useDeckHistory } from "./useDeckHistory";
 import { SortControl } from "./SortControl";
 import { useSortMode } from "./useSortMode";
 
@@ -26,29 +24,25 @@ const textareaClasses =
   "h-48 w-full resize-y rounded-lg border border-white/20 bg-white/10 p-3 font-mono text-sm text-white placeholder-white/40 transition-colors focus:border-purple-400 focus:ring-2 focus:ring-purple-400 focus:outline-none";
 
 /**
- * DeckDelta's interactive surface: two deck-list text areas that auto-build the
- * grouped upgrade plan ~700ms after edits settle. Runs are guarded by a request
- * token so a slow earlier resolution can never clobber a newer plan, and the
- * resolver's transient failure surfaces as a retryable error banner.
+ * DeckDelta's anonymous, stateless comparer: two deck-list text areas that
+ * auto-build the grouped upgrade plan ~700ms after edits settle. Runs are guarded
+ * by a request token so a slow earlier resolution can never clobber a newer plan,
+ * and the resolver's transient failure surfaces as a retryable error banner.
+ * Account-backed persistence lives in the path builder (`/paths`); this surface
+ * keeps nothing.
  */
 export default function DeckComparer() {
   const [baseText, setBaseText] = useState("");
   const [targetText, setTargetText] = useState("");
   const [view, setView] = useState<View>({ status: "idle" });
   const [sharedOpen, setSharedOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [savedFlash, setSavedFlash] = useState(false);
 
-  const history = useDeckHistory();
   // External store keeps the preference out of render/effects: grouped on SSR and
-  // first paint, the stored value adopted after mount (hydration-safe), and
-  // persisted on change. Mirrors useDeckHistory.
+  // first paint, the stored value adopted after mount (hydration-safe).
   const { mode: sortMode, setMode: handleSortChange } = useSortMode();
 
   // Monotonic token: only the latest run is allowed to write the view.
   const requestToken = useRef(0);
-  // Holds the timer that clears the transient "Saved ✓" confirmation.
-  const savedFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bothFilled = baseText.trim() !== "" && targetText.trim() !== "";
 
@@ -87,52 +81,9 @@ export default function DeckComparer() {
     };
   }, [baseText, targetText, bothFilled, runPlan]);
 
-  useEffect(() => {
-    return () => {
-      if (savedFlashTimer.current !== null) {
-        clearTimeout(savedFlashTimer.current);
-      }
-    };
-  }, []);
-
-  const closeHistory = useCallback(() => {
-    setHistoryOpen(false);
-  }, []);
-
-  // Save the current ready plan as an inputs-only history entry, with brief
-  // on-screen confirmation. The plan itself is never persisted — only the texts.
-  const handleSave = useCallback(() => {
-    if (view.status !== "ready") {
-      return;
-    }
-    history.save(baseText, targetText, view.plan);
-    setSavedFlash(true);
-    if (savedFlashTimer.current !== null) {
-      clearTimeout(savedFlashTimer.current);
-    }
-    savedFlashTimer.current = setTimeout(() => {
-      setSavedFlash(false);
-    }, 1800);
-  }, [history, baseText, targetText, view]);
-
-  // Revisit a saved comparison: refill both texts and let the debounce effect
-  // rebuild the plan. Deliberately does not call runPlan or set the view.
-  const handleRestore = useCallback(
-    (id: string) => {
-      const entry = history.items.find((item) => item.id === id);
-      if (!entry) {
-        return;
-      }
-      setBaseText(entry.baseText);
-      setTargetText(entry.targetText);
-      setHistoryOpen(false);
-    },
-    [history.items],
-  );
-
   // Accept one fuzzy suggestion: rewrite the matching line(s) in the right deck's
-  // text and let the debounce effect rebuild the plan. Mirrors handleRestore's
-  // "set text, let the effect rebuild" pattern — no runPlan, no setView.
+  // text and let the debounce effect rebuild the plan. Mirrors "set text, let the
+  // effect rebuild" — no runPlan, no setView.
   const handleAccept = useCallback(
     (entry: UnresolvedEntry) => {
       if (entry.suggestion === null) {
@@ -160,21 +111,6 @@ export default function DeckComparer() {
 
   return (
     <div>
-      <div className="mb-3 flex justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
-          onClick={() => {
-            setHistoryOpen(true);
-          }}
-        >
-          <History className="size-4" />
-          History ({history.items.length})
-        </Button>
-      </div>
-
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="base-deck" className="mb-1 block text-sm font-medium text-blue-100/80">
@@ -243,20 +179,7 @@ export default function DeckComparer() {
 
         {bothFilled && view.status === "ready" ? (
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
-                  onClick={handleSave}
-                >
-                  <Save className="size-4" />
-                  Save this comparison
-                </Button>
-                {savedFlash ? <span className="text-sm text-green-300">Saved ✓</span> : null}
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-3">
               <SortControl value={sortMode} onChange={handleSortChange} />
             </div>
 
@@ -288,17 +211,6 @@ export default function DeckComparer() {
           </div>
         ) : null}
       </div>
-
-      {historyOpen ? (
-        <HistoryDrawer
-          open={historyOpen}
-          items={history.items}
-          onClose={closeHistory}
-          onRestore={handleRestore}
-          onDelete={history.remove}
-          onClearAll={history.clear}
-        />
-      ) : null}
     </div>
   );
 }
