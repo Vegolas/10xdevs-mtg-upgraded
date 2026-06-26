@@ -366,12 +366,12 @@ Connect auth to the product surface (header + redirect) and remove the browser o
 ### Phase 5: Auth-to-product wiring & retire on-device history
 
 #### Automated
-- [x] 5.1 Type check passes (no dangling history imports): `npx astro check`
-- [x] 5.2 Lint passes: `npm run lint`
-- [x] 5.3 Test suite passes with history tests removed: `npm test`
-- [x] 5.4 Build succeeds: `npm run build`
+- [x] 5.1 Type check passes (no dangling history imports): `npx astro check` — 7a819c2
+- [x] 5.2 Lint passes: `npm run lint` — 7a819c2
+- [x] 5.3 Test suite passes with history tests removed: `npm test` — 7a819c2
+- [x] 5.4 Build succeeds: `npm run build` — 7a819c2
 
 #### Manual
-- [x] 5.5 Logged out: `/` builds a plan; no Save/History controls
-- [x] 5.6 Header state correct signed in/out; "My Paths" reaches `/paths`; sign-out works; sign-in lands on `/paths`
-- [x] 5.7 No console errors referencing removed history modules
+- [x] 5.5 Logged out: `/` builds a plan; no Save/History controls — 7a819c2
+- [x] 5.6 Header state correct signed in/out; "My Paths" reaches `/paths`; sign-out works; sign-in lands on `/paths` — 7a819c2
+- [x] 5.7 No console errors referencing removed history modules — 7a819c2
