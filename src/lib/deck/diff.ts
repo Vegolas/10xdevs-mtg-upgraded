@@ -65,9 +65,11 @@ function byName(deck: DeckCard[]): Map<string, DeckCard> {
 /**
  * Group a flat {@link DeckCard} list into {@link CardGroup}s ordered by
  * {@link CATEGORY_ORDER}, omitting categories with no cards. Within each group,
- * cards are sorted by name.
+ * cards are sorted by name. Exported so a base (position-0) path step can render
+ * its deck as a grouped list without computing a diff (see `@/lib/path`'s
+ * `stepPlan`).
  */
-function groupByCategory(cards: DeckCard[]): CardGroup[] {
+export function groupByCategory(cards: DeckCard[]): CardGroup[] {
   const buckets = new Map<CardCategory, DeckCard[]>();
   for (const entry of cards) {
     const bucket = buckets.get(entry.card.category);

@@ -315,25 +315,25 @@ Connect auth to the product surface (header + redirect) and remove the browser o
 ### Phase 1: Database foundation & RLS
 
 #### Automated
-- [x] 1.1 Migration applies cleanly locally: `npm run db:reset`
-- [x] 1.2 RLS isolation assertion passes (user B sees 0 of user A's rows)
-- [x] 1.3 Type check passes: `npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly locally: `npm run db:reset` — ac7f846
+- [x] 1.2 RLS isolation assertion passes (user B sees 0 of user A's rows) — ac7f846
+- [x] 1.3 Type check passes: `npx astro check` — ac7f846
+- [x] 1.4 Lint passes: `npm run lint` — ac7f846
 
 #### Manual
-- [x] 1.5 Both tables exist in Studio with RLS enabled and policies attached
-- [x] 1.6 Insert as one user, query as another → nothing returned
+- [x] 1.5 Both tables exist in Studio with RLS enabled and policies attached — ac7f846
+- [x] 1.6 Insert as one user, query as another → nothing returned — ac7f846
 
 ### Phase 2: Engine-reuse helpers (pure logic)
 
 #### Automated
-- [ ] 2.1 New unit tests pass (`resolveDeck`, `parseSnapshot`, `stepPlan`, `cumulativePathCost`): `npm test`
-- [ ] 2.2 Existing deck tests still pass unchanged: `npm test`
-- [ ] 2.3 Type check passes: `npx astro check`
-- [ ] 2.4 Lint passes: `npm run lint`
+- [x] 2.1 New unit tests pass (`resolveDeck`, `parseSnapshot`, `stepPlan`, `cumulativePathCost`): `npm test`
+- [x] 2.2 Existing deck tests still pass unchanged: `npm test`
+- [x] 2.3 Type check passes: `npx astro check`
+- [x] 2.4 Lint passes: `npm run lint`
 
 #### Manual
-- [ ] 2.5 3-snapshot chain matches pairwise `/` comparer output
+- [x] 2.5 3-snapshot chain matches pairwise `/` comparer output
 
 ### Phase 3: Server data API
 

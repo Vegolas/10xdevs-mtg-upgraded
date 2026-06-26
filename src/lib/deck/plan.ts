@@ -14,11 +14,10 @@
  */
 
 import { resolveCards } from "@/lib/card-data";
-import type { UnresolvedReason } from "@/lib/card-data";
+import type { UnresolvedCard, UnresolvedReason } from "@/lib/card-data";
 import { parseDeckList } from "./parse";
-import type { ParsedDeck } from "./parse";
 import { diffDecks } from "./diff";
-import type { UpgradePlan } from "./diff";
+import type { DeckCard, UpgradePlan } from "./diff";
 import { attachQuantities } from "./quantity";
 
 /** Which side of the comparison an input name came from. */
@@ -32,6 +31,12 @@ export interface UnresolvedEntry {
   deck: DeckSide;
 }
 
+/** A single deck's resolution: its quantity-tagged cards plus every input that did not become a card. */
+export interface ResolvedDeck {
+  deck: DeckCard[];
+  unresolved: UnresolvedCard[];
+}
+
 /**
  * The outcome of building an upgrade plan:
  *   - `ok`    — a renderable plan plus any unresolved inputs to flag.
@@ -43,9 +48,29 @@ export type PlanOutcome =
   | { status: "empty" }
   | { status: "error"; message: string };
 
-/** Collect a parsed deck's malformed lines as deck-tagged unresolved entries. */
-function malformedEntries(parsed: ParsedDeck, deck: DeckSide): UnresolvedEntry[] {
-  return parsed.malformed.map((name) => ({ name, reason: "malformed" as const, suggestion: null, deck }));
+/**
+ * Resolve one raw deck-list text into quantity-tagged cards plus its unresolved inputs.
+ *
+ * Parses the text, resolves the entry names against the card-data source, and
+ * attaches the parsed quantities. The returned `unresolved` merges the parser's
+ * malformed lines (first) with the resolver's misses (second), each as an
+ * untagged {@link UnresolvedCard}; callers that compare two decks tag these with
+ * a {@link DeckSide}. The resolver throws only on a transient transport failure,
+ * which propagates to the caller — unknown names never throw.
+ */
+export async function resolveDeck(text: string): Promise<ResolvedDeck> {
+  const parsed = parseDeckList(text);
+  const names = parsed.entries.map((entry) => entry.name);
+
+  const resolution = await resolveCards(names);
+  const deck = attachQuantities(resolution.resolved, parsed.entries);
+
+  const unresolved: UnresolvedCard[] = [
+    ...parsed.malformed.map((name) => ({ name, reason: "malformed" as const, suggestion: null })),
+    ...resolution.unresolved,
+  ];
+
+  return { deck, unresolved };
 }
 
 /**
@@ -55,7 +80,8 @@ function malformedEntries(parsed: ParsedDeck, deck: DeckSide): UnresolvedEntry[]
  * so no Scryfall request fires until both sides have real content. Otherwise it
  * resolves the two decks *sequentially* (warms the resolver's in-session cache
  * and stays Scryfall-polite), diffs the resolved cards, and merges each deck's
- * malformed + unresolved inputs. A transient resolver throw becomes `error`.
+ * malformed + unresolved inputs, tagging each with its {@link DeckSide}. A
+ * transient resolver throw becomes `error`.
  */
 export async function generateUpgradePlan(baseText: string, targetText: string): Promise<PlanOutcome> {
   const baseParsed = parseDeckList(baseText);
@@ -65,22 +91,15 @@ export async function generateUpgradePlan(baseText: string, targetText: string):
     return { status: "empty" };
   }
 
-  const baseNames = baseParsed.entries.map((entry) => entry.name);
-  const targetNames = targetParsed.entries.map((entry) => entry.name);
-
   try {
-    const baseResolution = await resolveCards(baseNames);
-    const targetResolution = await resolveCards(targetNames);
+    const base = await resolveDeck(baseText);
+    const target = await resolveDeck(targetText);
 
-    const baseDeck = attachQuantities(baseResolution.resolved, baseParsed.entries);
-    const targetDeck = attachQuantities(targetResolution.resolved, targetParsed.entries);
-    const plan = diffDecks(baseDeck, targetDeck);
+    const plan = diffDecks(base.deck, target.deck);
 
     const unresolved: UnresolvedEntry[] = [
-      ...malformedEntries(baseParsed, "base"),
-      ...baseResolution.unresolved.map((card) => ({ ...card, deck: "base" as const })),
-      ...malformedEntries(targetParsed, "target"),
-      ...targetResolution.unresolved.map((card) => ({ ...card, deck: "target" as const })),
+      ...base.unresolved.map((card) => ({ ...card, deck: "base" as const })),
+      ...target.unresolved.map((card) => ({ ...card, deck: "target" as const })),
     ];
 
     return { status: "ok", plan, unresolved };
