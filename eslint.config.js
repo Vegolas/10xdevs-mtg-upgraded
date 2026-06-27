@@ -71,7 +71,9 @@ const astroConfig = tseslint.config({
 export default tseslint.config(
   // Never lint nested git worktrees / IDE artifacts under .claude (e.g. leftover
   // worktrees), which carry their own stale checkouts and produce spurious errors.
-  { ignores: [".claude/**"] },
+  // Design-handoff bundles dropped into a change folder (exported HTML/JS mockups)
+  // are reference artifacts, not source — never lint them either.
+  { ignores: [".claude/**", "context/**/handoff/**"] },
   includeIgnoreFile(gitignorePath),
   baseConfig,
   reactConfig,

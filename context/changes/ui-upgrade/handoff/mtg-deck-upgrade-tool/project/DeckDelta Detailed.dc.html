@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#d7cdb6; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .ann { font-family:'Caveat',cursive; }
+  .serif { font-family:'Spectral', Georgia, serif; }
+  .frame { background:#f6efdd; border:1px solid #d8caa9; border-radius:4px; box-shadow:0 3px 16px rgba(60,42,15,.16); position:relative; overflow:hidden; }
+  .corner { position:absolute; width:8px; height:8px; background:#b4763a; transform:rotate(45deg); z-index:2; }
+  .stripe { background:repeating-linear-gradient(45deg,#e3d8bd,#e3d8bd 5px,#efe6cf 5px,#efe6cf 10px); }
+  .wb { box-sizing:border-box; }
+  .ico { font-family:'Spectral',serif; }
+</style>
+</helmet>
+
+<!-- TITLE -->
+<div style="position:absolute; left:80px; top:30px; width:1000px">
+  <div class="ann" style="font-size:44px; font-weight:700; color:#372c16; line-height:1">DeckDelta — detailed mockups</div>
+  <div class="ann" style="font-size:22px; color:#766a4d; margin-top:0">aged-paper direction · merged main page · split sign-in · approved screens refined</div>
+</div>
+<div style="position:absolute; left:1180px; top:26px; width:300px; background:#fbef9a; padding:13px 16px; box-shadow:0 2px 8px rgba(60,45,20,.2); transform:rotate(-1deg)">
+  <div class="ann" style="font-size:19px; font-weight:700; color:#5b4a1e; margin-bottom:5px">what changed from v1</div>
+  <div style="font-size:12px; color:#5b4a1e; line-height:1.65">Main page = A + B merged. Save / History / Share moved up top. Base & Target collapse once the delta is calculated. Unmatched expands by default. <b>Columns ⇄ Merged</b> is now a view toggle.</div>
+</div>
+
+<!-- ============================ SECTION 1: MAIN PAGE ============================ -->
+<div class="ann" style="position:absolute; left:80px; top:150px; font-size:32px; font-weight:700; color:#372c16">1 · Main comparison page <span style="font-size:18px;color:#9a8c6a">— three states</span></div>
+
+<!-- ---------- STATE A: SETUP (before calculate) ---------- -->
+<div style="position:absolute; left:80px; top:214px; width:820px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">A · Setup — inputs open, ready to calculate</div>
+  <div class="frame wb" style="width:820px; min-height:760px; display:flex">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <!-- SIDEBAR -->
+    <div class="wb" style="width:182px;flex:none;border-right:1px solid #ddd0b2;background:#efe5cd;padding:18px 15px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:20px;height:20px;background:#b4763a;transform:rotate(45deg);box-shadow:0 0 0 3px #efe5cd,0 0 0 4px #d8b07e"></div><span class="serif" style="font-size:21px;font-weight:700;color:#372c16;letter-spacing:.3px">DeckDelta</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#5d5236">
+        <div style="padding:9px 11px;background:#e4d6b6;border-left:3px solid #b4763a;border-radius:3px;color:#372c16;font-weight:600">✦ New comparison</div>
+        <div style="padding:9px 11px">▤ Saved decks</div>
+        <div style="padding:9px 11px">⤴ Shared with me</div>
+        <div style="padding:9px 11px">↺ History</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="border-top:1px solid #ddd0b2;padding-top:13px;display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#cdbf9a;border:1px solid #bbac84"></div><div><div style="font-size:12px;font-weight:600;color:#372c16">Planeswalker</div><div style="font-size:10px;color:#9a8c6a">account ▾</div></div></div>
+    </div>
+    <!-- CONTENT -->
+    <div class="wb" style="flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+      <!-- top bar: title + actions -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="serif" style="font-size:25px;font-weight:600;color:#2e2618;line-height:1">Untitled comparison</div><div style="font-size:12px;color:#8a7c5a;margin-top:2px">Paste current + target decks to see your delta.</div></div>
+        <div style="display:flex;gap:8px">
+          <div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#5d5236">↺ History</div>
+          <div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#5d5236">⤓ Save</div>
+          <div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#b9aa86;background:#efe7d4">⤴ Share</div>
+        </div>
+      </div>
+      <div style="height:1px;background:linear-gradient(90deg,transparent,#d8caa9 12%,#d8caa9 88%,transparent)"></div>
+      <!-- inputs -->
+      <div style="display:flex;gap:16px">
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#6a5d3c;margin-bottom:6px">BASE DECK — WHAT YOU HAVE</div><div class="wb" style="border:1.5px dashed #bcae8c;border-radius:5px;background:#fcf7e9;height:230px;padding:11px;font-family:ui-monospace,monospace;font-size:11px;color:#a99a76;line-height:1.8">1 Sol Ring<br>1 Arcane Signet<br>1 Talisman of Indulgence<br>1 Solemn Simulacrum<br>1 Séance Board<br>1 Star Athlete<br><span style="color:#c4b793">…paste your decklist…</span></div></div>
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#6a5d3c;margin-bottom:6px">TARGET DECK — WHAT YOU WANT</div><div class="wb" style="border:1.5px dashed #bcae8c;border-radius:5px;background:#fcf7e9;height:230px;padding:11px;font-family:ui-monospace,monospace;font-size:11px;color:#a99a76;line-height:1.8">1 Sheoldred, the Apocalypse<br>1 Bloodletter of Aclazotz<br>1 Deadly Rollick<br>1 Bloodchief Ascension<br>1 Necromancy<br>1 Luxury Suite<br><span style="color:#c4b793">…paste your decklist…</span></div></div>
+      </div>
+      <!-- calculate CTA -->
+      <div style="display:flex;justify-content:center;margin-top:4px">
+        <div class="serif" style="border:1.5px solid #8a571f;background:linear-gradient(#efce9f,#e6bd86);border-radius:6px;padding:12px 30px;font-size:16px;font-weight:600;color:#5a3812;box-shadow:0 2px 0 #c79a5d">Calculate the delta  →</div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#a99a76">Prices via Scryfall · stored locally until you save</div>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- STATE B: RESULT, COLUMNS VIEW (the hero) ---------- -->
+<div style="position:absolute; left:960px; top:214px; width:820px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">B · Result — inputs collapsed · Columns view <span style="font-size:14px;color:#9a8c6a">(default)</span></div>
+  <div class="frame wb" style="width:820px; min-height:920px; display:flex">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <div class="wb" style="width:182px;flex:none;border-right:1px solid #ddd0b2;background:#efe5cd;padding:18px 15px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:20px;height:20px;background:#b4763a;transform:rotate(45deg);box-shadow:0 0 0 3px #efe5cd,0 0 0 4px #d8b07e"></div><span class="serif" style="font-size:21px;font-weight:700;color:#372c16">DeckDelta</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#5d5236">
+        <div style="padding:9px 11px;background:#e4d6b6;border-left:3px solid #b4763a;border-radius:3px;color:#372c16;font-weight:600">✦ New comparison</div>
+        <div style="padding:9px 11px">▤ Saved decks</div>
+        <div style="padding:9px 11px">⤴ Shared with me</div>
+        <div style="padding:9px 11px">↺ History</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="border-top:1px solid #ddd0b2;padding-top:13px;display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#cdbf9a;border:1px solid #bbac84"></div><div><div style="font-size:12px;font-weight:600;color:#372c16">Planeswalker</div><div style="font-size:10px;color:#9a8c6a">account ▾</div></div></div>
+    </div>
+    <div class="wb" style="flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+      <!-- top bar -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="serif" style="font-size:25px;font-weight:600;color:#2e2618;line-height:1">Rakdos Midrange → Cutthroat</div><div style="font-size:12px;color:#8a7c5a;margin-top:2px">Unsaved · calculated just now</div></div>
+        <div style="display:flex;gap:8px">
+          <div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#5d5236">↺ History</div>
+          <div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#5d5236">⤓ Save</div>
+          <div style="border:1.5px solid #8a571f;background:#f0dcc0;border-radius:5px;padding:7px 11px;font-size:12px;font-weight:600;color:#7a4d1f">⤴ Share</div>
+        </div>
+      </div>
+      <!-- collapsed inputs strip -->
+      <div style="border:1px solid #ddd0b2;background:#efe7d2;border-radius:6px;padding:10px 13px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:#b4763a">▸</span>
+        <span style="font-size:12px;color:#5d5236;flex:1"><b>Decklists</b> · base <b>100</b> · target <b>100</b> &nbsp;<span style="color:#9a8c6a">— collapsed</span></span>
+        <span style="font-size:12px;color:#7a4d1f;font-weight:600">Edit decklists ▾</span>
+      </div>
+      <!-- unmatched (expanded by default) -->
+      <div style="border:1px solid #d9a39f;background:#f6e6e3;border-radius:6px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+          <div style="font-size:13px;font-weight:700;color:#9c3b36">⚠ 2 cards couldn't be matched</div>
+          <div style="border:1.5px solid #c0726d;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:600;color:#9c3b36">Accept all (2)</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #e7c9c5;font-size:11px;color:#9c5a55"><span>Spiked Corridor/Torture Pit <span style="color:#bb8d89">(base)</span> — did you mean <b style="color:#7e2e2a">Spiked Corridor // Torture Pit</b>?</span><span style="border:1.5px solid #c0726d;border-radius:4px;padding:3px 9px;color:#9c3b36;font-weight:600">Accept</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #e7c9c5;font-size:11px;color:#9c5a55"><span>Spiked Corridor/Torture Pit <span style="color:#bb8d89">(target)</span> — did you mean <b style="color:#7e2e2a">Spiked Corridor // Torture Pit</b>?</span><span style="border:1.5px solid #c0726d;border-radius:4px;padding:3px 9px;color:#9c3b36;font-weight:600">Accept</span></div>
+      </div>
+      <!-- cost + view toggle + sort -->
+      <div style="display:flex;align-items:stretch;gap:12px">
+        <div style="flex:1;border:1px solid #ddd0b2;background:#efe7d2;border-radius:6px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:10px;letter-spacing:.4px;color:#9a8c6a">TOTAL UPGRADE COST</div><div class="serif" style="font-size:22px;font-weight:700;color:#2e2618">~$340.69</div></div>
+          <div style="text-align:right;font-size:11px;color:#8a7c5a;line-height:1.5">−20 remove<br>+20 add · 80 stay</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <!-- VIEW TOGGLE -->
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:11px;color:#8a7c5a">View</span>
+          <div style="display:flex;border:1.5px solid #c9bb98;border-radius:6px;overflow:hidden">
+            <span style="padding:6px 12px;font-size:12px;font-weight:600;background:#b4763a;color:#fff">▥ Columns</span>
+            <span style="padding:6px 12px;font-size:12px;color:#5d5236">≡ Merged</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8a7c5a">
+          Sort
+          <span style="border:1px solid #c9bb98;border-radius:4px;padding:4px 8px">Grouped</span>
+          <span style="border:1px solid #8a571f;background:#f0dcc0;border-radius:4px;padding:4px 8px;color:#7a4d1f;font-weight:600">Flat</span>
+          <span style="border:1px solid #8a571f;background:#f0dcc0;border-radius:4px;padding:4px 8px;color:#7a4d1f;font-weight:600">Price ↓</span>
+        </div>
+      </div>
+      <!-- columns -->
+      <div style="display:flex;gap:14px">
+        <div style="flex:1;border:1px solid #ddd0b2;border-radius:6px;background:#fbf6ea;overflow:hidden">
+          <div style="padding:9px 12px;background:#f1e2df;border-bottom:1px solid #e3c8c4;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#9c3b36">− REMOVE</span><span style="font-size:11px;color:#bd8a86">20 · $24</span></div>
+          <div style="padding:9px 11px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sol Ring</span><span style="font-size:11px;color:#8a7c5a">~$4.77</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Talisman of Indulgence</span><span style="font-size:11px;color:#8a7c5a">~$4.68</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Séance Board</span><span style="font-size:11px;color:#8a7c5a">~$4.34</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Arcane Signet</span><span style="font-size:11px;color:#8a7c5a">~$1.43</span></div>
+            <div style="font-size:11px;color:#b0a07c;padding-left:35px">+ 16 more…</div>
+          </div>
+        </div>
+        <div style="flex:1;border:1px solid #ddd0b2;border-radius:6px;background:#fbf6ea;overflow:hidden">
+          <div style="padding:9px 12px;background:#e7efe0;border-bottom:1px solid #cfdec5;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#3e6e38">+ ADD</span><span style="font-size:11px;color:#7da172">20 · $341</span></div>
+          <div style="padding:9px 11px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sheoldred, the Apocalypse</span><span style="font-size:11px;color:#8a7c5a">~$94.38</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Bloodletter of Aclazotz</span><span style="font-size:11px;color:#8a7c5a">~$36.89</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Deadly Rollick</span><span style="font-size:11px;color:#8a7c5a">~$27.54</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:26px;height:36px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Bloodchief Ascension</span><span style="font-size:11px;color:#8a7c5a">~$22.68</span></div>
+            <div style="font-size:11px;color:#b0a07c;padding-left:35px">+ 16 more…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- STATE C: RESULT, MERGED VIEW ---------- -->
+<div style="position:absolute; left:1840px; top:214px; width:820px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">C · Same result — Merged view <span style="font-size:14px;color:#9a8c6a">(toggle)</span></div>
+  <div class="frame wb" style="width:820px; min-height:920px; display:flex">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <div class="wb" style="width:182px;flex:none;border-right:1px solid #ddd0b2;background:#efe5cd;padding:18px 15px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:20px;height:20px;background:#b4763a;transform:rotate(45deg);box-shadow:0 0 0 3px #efe5cd,0 0 0 4px #d8b07e"></div><span class="serif" style="font-size:21px;font-weight:700;color:#372c16">DeckDelta</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#5d5236">
+        <div style="padding:9px 11px;background:#e4d6b6;border-left:3px solid #b4763a;border-radius:3px;color:#372c16;font-weight:600">✦ New comparison</div>
+        <div style="padding:9px 11px">▤ Saved decks</div>
+        <div style="padding:9px 11px">⤴ Shared with me</div>
+        <div style="padding:9px 11px">↺ History</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="border-top:1px solid #ddd0b2;padding-top:13px;display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#cdbf9a;border:1px solid #bbac84"></div><div><div style="font-size:12px;font-weight:600;color:#372c16">Planeswalker</div><div style="font-size:10px;color:#9a8c6a">account ▾</div></div></div>
+    </div>
+    <div class="wb" style="flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="serif" style="font-size:25px;font-weight:600;color:#2e2618;line-height:1">Rakdos Midrange → Cutthroat</div><div style="font-size:12px;color:#8a7c5a;margin-top:2px">Unsaved · calculated just now</div></div>
+        <div style="display:flex;gap:8px"><div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#5d5236">↺ History</div><div style="border:1.5px solid #c9bb98;border-radius:5px;padding:7px 11px;font-size:12px;color:#5d5236">⤓ Save</div><div style="border:1.5px solid #8a571f;background:#f0dcc0;border-radius:5px;padding:7px 11px;font-size:12px;font-weight:600;color:#7a4d1f">⤴ Share</div></div>
+      </div>
+      <div style="border:1px solid #ddd0b2;background:#efe7d2;border-radius:6px;padding:10px 13px;display:flex;align-items:center;gap:12px"><span style="font-size:13px;color:#b4763a">▸</span><span style="font-size:12px;color:#5d5236;flex:1"><b>Decklists</b> · base <b>100</b> · target <b>100</b></span><span style="font-size:12px;color:#7a4d1f;font-weight:600">Edit decklists ▾</span></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1;border:1px solid #ddd0b2;background:#efe7d2;border-radius:6px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:10px;letter-spacing:.4px;color:#9a8c6a">NET UPGRADE COST</div><div class="serif" style="font-size:22px;font-weight:700;color:#2e2618">~$340.69</div></div><div style="text-align:right;font-size:11px;color:#8a7c5a;line-height:1.5">−20 · +20<br>80 stay</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:7px"><span style="font-size:11px;color:#8a7c5a">View</span><div style="display:flex;border:1.5px solid #c9bb98;border-radius:6px;overflow:hidden"><span style="padding:6px 12px;font-size:12px;color:#5d5236">▥ Columns</span><span style="padding:6px 12px;font-size:12px;font-weight:600;background:#b4763a;color:#fff">≡ Merged</span></div></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8a7c5a">Show <span style="border:1px solid #8a571f;background:#f0dcc0;border-radius:4px;padding:4px 8px;color:#7a4d1f;font-weight:600">All</span><span style="border:1px solid #c9bb98;border-radius:4px;padding:4px 8px">Δ only</span><span style="border:1px solid #c9bb98;border-radius:4px;padding:4px 8px">Price ↓</span></div>
+      </div>
+      <!-- merged ledger -->
+      <div style="border:1px solid #ddd0b2;border-radius:6px;background:#fbf6ea;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid #eadfc6;border-left:4px solid #9c3b36;background:#faf2ee"><span class="serif" style="font-size:16px;font-weight:700;color:#9c3b36;width:14px">−</span><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sol Ring</span><span style="font-size:9px;color:#9a8c6a;border:1px solid #ddd0b2;border-radius:10px;padding:1px 7px">Artifact</span><span style="font-size:11px;color:#9c3b36;width:56px;text-align:right">−$4.77</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid #eadfc6;border-left:4px solid #3e6e38;background:#f4f7ee"><span class="serif" style="font-size:16px;font-weight:700;color:#3e6e38;width:14px">+</span><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sheoldred, the Apocalypse</span><span style="font-size:9px;color:#9a8c6a;border:1px solid #ddd0b2;border-radius:10px;padding:1px 7px">Creature</span><span style="font-size:11px;color:#3e6e38;width:56px;text-align:right">+$94.38</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid #eadfc6;border-left:4px solid #3e6e38;background:#f4f7ee"><span class="serif" style="font-size:16px;font-weight:700;color:#3e6e38;width:14px">+</span><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Deadly Rollick</span><span style="font-size:9px;color:#9a8c6a;border:1px solid #ddd0b2;border-radius:10px;padding:1px 7px">Instant</span><span style="font-size:11px;color:#3e6e38;width:56px;text-align:right">+$27.54</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid #eadfc6;border-left:4px solid #9c3b36;background:#faf2ee"><span class="serif" style="font-size:16px;font-weight:700;color:#9c3b36;width:14px">−</span><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Talisman of Indulgence</span><span style="font-size:9px;color:#9a8c6a;border:1px solid #ddd0b2;border-radius:10px;padding:1px 7px">Artifact</span><span style="font-size:11px;color:#9c3b36;width:56px;text-align:right">−$4.68</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid #eadfc6;border-left:4px solid #c9bb98;opacity:.6"><span class="serif" style="font-size:15px;color:#9a8c6a;width:14px">=</span><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Witch's Clinic <span style="color:#9a8c6a">· stays</span></span><span style="font-size:9px;color:#9a8c6a;border:1px solid #ddd0b2;border-radius:10px;padding:1px 7px">Land</span><span style="font-size:11px;color:#9a8c6a;width:56px;text-align:right">—</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-left:4px solid #3e6e38;background:#f4f7ee"><span class="serif" style="font-size:16px;font-weight:700;color:#3e6e38;width:14px">+</span><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Bloodletter of Aclazotz</span><span style="font-size:9px;color:#9a8c6a;border:1px solid #ddd0b2;border-radius:10px;padding:1px 7px">Creature</span><span style="font-size:11px;color:#3e6e38;width:56px;text-align:right">+$36.89</span></div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#b0a07c">↓ removes, adds & stays interleaved · 37 more rows</div>
+    </div>
+  </div>
+</div>
+
+<!-- post-it near main -->
+<div style="position:absolute; left:80px; top:1010px; width:300px; background:#fbef9a; padding:13px 16px; box-shadow:0 2px 8px rgba(60,45,20,.2); transform:rotate(1deg)">
+  <div class="ann" style="font-size:19px;font-weight:700;color:#5b4a1e;margin-bottom:4px">collapse flow</div>
+  <div style="font-size:12px;color:#5b4a1e;line-height:1.6">A → B happens on “Calculate”. Inputs fold into the one-line strip; “Edit decklists ▾” reopens the A panel inline. View toggle swaps B ⇄ C without recalculating.</div>
+</div>
+
+<!-- ============================ SECTION 2: SIGN IN ============================ -->
+<div class="ann" style="position:absolute; left:80px; top:1230px; font-size:32px; font-weight:700; color:#372c16">2 · Sign in <span style="font-size:18px;color:#9a8c6a">— split, with slogan</span></div>
+
+<div style="position:absolute; left:80px; top:1296px; width:760px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">Art panel + form · email & social</div>
+  <div class="frame wb" style="width:760px; min-height:560px; display:flex">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <!-- art panel -->
+    <div class="stripe wb" style="width:320px;flex:none;position:relative;display:flex;flex-direction:column;padding:28px">
+      <div style="position:absolute;inset:0;background:linear-gradient(140deg,rgba(58,40,15,.12),rgba(58,40,15,.34))"></div>
+      <div style="position:relative;display:flex;align-items:center;gap:9px"><div style="width:18px;height:18px;background:#f0dcc0;transform:rotate(45deg)"></div><span class="serif" style="font-size:19px;font-weight:700;color:#f4ecd9">DeckDelta</span></div>
+      <div style="position:relative;font-family:ui-monospace,monospace;font-size:10px;color:#3a2c12;background:rgba(244,236,217,.6);padding:2px 7px;border-radius:3px;align-self:flex-start;margin-top:12px">hero art slot</div>
+      <div style="flex:1"></div>
+      <div class="serif" style="position:relative;font-size:34px;font-weight:700;font-style:italic;color:#fbf4e3;line-height:1.05;text-shadow:0 1px 8px rgba(40,28,8,.5)">Every deck<br>has a delta.</div>
+      <div style="position:relative;font-size:13px;color:#f0e7d2;margin-top:9px;max-width:230px">Save your comparisons, track the path from what you own to what you want, and share the build.</div>
+    </div>
+    <!-- form -->
+    <div class="wb" style="flex:1;padding:34px 36px;display:flex;flex-direction:column;gap:18px;justify-content:center">
+      <div><div class="serif" style="font-size:26px;font-weight:600;color:#2e2618">Welcome back</div><div style="font-size:12px;color:#8a7c5a;margin-top:2px">Sign in to sync and share your deltas.</div></div>
+      <div style="display:flex;gap:6px;border-bottom:1px solid #ddd0b2"><div style="padding:7px 4px;font-size:13px;font-weight:600;color:#2e2618;border-bottom:2px solid #b4763a;margin-bottom:-1px">Sign in</div><div style="padding:7px 10px;font-size:13px;color:#9a8c6a">Create account</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div><div style="font-size:11px;color:#6a5d3c;margin-bottom:4px">Email</div><div style="border:1.5px dashed #bcae8c;border-radius:6px;padding:11px;font-size:12px;color:#a99a76;background:#fcf7e9">you@plane.gg</div></div>
+        <div><div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6a5d3c;margin-bottom:4px">Password</span><span style="font-size:11px;color:#9a8c6a">Forgot?</span></div><div style="border:1.5px dashed #bcae8c;border-radius:6px;padding:11px;font-size:12px;color:#a99a76;background:#fcf7e9">••••••••</div></div>
+        <div class="serif" style="border:1.5px solid #8a571f;background:linear-gradient(#efce9f,#e6bd86);border-radius:6px;padding:12px;text-align:center;font-size:15px;font-weight:600;color:#5a3812;box-shadow:0 2px 0 #c79a5d;margin-top:2px">Sign in  →</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;color:#b0a07c;font-size:11px"><div style="flex:1;height:1px;background:#ddd0b2"></div>or continue with<div style="flex:1;height:1px;background:#ddd0b2"></div></div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;border:1.5px solid #c9bb98;border-radius:6px;padding:10px;text-align:center;font-size:12px;color:#5d5236">⟢ Google</div>
+        <div style="flex:1;border:1.5px solid #c9bb98;border-radius:6px;padding:10px;text-align:center;font-size:12px;color:#5d5236">✦ Discord</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="position:absolute; left:880px; top:1320px; width:280px; background:#fbef9a; padding:13px 16px; box-shadow:0 2px 8px rgba(60,45,20,.2); transform:rotate(-1deg)">
+  <div class="ann" style="font-size:19px;font-weight:700;color:#5b4a1e;margin-bottom:4px">create account</div>
+  <div style="font-size:12px;color:#5b4a1e;line-height:1.6">Same split — the right tab swaps to email + confirm-password + “Create account”. Social buttons stay.</div>
+</div>
+
+<!-- ============================ SECTION 3: APPROVED, REFINED ============================ -->
+<div class="ann" style="position:absolute; left:80px; top:1980px; font-size:32px; font-weight:700; color:#372c16">3 · Approved screens — refined to match</div>
+
+<!-- SAVED DETAIL -->
+<div style="position:absolute; left:80px; top:2046px; width:820px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">Saved comparison — owner detail</div>
+  <div class="frame wb" style="width:820px; min-height:600px; display:flex">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <div class="wb" style="width:182px;flex:none;border-right:1px solid #ddd0b2;background:#efe5cd;padding:18px 15px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:20px;height:20px;background:#b4763a;transform:rotate(45deg);box-shadow:0 0 0 3px #efe5cd,0 0 0 4px #d8b07e"></div><span class="serif" style="font-size:21px;font-weight:700;color:#372c16">DeckDelta</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#5d5236"><div style="padding:9px 11px">✦ New comparison</div><div style="padding:9px 11px;background:#e4d6b6;border-left:3px solid #b4763a;border-radius:3px;color:#372c16;font-weight:600">▤ Saved decks</div><div style="padding:9px 11px">⤴ Shared with me</div><div style="padding:9px 11px">↺ History</div></div>
+      <div style="flex:1"></div>
+      <div style="border-top:1px solid #ddd0b2;padding-top:13px;display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#cdbf9a;border:1px solid #bbac84"></div><div><div style="font-size:12px;font-weight:600;color:#372c16">Planeswalker</div><div style="font-size:10px;color:#9a8c6a">account ▾</div></div></div>
+    </div>
+    <div class="wb" style="flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:13px">
+      <div style="font-size:11px;color:#9a8c6a">▤ Saved decks ›</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="serif" style="font-size:24px;font-weight:600;color:#2e2618;line-height:1">Rakdos Midrange → Cutthroat</div><div style="font-size:12px;color:#8a7c5a;margin-top:3px">Saved Mar 14 · 🔒 private · 20 in / 20 out · ~$340.69</div></div>
+        <div style="display:flex;gap:7px"><div style="border:1.5px solid #c9bb98;border-radius:5px;padding:6px 10px;font-size:12px;color:#5d5236">✎ Edit</div><div style="border:1.5px solid #c9bb98;border-radius:5px;padding:6px 10px;font-size:12px;color:#5d5236">⎘ Duplicate</div></div>
+      </div>
+      <div style="border:1px solid #ddd0b2;background:#efe7d2;border-radius:6px;padding:11px 13px;display:flex;align-items:center;gap:10px"><span style="font-size:12px;font-weight:600;color:#2e2618">⤴ Share</span><div style="flex:1;border:1.5px dashed #bcae8c;background:#fcf7e9;border-radius:5px;padding:7px 10px;font-family:ui-monospace,monospace;font-size:11px;color:#a99a76">deckdelta.app/s/9fXa2k</div><div style="border:1px solid #c9bb98;border-radius:5px;padding:6px 11px;font-size:11px;color:#5d5236">Copy</div><span style="border:1px solid #8a571f;background:#f0dcc0;border-radius:11px;padding:3px 9px;font-size:11px;color:#7a4d1f">Public ◐</span></div>
+      <div style="display:flex;gap:14px">
+        <div style="flex:1;border:1px solid #ddd0b2;border-radius:6px;background:#fbf6ea;overflow:hidden">
+          <div style="padding:8px 12px;background:#f1e2df;border-bottom:1px solid #e3c8c4;font-size:12px;font-weight:700;color:#9c3b36">− REMOVE 20</div>
+          <div style="padding:9px 11px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sol Ring</span><span style="font-size:11px;color:#8a7c5a">~$4.77</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Séance Board</span><span style="font-size:11px;color:#8a7c5a">~$4.34</span></div>
+            <div style="font-size:11px;color:#b0a07c;padding-left:33px">+ 18 more…</div>
+          </div>
+        </div>
+        <div style="flex:1;border:1px solid #ddd0b2;border-radius:6px;background:#fbf6ea;overflow:hidden">
+          <div style="padding:8px 12px;background:#e7efe0;border-bottom:1px solid #cfdec5;font-size:12px;font-weight:700;color:#3e6e38">+ ADD 20</div>
+          <div style="padding:9px 11px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sheoldred, the Apocalypse</span><span style="font-size:11px;color:#8a7c5a">~$94.38</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Bloodletter of Aclazotz</span><span style="font-size:11px;color:#8a7c5a">~$36.89</span></div>
+            <div style="font-size:11px;color:#b0a07c;padding-left:33px">+ 18 more…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISITOR / SHARED -->
+<div style="position:absolute; left:960px; top:2046px; width:820px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">Shared link — visitor view + fork</div>
+  <div class="frame wb" style="width:820px; min-height:600px; display:flex;flex-direction:column">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid #ddd0b2;background:#efe5cd">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:17px;height:17px;background:#b4763a;transform:rotate(45deg)"></div><span class="serif" style="font-size:20px;font-weight:700;color:#372c16">DeckDelta</span><span style="font-size:11px;color:#9a8c6a;border:1px solid #d8caa9;border-radius:11px;padding:2px 9px;margin-left:4px">shared · read-only</span></div>
+      <div style="border:1.5px solid #c9bb98;border-radius:5px;padding:6px 12px;font-size:12px;color:#5d5236">Sign in</div>
+    </div>
+    <div style="flex:1;display:flex">
+      <div class="wb" style="flex:1;padding:20px 22px;display:flex;flex-direction:column;gap:11px;border-right:1px solid #ddd0b2">
+        <div class="serif" style="font-size:23px;font-weight:600;color:#2e2618;line-height:1">Rakdos Midrange → Cutthroat</div>
+        <div style="font-size:11px;color:#8a7c5a">shared by <b>Planeswalker</b> · Mar 14</div>
+        <div style="display:flex;justify-content:flex-end;gap:6px;font-size:11px;color:#8a7c5a"><span style="border:1px solid #8a571f;background:#f0dcc0;border-radius:4px;padding:3px 8px;color:#7a4d1f;font-weight:600">Grouped</span><span style="border:1px solid #c9bb98;border-radius:4px;padding:3px 8px">Price ↓</span></div>
+        <div style="font-size:12px;font-weight:700;color:#9c3b36;margin-top:2px">− REMOVE 20</div>
+        <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sol Ring</span><span style="font-size:11px;color:#8a7c5a">~$4.77</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Talisman of Indulgence</span><span style="font-size:11px;color:#8a7c5a">~$4.68</span></div>
+        <div style="font-size:12px;font-weight:700;color:#3e6e38;margin-top:4px">+ ADD 20</div>
+        <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Sheoldred, the Apocalypse</span><span style="font-size:11px;color:#8a7c5a">~$94.38</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><div class="stripe" style="width:24px;height:33px;border-radius:2px;border:1px solid #d8caa9"></div><span style="font-size:12px;color:#3e3522;flex:1">Deadly Rollick</span><span style="font-size:11px;color:#8a7c5a">~$27.54</span></div>
+        <div style="font-size:11px;color:#b0a07c;padding-left:33px">↓ 36 more…</div>
+      </div>
+      <div class="wb" style="width:224px;flex:none;padding:20px 18px;background:#efe5cd;display:flex;flex-direction:column;gap:14px">
+        <div style="border:1px solid #ddd0b2;background:#fbf6ea;border-radius:6px;padding:13px"><div style="font-size:10px;color:#9a8c6a;letter-spacing:.4px">UPGRADE COST</div><div class="serif" style="font-size:23px;font-weight:700;color:#2e2618">~$340.69</div></div>
+        <div style="display:flex;gap:10px"><div style="flex:1;text-align:center;border:1px solid #ddd0b2;background:#fbf6ea;border-radius:6px;padding:9px"><div class="serif" style="font-size:19px;font-weight:700;color:#9c3b36">20</div><div style="font-size:9px;color:#9a8c6a">REMOVE</div></div><div style="flex:1;text-align:center;border:1px solid #ddd0b2;background:#fbf6ea;border-radius:6px;padding:9px"><div class="serif" style="font-size:19px;font-weight:700;color:#3e6e38">20</div><div style="font-size:9px;color:#9a8c6a">ADD</div></div></div>
+        <div class="serif" style="border:1.5px solid #8a571f;background:linear-gradient(#efce9f,#e6bd86);border-radius:6px;padding:11px;text-align:center;font-size:14px;font-weight:600;color:#5a3812;box-shadow:0 2px 0 #c79a5d">⑂ Fork to my account</div>
+        <div style="border:1.5px solid #c9bb98;border-radius:6px;padding:9px;text-align:center;font-size:12px;color:#5d5236">⤓ Export list</div>
+        <div style="font-size:10px;color:#9a8c6a;line-height:1.5">Forking copies both decklists into a new editable comparison you own.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div style="position:absolute; left:1840px; top:2046px; width:820px">
+  <div data-drags-parent="1" class="ann" style="position:absolute; top:-30px; font-size:21px; font-weight:600; color:#6a5d3c">Saved decks — card grid</div>
+  <div class="frame wb" style="width:820px; min-height:600px; display:flex">
+    <span class="corner" style="left:-4px;top:-4px"></span><span class="corner" style="right:-4px;top:-4px"></span><span class="corner" style="left:-4px;bottom:-4px"></span><span class="corner" style="right:-4px;bottom:-4px"></span>
+    <div class="wb" style="width:182px;flex:none;border-right:1px solid #ddd0b2;background:#efe5cd;padding:18px 15px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:9px"><div style="width:20px;height:20px;background:#b4763a;transform:rotate(45deg);box-shadow:0 0 0 3px #efe5cd,0 0 0 4px #d8b07e"></div><span class="serif" style="font-size:21px;font-weight:700;color:#372c16">DeckDelta</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#5d5236"><div style="padding:9px 11px">✦ New comparison</div><div style="padding:9px 11px;background:#e4d6b6;border-left:3px solid #b4763a;border-radius:3px;color:#372c16;font-weight:600">▤ Saved decks</div><div style="padding:9px 11px">⤴ Shared with me</div><div style="padding:9px 11px">↺ History</div></div>
+      <div style="flex:1"></div>
+      <div style="border-top:1px solid #ddd0b2;padding-top:13px;display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#cdbf9a;border:1px solid #bbac84"></div><div><div style="font-size:12px;font-weight:600;color:#372c16">Planeswalker</div><div style="font-size:10px;color:#9a8c6a">account ▾</div></div></div>
+    </div>
+    <div class="wb" style="flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:15px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="serif" style="font-size:24px;font-weight:600;color:#2e2618">Saved decks</div><div style="display:flex;gap:8px;align-items:center"><div style="border:1.5px dashed #bcae8c;background:#fcf7e9;border-radius:5px;padding:6px 12px;font-size:12px;color:#a99a76">⌕ search…</div><div style="border:1.5px solid #8a571f;background:#f0dcc0;border-radius:5px;padding:6px 11px;font-size:12px;font-weight:600;color:#7a4d1f">✦ New</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div style="border:1px solid #ddd0b2;border-radius:6px;overflow:hidden;background:#fbf6ea"><div class="stripe" style="height:90px;position:relative;border-bottom:1px solid #e3d8bd"><span style="position:absolute;bottom:5px;left:6px;font-family:ui-monospace,monospace;font-size:9px;color:#6a5a3a;background:rgba(246,239,221,.7);padding:1px 5px;border-radius:3px">commander art</span></div><div style="padding:9px 11px"><div style="font-size:12px;font-weight:600;color:#2e2618">Rakdos → Cutthroat</div><div style="font-size:10px;color:#9a8c6a;margin-top:3px">~$340.69 · 20/20 · 🔒</div></div></div>
+        <div style="border:1px solid #ddd0b2;border-radius:6px;overflow:hidden;background:#fbf6ea"><div class="stripe" style="height:90px;border-bottom:1px solid #e3d8bd"></div><div style="padding:9px 11px"><div style="font-size:12px;font-weight:600;color:#2e2618">Azorius Control v3</div><div style="font-size:10px;color:#9a8c6a;margin-top:3px">~$112.40 · 14/16 · ◐ public</div></div></div>
+        <div style="border:1px solid #ddd0b2;border-radius:6px;overflow:hidden;background:#fbf6ea"><div class="stripe" style="height:90px;border-bottom:1px solid #e3d8bd"></div><div style="padding:9px 11px"><div style="font-size:12px;font-weight:600;color:#2e2618">Golgari Budget</div><div style="font-size:10px;color:#9a8c6a;margin-top:3px">~$38.10 · 9/9 · 🔒</div></div></div>
+        <div style="border:1.5px dashed #bcae8c;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:134px;color:#a99a76;background:#fcf7e9"><div class="serif" style="font-size:26px">✦</div><div style="font-size:11px">New comparison</div></div>
+        <div style="border:1px solid #ddd0b2;border-radius:6px;overflow:hidden;background:#fbf6ea;opacity:.75"><div class="stripe" style="height:90px;border-bottom:1px solid #e3d8bd"></div><div style="padding:9px 11px"><div style="font-size:12px;font-weight:600;color:#2e2618">Mono-Red Aggro</div><div style="font-size:10px;color:#9a8c6a;margin-top:3px">~$76.00 · 11/13 · 🔒</div></div></div>
+        <div style="border:1px solid #ddd0b2;border-radius:6px;overflow:hidden;background:#fbf6ea;opacity:.75"><div class="stripe" style="height:90px;border-bottom:1px solid #e3d8bd"></div><div style="padding:9px 11px"><div style="font-size:12px;font-weight:600;color:#2e2618">Simic Ramp</div><div style="font-size:10px;color:#9a8c6a;margin-top:3px">~$205.30 · 18/18 · ◐ public</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>
