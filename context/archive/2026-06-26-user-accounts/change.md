@@ -1,10 +1,10 @@
 ---
 change_id: user-accounts
 title: User accounts with saved decks, checkpointed upgrade paths, and forking
-status: implemented
+status: archived
 created: 2026-06-26
-updated: 2026-06-26
-archived_at: null
+updated: 2026-06-27
+archived_at: 2026-06-27T12:38:23Z
 ---
 
 ## Notes
