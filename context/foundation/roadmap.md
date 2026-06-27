@@ -53,15 +53,15 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 
 ## Baseline
 
-What's already in place in the codebase as of `2026-06-09` (auto-researched + user-confirmed).
-Foundations below assume these are present and do NOT re-scaffold them.
+What's in place in the codebase as of `2026-06-27` (refreshed from the original `2026-06-09` snapshot after F-01, S-01–S-06, and S-08 landed).
 
-- **Frontend:** present — Astro 6.3.1 + React 19 + Tailwind 4, file-based routing, `src/components/ui` (`button.tsx`, `Layout.astro`). `package.json`, `astro.config.mjs`.
-- **Backend / API:** present — `output: "server"` + Cloudflare adapter; existing API routes are auth-only today (`src/pages/api/auth/*`, `src/middleware.ts`). DeckDelta's diff logic stays client-side per the privacy NFR.
-- **Data:** partial — Supabase client + `supabase/config.toml` present, but no schema/migrations/seed, and no client-side storage (localStorage/IndexedDB) wired yet.
-- **Auth:** present — Supabase Auth fully wired (SSR session, protected `/dashboard`). Unused by DeckDelta (PRD: single-user, no auth, on-device only); noted as present so no Foundation re-builds it.
+- **Frontend:** present — Astro 6 + React 19 + Tailwind 4, file-based routing. `src/components/ui` (`button.tsx`) + `src/layouts/Layout.astro` (now a shared auth-aware header). Deck UI in `src/components/deck/*` (comparer, grouped plan, images, cost summary, sort control, unresolved notice); path builder in `src/components/path/*` (`PathEditor`, `NewPathForm`).
+- **Backend / API:** present — `output: "server"` + Cloudflare adapter. API routes: `src/pages/api/auth/*` and `src/pages/api/paths/*` (paths/steps CRUD on the cookie-bound Supabase client, RLS-scoped to the owner). The deck diff/cost engine **and** card resolution stay client-side — resolution is deliberately kept off the Worker (Cloudflare CPU/subrequest limits).
+- **Data:** present — Supabase with the project's first migration `supabase/migrations/20260626121519_user_accounts_paths.sql`: `upgrade_paths` / `path_steps` tables, owner-only RLS, and `db:push` / `db:reset` / `db:new` scripts. Client-side storage: only the sort preference persists in `localStorage`; on-device comparison history was removed (S-04 retired). Op note: the migration must be pushed to the linked project (`npm run db:push`) for accounts to work against remote Supabase.
+- **Auth:** present — Supabase Auth wired end-to-end **and now surfaced in the product**: header sign-in/out state, `/paths` and `/dashboard` gated in `src/middleware.ts`, post-signin redirect to `/paths`. Email + password only (no OAuth / password-reset; email confirmation disabled).
 - **Deploy / infra:** present — Cloudflare Workers (`wrangler.jsonc`), GitHub Actions CI (`.github/workflows/ci.yml`), `npm run deploy` → `astro build && wrangler deploy`.
 - **Observability:** partial — `wrangler.jsonc` observability flag enabled; no logging/error-tracking library. No PRD NFR forces more for MVP.
+- **Testing:** present — pure-logic vitest suite (`npm test`); types via `astro check`, lint via `eslint .`. No component-test tooling (jsdom/RTL) by design.
 
 ## Foundations
 
