@@ -31,7 +31,8 @@ export default function NewPathForm() {
         body: JSON.stringify({ title: trimmed }),
       });
       if (!response.ok) {
-        setError("Couldn't create the path.");
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setError(body?.error ?? `Couldn't create the path (${response.status}).`);
         setPending(false);
         return;
       }
