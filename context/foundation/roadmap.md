@@ -14,10 +14,11 @@ top_blocker: external
 > Derived from `context/foundation/prd.md` (v1) + auto-researched codebase baseline.
 > Edit-in-place; archive when superseded.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
+> **Update 2026-06-27:** the original v1 MVP is delivered (F-01, S-01–S-03, S-05–S-06). **S-08 (`user-accounts`)** extends scope beyond v1 — driven by the brownfield `prd-v2.md` (accounts + server-persisted checkpointed paths) — and **retires S-04** (on-device history). S-07 is parked.
 
 ## Vision recap
 
-DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck lists into an actionable upgrade plan. Instead of a flat "add X, remove Y" diff, it groups the swaps by card function — lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers — and attaches card images, approximate prices, and a total upgrade cost, so a player can see the strategic shape of the upgrade and prioritize purchases. The core bet is that grouping-by-function plus pricing, not a raw diff, is the right abstraction for planning a deck upgrade. All user data stays on-device; the only external touchpoint is card-data lookups by name.
+DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck lists into an actionable upgrade plan. Instead of a flat "add X, remove Y" diff, it groups the swaps by card function — lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers — and attaches card images, approximate prices, and a total upgrade cost, so a player can see the strategic shape of the upgrade and prioritize purchases. The core bet is that grouping-by-function plus pricing, not a raw diff, is the right abstraction for planning a deck upgrade. Originally an on-device single-user tool; as of **S-08** the app adds optional accounts with server-persisted, checkpointed upgrade paths, while the anonymous `/` comparer stays stateless (nothing stored). Card-data lookups by name remain the core external touchpoint.
 
 ## North star
 
@@ -29,14 +30,15 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 
 | ID   | Change ID               | Outcome (user can …)                                                              | Prerequisites         | PRD refs                                      | Status |
 | ---- | ----------------------- | --------------------------------------------------------------------------------- | --------------------- | --------------------------------------------- | ------ |
-| F-01 | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands                | —                     | Guardrails (accuracy), NFR (lookups)          | ready  |
+| F-01 | card-data-resolution    | (foundation) card-data source selected; name→type resolution lands                | —                     | Guardrails (accuracy), NFR (lookups)          | done   |
 | S-01 | grouped-upgrade-plan    | paste base+target and see add/remove/shared grouped by card type                  | F-01                  | US-01, FR-001, FR-002, FR-003, FR-004, FR-008 | done   |
 | S-02 | card-images-in-plan     | see a card image for each card in the upgrade plan                                | S-01                  | US-01, FR-005                                 | done   |
 | S-03 | upgrade-cost-and-prices | see per-card prices and the total upgrade cost                                    | S-01                  | US-01, FR-006, FR-007                         | done   |
-| S-04 | on-device-history       | save and revisit past comparisons from on-device storage                          | S-01                  | FR-009                                        | done   |
+| S-04 | on-device-history       | ~~save and revisit past comparisons from on-device storage~~ (retired by S-08)     | S-01                  | FR-009                                        | retired |
 | S-05 | did-you-mean-accept     | accept a "did you mean …?" suggestion in one click to fix an unresolved card name | S-01                  | Guardrails (input handling), US-01            | done   |
 | S-06 | sortable-card-rows      | sort the cards in the plan by name, type, or price                                | S-01 (S-03 for price) | US-01, FR-004, FR-008                         | done   |
 | S-07 | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor             | S-03                  | US-01, FR-006, FR-007                         | parked |
+| S-08 | user-accounts           | sign in and build server-persisted, checkpointed upgrade paths (cross-device)     | S-01, Supabase Auth   | brownfield prd-v2; supersedes FR-009          | done   |
 
 ## Streams
 
@@ -45,8 +47,9 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 | Stream | Theme              | Chain                                        | Note                                                                                                                                                                                                                                          |
 | ------ | ------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A      | Upgrade-plan core  | `F-01` → `S-01` → `S-02` / `S-03` (parallel) | The critical path. `S-02` and `S-03` enrich the same plan in parallel once `S-01` lands; matches the `low-complexity` goal (smallest core first).                                                                                             |
-| B      | On-device history  | `S-04`                                       | Standalone enricher; joins Stream A at `S-01`. Lowest priority (nice-to-have).                                                                                                                                                                |
-| C      | Post-MVP enrichers | `S-05` / `S-06` / `S-07` (parallel)          | Optional polish on top of the now-complete MVP. Each builds on a done slice (`S-05`→`S-01`, `S-06`→`S-01`/`S-03`, `S-07`→`S-03`) and is independent of the others, so pick in any order. Suggested order by effort: `S-05` → `S-06` → `S-07`. |
+| B      | On-device history  | `S-04`                                       | **Retired 2026-06-27** — superseded by Stream D (`S-08`). On-device history removed; `/` is now stateless.                                                                                                                                     |
+| C      | Post-MVP enrichers | `S-05` / `S-06` / `S-07` (parallel)          | Optional polish on top of the now-complete MVP. Each builds on a done slice (`S-05`→`S-01`, `S-06`→`S-01`/`S-03`, `S-07`→`S-03`) and is independent of the others, so pick in any order. `S-05`/`S-06` done; `S-07` parked.                     |
+| D      | Accounts & paths   | `S-08`                                        | Brownfield expansion (`prd-v2.md`): email/password auth wired to the product + server-persisted checkpointed upgrade paths. Retires Stream B. Follow-on QOL parked in memory `path-builder-qol`.                                               |
 
 ## Baseline
 
@@ -74,7 +77,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Which authoritative card-data source meets the accuracy Guardrail (name-matching quality across MTGO/Arena/Moxfield paste variants)? — Owner: user. Block: no (selected during this foundation's planning).
 - **Risk:** This is the `external` top-blocker made concrete. Sequenced first because every display slice consumes it and the accuracy Guardrail is existential — a wrong card identity makes the tool untrustworthy. Kept minimal (resolution + error handling only) so it doesn't drift into building the whole card-data layer ahead of user-facing work; confirming the source is the first action.
-- **Status:** ready
+- **Status:** done — delivered with S-01 (no separate change/archive); the `src/lib/card-data` resolution module is in the codebase and every display slice consumes it.
 
 ## Slices
 
@@ -127,7 +130,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Nice-to-have (FR-009) and the Secondary success criterion; sequenced last under the `low-complexity` goal. On-device storage only — the PRD accepts that clearing browser data loses history (no false durability promise). Independent of images/prices, so it can be picked up whenever capacity allows after S-01.
-- **Status:** done
+- **Status:** retired — shipped & archived 2026-06-16, then **superseded 2026-06-27 by S-08** (account-backed paths). The on-device history module was removed and `/` is now stateless. localStorage history was **dropped, not migrated** (FR-009 retired). See `context/archive/2026-06-26-user-accounts/`.
 
 ### S-05: "Did you mean …?" inline accept
 
@@ -168,6 +171,18 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Risk:** Largest of the three enrichers — it adds a price dimension (currency/vendor) and a display toggle threaded through `planAddCost` / `formatUsd` / `CostSummary`. `Card.priceEur` already exists on the type but is unused, so the field is reserved; EUR-from-the-existing-source is the smaller first step, while a true second vendor (Cardmarket/Allegro) is a new external integration the PRD §Non-Goals spirit keeps minimal. Sequenced last.
 - **Status:** parked — deprioritized 2026-06-27 (user call): an "endgame" polish feature, not needed for now. Revisit after higher-value path-builder QOL work.
 
+### S-08: User accounts & checkpointed upgrade paths
+
+- **Outcome:** a user can create an account and sign in, then build a named **upgrade path** — an ordered chain of checkpoints, each diffing against the previous step — that is server-persisted and reopenable from any device. The anonymous `/` comparer stays stateless.
+- **Change ID:** user-accounts
+- **PRD refs:** brownfield `prd-v2.md` (accounts, saved checkpointed paths); supersedes FR-009 (on-device history)
+- **Prerequisites:** S-01 (reuses the diff/cost engine on stored snapshots); existing Supabase Auth scaffold
+- **Parallel with:** —
+- **Supersedes:** S-04 — on-device history retired; `/` is now stateless.
+- **Delivered:** email/password auth wired to the product (header auth state + `/paths` route gate + post-signin redirect); `upgrade_paths` / `path_steps` tables with owner-only RLS; `/api/paths/*` CRUD on the cookie-bound client; `/paths` list + `/paths/[id]` builder reusing the engine on client-produced snapshots (no card-data lookups on view).
+- **Deferred (memory `path-builder-qol`):** fuzzy-fix on save, diff-style checkpoint entry, in-hand upgrade UI, deck/path cover art. Sharing / fork-to-account also deferred — a `visibility` column ships but only `private` is exercised.
+- **Status:** done — Archived 2026-06-27 → `context/archive/2026-06-26-user-accounts/`.
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID               | Suggested issue title                                    | Ready for `/10x-plan` | Notes                                                                                                                                                                       |
@@ -176,10 +191,11 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-01       | grouped-upgrade-plan    | Paste two decks → grouped add/remove/shared by card type | no                    | Needs F-01 done first (north star).                                                                                                                                         |
 | S-02       | card-images-in-plan     | Show card images in the upgrade plan                     | no                    | Needs S-01. Parallel with S-03/S-04.                                                                                                                                        |
 | S-03       | upgrade-cost-and-prices | Show per-card prices and total upgrade cost              | yes                   | S-01 done; change folder open. Parallel with S-04.                                                                                                                          |
-| S-04       | on-device-history       | Save and revisit past comparisons on-device              | no                    | Needs S-01. Lowest priority (nice-to-have).                                                                                                                                 |
+| S-04       | on-device-history       | ~~Save and revisit past comparisons on-device~~          | retired               | Retired 2026-06-27 — superseded by S-08 (account-backed paths); `/` now stateless.                                                                                          |
 | S-05       | did-you-mean-accept     | One-click accept for "did you mean …?" card suggestions  | yes                   | Needs S-01 (done). Shaped 2026-06-16 (in-place edit; per-card + accept-all — see change folder). Parallel with S-06/S-07.                                                   |
 | S-06       | sortable-card-rows      | Sort plan cards by name, type, or price                  | yes                   | Needs S-01 (done). Shaped 2026-06-16 (opt-in flat-list toggle; grouped default preserved; one global control; sort persisted — see change folder). Parallel with S-05/S-07. |
-| S-07       | alt-cost-vendors        | Show prices/total in EUR or from an alternative vendor   | no                    | Needs S-03 (done). Confirm EUR source vs second integration during shaping. Parallel with S-05/S-06.                                                                        |
+| S-07       | alt-cost-vendors        | Show prices/total in EUR or from an alternative vendor   | parked                | Parked 2026-06-27 (endgame feature). Confirm EUR source vs second integration when unparked.                                                                                |
+| S-08       | user-accounts           | Accounts + server-persisted checkpointed upgrade paths   | done                  | Delivered & archived 2026-06-27 (brownfield prd-v2). Retires S-04. Follow-on QOL parked in memory `path-builder-qol`.                                                        |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One row per `F-NN` / `S-NN`.
 
@@ -203,6 +219,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 - **S-01: user can paste a base list and a target list and automatically see cards to add, cards to remove, and shared cards — each grouped by card type (lands, creatures, instants, sorceries, artifacts, enchantments, planeswalkers).** — Archived 2026-06-15 → `context/archive/2026-06-15-grouped-upgrade-plan/`. Lesson: —.
 - **S-02: user can see a card image for each card in the upgrade plan.** — Archived 2026-06-16 → `context/archive/2026-06-15-card-images-in-plan/`. Lesson: —.
 - **S-03: user can see an approximate price for each card and the total approximate upgrade cost.** — Archived 2026-06-16 → `context/archive/2026-06-16-upgrade-cost-and-prices/`. Lesson: —.
-- **S-04: user can save a comparison and revisit a past upgrade plan without re-pasting the lists.** — Archived 2026-06-16 → `context/archive/2026-06-16-on-device-history/`. Lesson: —.
+- **S-04: user can save a comparison and revisit a past upgrade plan without re-pasting the lists.** — Archived 2026-06-16 → `context/archive/2026-06-16-on-device-history/`. **Retired 2026-06-27** — superseded by S-08 (account-backed paths); on-device history removed, `/` now stateless. Lesson: —.
 - **S-05: when a pasted card name doesn't resolve but the card-data source returns a near-match `suggestion`, the user can accept it in one click to substitute the corrected name in place and re-generate the plan — instead of only seeing the hint and retyping by hand.** — Archived 2026-06-16 → `context/archive/2026-06-16-did-you-mean-accept/`. Lesson: —.
 - **S-06: user can sort the cards within the upgrade plan by name, type, or price, rather than the fixed category-bucket-then-name order.** — Archived 2026-06-16 → `context/archive/2026-06-16-sortable-card-rows/`. Lesson: —.
+- **S-08: a signed-in user can build server-persisted, checkpointed upgrade paths reopenable from any device; the anonymous `/` comparer stays stateless.** — Archived 2026-06-27 → `context/archive/2026-06-26-user-accounts/`. Lesson: migrations must be pushed to the linked DB (`npm run db:push`) before the feature works against a remote Supabase — a missing push surfaced as a 500 on path create.
