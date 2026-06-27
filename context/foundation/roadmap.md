@@ -3,7 +3,7 @@ project: DeckDelta
 version: 1
 status: draft
 created: 2026-06-09
-updated: 2026-06-16
+updated: 2026-06-27
 prd_version: 1
 main_goal: low-complexity
 top_blocker: external
@@ -36,7 +36,7 @@ DeckDelta turns the tedious side-by-side comparison of two Commander/EDH deck li
 | S-04 | on-device-history       | save and revisit past comparisons from on-device storage                          | S-01                  | FR-009                                        | done   |
 | S-05 | did-you-mean-accept     | accept a "did you mean …?" suggestion in one click to fix an unresolved card name | S-01                  | Guardrails (input handling), US-01            | done   |
 | S-06 | sortable-card-rows      | sort the cards in the plan by name, type, or price                                | S-01 (S-03 for price) | US-01, FR-004, FR-008                         | done   |
-| S-07 | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor             | S-03                  | US-01, FR-006, FR-007                         | ready  |
+| S-07 | alt-cost-vendors        | see per-card prices and the total in EUR / from an alternative vendor             | S-03                  | US-01, FR-006, FR-007                         | parked |
 
 ## Streams
 
@@ -166,7 +166,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Does the selected card-data source already expose EUR (filling the deliberately-unused `Card.priceEur`), or does an alternative-vendor price require a second external integration? — Owner: user. Block: no (decided during shaping; see Open Roadmap Question 2).
 - **Risk:** Largest of the three enrichers — it adds a price dimension (currency/vendor) and a display toggle threaded through `planAddCost` / `formatUsd` / `CostSummary`. `Card.priceEur` already exists on the type but is unused, so the field is reserved; EUR-from-the-existing-source is the smaller first step, while a true second vendor (Cardmarket/Allegro) is a new external integration the PRD §Non-Goals spirit keeps minimal. Sequenced last.
-- **Status:** ready
+- **Status:** parked — deprioritized 2026-06-27 (user call): an "endgame" polish feature, not needed for now. Revisit after higher-value path-builder QOL work.
 
 ## Backlog Handoff
 
@@ -194,6 +194,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 - **URL-based deck import (Archidekt, Moxfield, EDHRec links)** — Why parked: PRD §Non-Goals — each platform's API is a separate integration that doesn't prove the core upgrade-planning value. Text-paste only for MVP.
 - **Multi-user features (sharing, public links, collaboration)** — Why parked: PRD §Non-Goals — DeckDelta is a single-user local tool.
 - **Mobile-optimized responsive design** — Why parked: PRD §Non-Goals — desktop-first; a functional but unoptimized mobile experience is acceptable for MVP.
+- **S-07: alt-cost-vendors (EUR / alternative-vendor pricing)** — Why parked: deprioritized 2026-06-27 (user call) as an "endgame" polish feature — not needed now. Still fully shaped (see slice S-07 + Open Roadmap Question 2); unpark when EUR/alt-vendor pricing becomes worthwhile, after higher-value path-builder QOL.
 
 ## Done
 
