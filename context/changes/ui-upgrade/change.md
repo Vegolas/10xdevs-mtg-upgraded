@@ -1,7 +1,7 @@
 ---
 change_id: ui-upgrade
 title: Implement DeckDelta Dark v3 design handoff (UI upgrade)
-status: implementing
+status: implemented
 created: 2026-06-27
 updated: 2026-06-28
 archived_at: null
