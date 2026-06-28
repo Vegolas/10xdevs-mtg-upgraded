@@ -93,6 +93,11 @@
   background-image: linear-gradient(to bottom, #221e18, #1a160f, #221e18);
 }
 
+/* v3 diagonal weave used as the placeholder art header on saved-deck grid cards. */
+@utility stripe {
+  background: repeating-linear-gradient(45deg, #241d12, #241d12 5px, #2d2417 5px, #2d2417 10px);
+}
+
 /*
  * v3 "notch" frame: a clipped octagon for the one primary CTA per screen. The
  * outer `notch` is the bronze/green edge; the inner `notchIn` is the fill. Used

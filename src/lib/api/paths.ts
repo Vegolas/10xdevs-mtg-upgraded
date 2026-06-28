@@ -13,8 +13,8 @@ import type { APIContext } from "astro";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
-import { parseSnapshot } from "@/lib/path";
-import type { PathStep, UpgradePath } from "@/lib/path";
+import { overallPathSummary, parseSnapshot } from "@/lib/path";
+import type { PathStep, PathSummary, UpgradePath } from "@/lib/path";
 
 /** The non-null cookie-bound client type, derived so it tracks `createClient`'s return. */
 type DbClient = NonNullable<ReturnType<typeof createClient>>;
@@ -53,6 +53,25 @@ export function toUpgradePath(row: PathRow): UpgradePath {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+/** A listed path paired with its computed base→final {@link PathSummary} (grid metadata). */
+export interface PathWithSummary {
+  path: UpgradePath;
+  summary: PathSummary;
+}
+
+/**
+ * Map a path row plus its embedded step rows to the saved-decks grid shape: the
+ * domain path plus an {@link overallPathSummary} (base→final cost + in/out counts)
+ * computed from the stored snapshots only — no card-data lookups. Step rows are
+ * sorted by `position` first so the first/last pair is the true base/final.
+ */
+export function toPathWithSummary(row: PathRow, stepRows: StepRow[]): PathWithSummary {
+  const snapshots = [...stepRows]
+    .sort((a, b) => a.position - b.position)
+    .map((step) => parseSnapshot(step.snapshot) ?? { cards: [], unresolved: [] });
+  return { path: toUpgradePath(row), summary: overallPathSummary(snapshots) };
 }
 
 /**

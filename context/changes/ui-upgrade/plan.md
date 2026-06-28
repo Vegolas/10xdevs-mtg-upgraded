@@ -726,28 +726,28 @@ churn mid-restyle. The `.dark` class removal is safe — nothing sets `.dark` on
 
 #### Automated
 
-- [x] 6.1 Build passes: `npm run build`
-- [x] 6.2 Type check passes: `npm run astro -- check`
-- [x] 6.3 Lint passes: `npm run lint`
+- [x] 6.1 Build passes: `npm run build` — 6845a38
+- [x] 6.2 Type check passes: `npm run astro -- check` — 6845a38
+- [x] 6.3 Lint passes: `npm run lint` — 6845a38
 
 #### Manual
 
-- [x] 6.4 Detail breadcrumb + real subtitle; rename/delete/add-step still work
-- [x] 6.5 Static [Edit | Duplicate] + Share row render and are inert
-- [x] 6.6 Visitor/fork chrome renders per mock, clearly static, only via preview host
+- [x] 6.4 Detail breadcrumb + real subtitle; rename/delete/add-step still work — 6845a38
+- [x] 6.5 Static [Edit | Duplicate] + Share row render and are inert — 6845a38
+- [x] 6.6 Visitor/fork chrome renders per mock, clearly static, only via preview host — 6845a38
 
 ### Phase 7: Saved-decks grid + computed metadata (Screen 5)
 
 #### Automated
 
-- [ ] 7.1 Build passes: `npm run build`
-- [ ] 7.2 Type check passes: `npm run astro -- check`
-- [ ] 7.3 Lint passes: `npm run lint`
-- [ ] 7.4 Tests pass incl. `overallPathSummary`: `npm test`
+- [x] 7.1 Build passes: `npm run build`
+- [x] 7.2 Type check passes: `npm run astro -- check`
+- [x] 7.3 Lint passes: `npm run lint`
+- [x] 7.4 Tests pass incl. `overallPathSummary`: `npm test`
 
 #### Manual
 
-- [ ] 7.5 3-col grid; each card's cost + in/out + lock match base→final diff
-- [ ] 7.6 Dashed New tile creates a path; empty state restyled
-- [ ] 7.7 Static search inert; dashboard coherent (restyled or redirects)
-- [ ] 7.8 Multi-step path shows base→final numbers (not cumulative/last-step)
+- [x] 7.5 3-col grid; each card's cost + in/out + lock match base→final diff
+- [x] 7.6 Dashed New tile creates a path; empty state restyled
+- [x] 7.7 Static search inert; dashboard coherent (restyled or redirects)
+- [x] 7.8 Multi-step path shows base→final numbers (not cumulative/last-step)
