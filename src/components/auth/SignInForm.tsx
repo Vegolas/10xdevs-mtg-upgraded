@@ -67,6 +67,7 @@ export default function SignInForm({ serverError }: Props) {
         placeholder="Your password"
         error={errors.password}
         icon={<Lock className="size-4" />}
+        labelAction={<span className="text-muted-foreground text-[11px]">Forgot?</span>}
         endContent={
           <PasswordToggle
             visible={showPassword}
@@ -82,6 +83,27 @@ export default function SignInForm({ serverError }: Props) {
       <SubmitButton pendingText="Signing in..." icon={<LogIn className="size-4" />}>
         Sign in
       </SubmitButton>
+
+      <div className="text-muted-foreground flex items-center gap-[10px] text-[11px]">
+        <span className="bg-border h-px flex-1" />
+        or continue with
+        <span className="bg-border h-px flex-1" />
+      </div>
+
+      <div className="flex gap-[10px]">
+        <button
+          type="button"
+          className="font-display border-border bg-secondary text-secondary-foreground hover:text-foreground flex-1 rounded-[5px] border py-2 text-center text-[12px] transition-colors"
+        >
+          ⟢ Google
+        </button>
+        <button
+          type="button"
+          className="font-display border-border bg-secondary text-secondary-foreground hover:text-foreground flex-1 rounded-[5px] border py-2 text-center text-[12px] transition-colors"
+        >
+          ✦ Discord
+        </button>
+      </div>
     </form>
   );
 }

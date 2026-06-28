@@ -1,0 +1,76 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Logo from "@/components/ui/Logo.astro";
+
+interface Props {
+  title?: string;
+  // Drives the active tab, heading, and subtitle.
+  mode: "signin" | "signup";
+}
+
+const { title, mode } = Astro.props;
+
+// A fixed Scryfall art_crop for the hero. The element carries a dark base colour
+// underneath (see `style` below) so the split card stays coherent if the external
+// image fails to load.
+const HERO_CARD = "Valgavoth, Harrower of Souls";
+const HERO_ART = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(HERO_CARD)}&format=image&version=art_crop`;
+
+const heading = mode === "signin" ? "Welcome back" : "Create account";
+const subtitle =
+  mode === "signin" ? "Sign in to sync and share your deltas." : "Create an account to save and share your deltas.";
+
+const tabBase = "font-display px-[10px] py-[7px] text-[13px] no-underline transition-colors";
+const tabActive = "text-foreground border-accent -mb-px border-b-2 font-semibold";
+const tabInactive = "text-muted-foreground hover:text-secondary-foreground";
+---
+
+<Layout title={title}>
+  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
+    <div class="border-border bg-card flex w-full max-w-3xl overflow-hidden rounded-xl border shadow-2xl">
+      <!-- Hero: art crop + dark gradient overlay + gold inset ring. Hidden below sm. -->
+      <div
+        class="relative hidden w-[320px] flex-none flex-col p-7 sm:flex"
+        style={`background-color:#16120d;background-image:url('${HERO_ART}');background-size:cover;background-position:center`}
+      >
+        <div class="absolute inset-0" style="background:linear-gradient(160deg,rgba(10,7,4,.42),rgba(10,7,4,.84))">
+        </div>
+        <div class="absolute inset-0" style="box-shadow:inset 0 0 0 1px rgba(201,163,92,.28)"></div>
+        <div class="relative">
+          <Logo size={30} />
+        </div>
+        <div class="flex-1"></div>
+        <div
+          class="font-display relative text-[30px] leading-[1.12] font-bold text-[#f5ead0]"
+          style="text-shadow:0 2px 14px rgba(0,0,0,.85)"
+        >
+          Every deck<br />has a delta.
+        </div>
+        <p
+          class="font-body relative mt-[10px] max-w-[236px] text-[13px] text-[#e0d2b0]"
+          style="text-shadow:0 1px 6px rgba(0,0,0,.85)"
+        >
+          Save your comparisons, trace the path from what you own to what you want, and share the build.
+        </p>
+        <div class="relative mt-[14px] font-mono text-[9px] text-[#cdb98a] opacity-70">art: {HERO_CARD}</div>
+      </div>
+
+      <!-- Form column -->
+      <div class="bg-card flex flex-1 flex-col justify-center gap-[18px] p-8">
+        <div>
+          <h1 class="font-display text-foreground text-[23px] font-semibold">{heading}</h1>
+          <p class="font-body text-muted-foreground mt-[3px] text-[12px] italic">{subtitle}</p>
+        </div>
+
+        <div class="border-border flex gap-[6px] border-b">
+          <a href="/auth/signin" class:list={`${tabBase} ${mode === "signin" ? tabActive : tabInactive}`}>Sign in</a>
+          <a href="/auth/signup" class:list={`${tabBase} ${mode === "signup" ? tabActive : tabInactive}`}
+            >Create account</a
+          >
+        </div>
+
+        <slot />
+      </div>
+    </div>
+  </div>
+</Layout>

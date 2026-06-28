@@ -697,30 +697,30 @@ churn mid-restyle. The `.dark` class removal is safe — nothing sets `.dark` on
 
 #### Automated
 
-- [x] 4.1 Build passes: `npm run build`
-- [x] 4.2 Lint passes: `npm run lint`
-- [x] 4.3 Tests pass incl. signed formatter: `npm test`
+- [x] 4.1 Build passes: `npm run build` — 929c919
+- [x] 4.2 Lint passes: `npm run lint` — 929c919
+- [x] 4.3 Tests pass incl. signed formatter: `npm test` — 929c919
 
 #### Manual
 
-- [x] 4.4 Merged shows interleaved list; back to Columns instant (no recompute)
-- [x] 4.5 Rows: correct −/+/= marker, type pill, colored border, signed price, "—" for missing
-- [x] 4.6 Sort reorders merged list consistently with columns
+- [x] 4.4 Merged shows interleaved list; back to Columns instant (no recompute) — 929c919
+- [x] 4.5 Rows: correct −/+/= marker, type pill, colored border, signed price, "—" for missing — 929c919
+- [x] 4.6 Sort reorders merged list consistently with columns — 929c919
 
 ### Phase 5: Auth — split-hero + tab links (Screen 2)
 
 #### Automated
 
-- [ ] 5.1 Build passes: `npm run build`
-- [ ] 5.2 Type check passes: `npm run astro -- check`
-- [ ] 5.3 Lint passes: `npm run lint`
+- [x] 5.1 Build passes: `npm run build`
+- [x] 5.2 Type check passes: `npm run astro -- check`
+- [x] 5.3 Lint passes: `npm run lint`
 
 #### Manual
 
-- [ ] 5.4 Split card + art hero renders; degrades to gradient on image fail
-- [ ] 5.5 Tabs switch pages via links; active tab gold-underlined
-- [ ] 5.6 Email/password sign-in + sign-up submit, redirect, surface server errors
-- [ ] 5.7 Forgot/Google/Discord visible but inert; password toggle works
+- [x] 5.4 Split card + art hero renders; degrades to gradient on image fail
+- [x] 5.5 Tabs switch pages via links; active tab gold-underlined
+- [x] 5.6 Email/password sign-in + sign-up submit, redirect, surface server errors
+- [x] 5.7 Forgot/Google/Discord visible but inert; password toggle works
 
 ### Phase 6: Saved detail + visitor (Screens 3 & 4)
 
