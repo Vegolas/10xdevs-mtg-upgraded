@@ -1,0 +1,83 @@
+---
+import Logo from "@/components/ui/Logo.astro";
+
+interface Props {
+  // Active nav key; derived from the URL when not passed explicitly.
+  current?: "new" | "paths";
+}
+
+const { user } = Astro.locals;
+const pathname = Astro.url.pathname;
+
+// Derive the active item from the route when the host page doesn't pin one.
+const current = Astro.props.current ?? (pathname.startsWith("/paths") ? "paths" : pathname === "/" ? "new" : undefined);
+
+const navBase = "flex items-center gap-2 rounded-[3px] px-[11px] py-[9px] text-[13px] transition-colors";
+const navActive =
+  "border-l-2 border-accent bg-gradient-to-r from-accent/15 to-transparent font-semibold text-foreground";
+const navIdle = "text-sidebar-foreground/80 hover:text-foreground hover:bg-accent/5";
+const navDisabled = "text-muted-foreground/60 cursor-default";
+---
+
+<aside
+  class="border-sidebar-border bg-sidebar hidden w-[188px] flex-none flex-col gap-5 border-r px-[15px] py-[18px] sm:flex"
+>
+  <Logo />
+
+  <nav class="flex flex-col gap-1">
+    <a
+      href="/"
+      class:list={[navBase, current === "new" ? navActive : navIdle]}
+      aria-current={current === "new" ? "page" : undefined}
+    >
+      <span aria-hidden="true">✦</span> New comparison
+    </a>
+    <a
+      href="/paths"
+      class:list={[navBase, current === "paths" ? navActive : navIdle]}
+      aria-current={current === "paths" ? "page" : undefined}
+    >
+      <span aria-hidden="true">▤</span> Saved decks
+    </a>
+    <span class:list={[navBase, navDisabled]} aria-disabled="true">
+      <span aria-hidden="true">⤴</span> Shared with me
+    </span>
+    <span class:list={[navBase, navDisabled]} aria-disabled="true">
+      <span aria-hidden="true">↺</span> History
+    </span>
+  </nav>
+
+  <div class="flex-1"></div>
+
+  <div class="border-sidebar-border border-t pt-[13px]">
+    {
+      user ? (
+        <details class="group">
+          <summary class="flex cursor-pointer list-none items-center gap-[10px]">
+            <span class="h-8 w-8 flex-none rounded-full border border-[#6a572f] bg-[#3a3120]" aria-hidden="true" />
+            <span class="min-w-0">
+              <span class="text-foreground block truncate text-[12px] font-semibold">{user.email}</span>
+              <span class="text-muted-foreground block text-[10px]">account ▾</span>
+            </span>
+          </summary>
+          <form method="POST" action="/api/auth/signout" class="mt-2">
+            <button
+              type="submit"
+              class="border-border bg-card text-sidebar-foreground hover:bg-accent/10 hover:text-foreground w-full rounded-md border px-3 py-1.5 text-left text-[12px] transition-colors"
+            >
+              Sign out
+            </button>
+          </form>
+        </details>
+      ) : (
+        <a
+          href="/auth/signin"
+          class="text-sidebar-foreground hover:text-foreground flex items-center gap-[10px] text-[12px] font-semibold transition-colors"
+        >
+          <span class="h-8 w-8 flex-none rounded-full border border-[#6a572f] bg-[#3a3120]" aria-hidden="true" />
+          Sign in
+        </a>
+      )
+    }
+  </div>
+</aside>

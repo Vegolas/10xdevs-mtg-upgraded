@@ -1,5 +1,5 @@
 ---
-import Layout from "@/layouts/Layout.astro";
+import AppLayout from "@/layouts/AppLayout.astro";
 import PathEditor from "@/components/path/PathEditor";
 import { createClient } from "@/lib/supabase";
 import { toUpgradePath, toPathStep } from "@/lib/api/paths";
@@ -27,9 +27,9 @@ if (supabase && id) {
 }
 ---
 
-<Layout title={path ? path.title : "Path not found"}>
+<AppLayout title={path ? path.title : "Path not found"} current="paths">
   <div class="bg-cosmic min-h-screen w-full">
-    <main class="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
+    <div class="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
       {
         path ? (
           <PathEditor path={path} initialSteps={steps} client:load />
@@ -46,6 +46,6 @@ if (supabase && id) {
           </div>
         )
       }
-    </main>
+    </div>
   </div>
-</Layout>
+</AppLayout>

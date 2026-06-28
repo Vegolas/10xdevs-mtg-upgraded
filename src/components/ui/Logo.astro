@@ -1,0 +1,26 @@
+---
+// DeckDelta brand mark: green-shield + crossed-keys glyph (lifted from the v3 SVG)
+// plus the "deck delta" wordmark — parchment "deck", brand-green "delta".
+interface Props {
+  size?: number;
+}
+
+const { size = 34 } = Astro.props;
+---
+
+<a href="/" class="flex items-center gap-[9px] no-underline">
+  <svg width={size} height={size} viewBox="0 0 100 100" class="flex-none" aria-hidden="true">
+    <path d="M46 12 A38 38 0 0 1 46 88 Z" fill="#4f9e3f"></path>
+    <g stroke="#c9a35c" stroke-width="2.2">
+      <rect x="-7" y="-22" width="14" height="44" rx="3" fill="#221c12" transform="translate(34,80) rotate(-32)"></rect>
+      <rect x="-7" y="-23" width="14" height="46" rx="3" fill="#2c2417" transform="translate(37,80) rotate(-18)"></rect>
+      <rect x="-7" y="-24" width="14" height="48" rx="3" fill="#352b1a" transform="translate(40,80) rotate(-5)"></rect>
+    </g>
+    <path d="M38 70 L60 44" stroke="#0c0a07" stroke-width="11" stroke-linecap="round"></path>
+    <path d="M38 70 L60 44" stroke="#f3ead2" stroke-width="7" stroke-linecap="round"></path>
+    <path d="M73 29 L55 31 L67 46 Z" fill="#f3ead2" stroke="#0c0a07" stroke-width="1.6" stroke-linejoin="round"></path>
+  </svg>
+  <span class="font-display text-[17px] font-bold tracking-[0.4px]">
+    <span class="text-foreground">deck</span><span class="text-brand"> delta</span>
+  </span>
+</a>

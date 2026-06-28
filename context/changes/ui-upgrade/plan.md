@@ -648,32 +648,32 @@ churn mid-restyle. The `.dark` class removal is safe — nothing sets `.dark` on
 
 #### Automated
 
-- [x] 1.1 Build passes: `npm run build`
-- [x] 1.2 Type check passes: `npm run astro -- check`
-- [x] 1.3 Lint passes: `npm run lint`
-- [x] 1.4 Existing tests still pass: `npm test`
+- [x] 1.1 Build passes: `npm run build` — b20cd8a
+- [x] 1.2 Type check passes: `npm run astro -- check` — b20cd8a
+- [x] 1.3 Lint passes: `npm run lint` — b20cd8a
+- [x] 1.4 Existing tests still pass: `npm test` — b20cd8a
 
 #### Manual
 
-- [x] 1.5 Every page renders dark; body text parchment; no blue/white leftovers
-- [x] 1.6 Cinzel + Spectral render on probes; decklist stays monospace
-- [x] 1.7 `bg-add` / `bg-brand` / `bg-success` utilities resolve
+- [x] 1.5 Every page renders dark; body text parchment; no blue/white leftovers — b20cd8a
+- [x] 1.6 Cinzel + Spectral render on probes; decklist stays monospace — b20cd8a
+- [x] 1.7 `bg-add` / `bg-brand` / `bg-success` utilities resolve — b20cd8a
 
 ### Phase 2: App shell — sidebar + logo
 
 #### Automated
 
-- [ ] 2.1 Build passes: `npm run build`
-- [ ] 2.2 Type check passes: `npm run astro -- check`
-- [ ] 2.3 Lint passes: `npm run lint`
+- [x] 2.1 Build passes: `npm run build`
+- [x] 2.2 Type check passes: `npm run astro -- check`
+- [x] 2.3 Lint passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 Sidebar shows on all app routes with correct active item
-- [ ] 2.5 Shared/History disabled; New comparison/Saved decks navigate
-- [ ] 2.6 Footer shows signed-in email; signed-out degrades gracefully
-- [ ] 2.7 Top auth bar gone; sign-out still reachable
-- [ ] 2.8 Sidebar collapses sensibly on narrow viewport
+- [x] 2.4 Sidebar shows on all app routes with correct active item
+- [x] 2.5 Shared/History disabled; New comparison/Saved decks navigate
+- [x] 2.6 Footer shows signed-in email; signed-out degrades gracefully
+- [x] 2.7 Top auth bar gone; sign-out still reachable
+- [x] 2.8 Sidebar collapses sensibly on narrow viewport
 
 ### Phase 3: Main comparison — Setup/collapse + Columns (States A/B)
 

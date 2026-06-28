@@ -1,0 +1,21 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Sidebar from "@/components/app/Sidebar.astro";
+
+interface Props {
+  title?: string;
+  // Pinned active nav item; Sidebar derives from the URL when omitted.
+  current?: "new" | "paths";
+}
+
+const { title, current } = Astro.props;
+---
+
+<Layout title={title}>
+  <div class="flex min-h-screen w-full">
+    <Sidebar current={current} />
+    <main class="min-w-0 flex-1">
+      <slot />
+    </main>
+  </div>
+</Layout>

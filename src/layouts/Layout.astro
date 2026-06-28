@@ -8,7 +8,6 @@ interface Props {
 }
 
 const { title = "10x Astro Starter" } = Astro.props;
-const { user } = Astro.locals;
 ---
 
 <!doctype html>
@@ -42,40 +41,6 @@ const { user } = Astro.locals;
         </Banner>
       ))
     }
-    <header
-      class="bg-cosmic flex items-center justify-end gap-4 border-b border-white/10 px-4 py-3 text-sm text-white sm:px-8"
-    >
-      {
-        user ? (
-          <>
-            <a href="/paths" class="text-blue-100/80 transition-colors hover:text-white">
-              My Paths
-            </a>
-            <span class="text-blue-100/50">{user.email}</span>
-            <form method="POST" action="/api/auth/signout">
-              <button
-                type="submit"
-                class="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/20"
-              >
-                Sign out
-              </button>
-            </form>
-          </>
-        ) : (
-          <>
-            <a href="/auth/signin" class="text-blue-100/80 transition-colors hover:text-white">
-              Sign in
-            </a>
-            <a
-              href="/auth/signup"
-              class="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/20"
-            >
-              Sign up
-            </a>
-          </>
-        )
-      }
-    </header>
     <slot />
   </body>
 </html>

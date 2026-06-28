@@ -1,11 +1,11 @@
 ---
-import Layout from "@/layouts/Layout.astro";
+import AppLayout from "@/layouts/AppLayout.astro";
 import DeckComparer from "@/components/deck/DeckComparer";
 ---
 
-<Layout title="DeckDelta">
+<AppLayout title="DeckDelta" current="new">
   <div class="bg-cosmic min-h-screen w-full">
-    <main class="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
+    <div class="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
       <header class="mb-8">
         <h1
           class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl"
@@ -19,6 +19,6 @@ import DeckComparer from "@/components/deck/DeckComparer";
       </header>
 
       <DeckComparer client:load />
-    </main>
+    </div>
   </div>
-</Layout>
+</AppLayout>
