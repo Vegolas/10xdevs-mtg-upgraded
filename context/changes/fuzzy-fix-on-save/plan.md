@@ -280,15 +280,15 @@ are untouched.
 
 #### Automated
 
-- [x] 2.1 Build passes: `npm run build`
-- [x] 2.2 Type check passes: `npm run astro -- check`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 Existing tests still pass: `npm test`
+- [x] 2.1 Build passes: `npm run build` — 9271350
+- [x] 2.2 Type check passes: `npm run astro -- check` — 9271350
+- [x] 2.3 Lint passes: `npm run lint` — 9271350
+- [x] 2.4 Existing tests still pass: `npm test` — 9271350
 
 #### Manual
 
-- [x] 2.5 Check shows mistyped card with did-you-mean Accept
-- [x] 2.6 Accept rewrites paste text + notice refreshes; Accept all fixes multiple
-- [x] 2.7 Add after accept saves a snapshot with the corrected card
-- [x] 2.8 Clean list shows "✓ all cards resolved"; saved steps stay read-only (no Accept)
-- [x] 2.9 `/` comparer accept still works unchanged
+- [x] 2.5 Check shows mistyped card with did-you-mean Accept — 9271350
+- [x] 2.6 Accept rewrites paste text + notice refreshes; Accept all fixes multiple — 9271350
+- [x] 2.7 Add after accept saves a snapshot with the corrected card — 9271350
+- [x] 2.8 Clean list shows "✓ all cards resolved"; saved steps stay read-only (no Accept) — 9271350
+- [x] 2.9 `/` comparer accept still works unchanged — 9271350
