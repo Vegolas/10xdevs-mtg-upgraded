@@ -39,3 +39,19 @@ export function formatUsd(value: number | null): string {
 
   return `~$${value.toFixed(2)}`;
 }
+
+/**
+ * Format a nullable USD price as a signed amount for the merged ledger rows —
+ * `+$94.38` for an added card, `−$4.77` for a removed one (true minus glyph,
+ * U+2212). `null` (no resolved price) becomes the same em-dash marker as
+ * {@link formatUsd}. The signed sibling of `formatUsd`; the `~` family is dropped
+ * because the sign already carries the meaning. Does not change `formatUsd`.
+ */
+export function formatSignedUsd(value: number | null, sign: "add" | "remove"): string {
+  if (value === null) {
+    return "—";
+  }
+
+  const amount = value.toFixed(2);
+  return sign === "add" ? `+$${amount}` : `−$${amount}`;
+}

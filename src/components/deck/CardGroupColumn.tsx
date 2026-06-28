@@ -1,7 +1,7 @@
 import type { CardGroup } from "@/lib/deck";
 import { categoryLabel, groupCopies } from "./labels";
 import { CardRow } from "./CardRow";
-import { flattenAndSort } from "./sort";
+import { flattenAndSort, sortCards } from "./sort";
 import type { SortMode } from "./sort";
 
 interface CardGroupColumnProps {
@@ -56,7 +56,7 @@ export function CardGroupColumn({ title, groups, sortMode }: CardGroupColumnProp
                   <span className="text-muted-foreground text-[11px] font-normal">{groupCopies(group)}</span>
                 </h4>
                 <ul className="space-y-2">
-                  {group.cards.map((entry) => (
+                  {sortCards(group.cards, sortMode.key, sortMode.direction).map((entry) => (
                     <CardRow key={entry.card.name} entry={entry} />
                   ))}
                 </ul>

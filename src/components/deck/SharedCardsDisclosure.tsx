@@ -2,7 +2,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import type { CardGroup } from "@/lib/deck";
 import { categoryLabel, groupCopies } from "./labels";
 import { CardRow } from "./CardRow";
-import { flattenAndSort } from "./sort";
+import { flattenAndSort, sortCards } from "./sort";
 import type { SortMode } from "./sort";
 
 interface SharedCardsDisclosureProps {
@@ -49,7 +49,7 @@ export function SharedCardsDisclosure({ groups, sortMode, open, onToggle }: Shar
                   <span className="text-xs font-normal text-blue-100/50">{groupCopies(group)}</span>
                 </h4>
                 <ul className="space-y-1">
-                  {group.cards.map((entry) => (
+                  {sortCards(group.cards, sortMode.key, sortMode.direction).map((entry) => (
                     <CardRow key={entry.card.name} entry={entry} />
                   ))}
                 </ul>

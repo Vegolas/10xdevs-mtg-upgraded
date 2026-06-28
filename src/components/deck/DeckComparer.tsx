@@ -9,6 +9,7 @@ import { CostSummary } from "./CostSummary";
 import { UnresolvedNotice } from "./UnresolvedNotice";
 import { SharedCardsDisclosure } from "./SharedCardsDisclosure";
 import { SortControl } from "./SortControl";
+import { MergedView } from "./MergedView";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
 import { useSortMode } from "./useSortMode";
 
@@ -252,9 +253,7 @@ export default function DeckComparer() {
                 These lists are identical — nothing to add or remove. Every card is shared below.
               </p>
             ) : viewMode === "merged" ? (
-              <div className="border-border text-muted-foreground rounded-md border bg-[#120e0a] p-6 text-center text-sm">
-                Merged view is coming in the next step.
-              </div>
+              <MergedView plan={view.plan} sortMode={sortMode} />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 <CardGroupColumn title="Remove" groups={view.plan.remove} sortMode={sortMode} />

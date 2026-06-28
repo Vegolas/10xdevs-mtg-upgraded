@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { SortMode } from "./sort";
+import type { SortDirection, SortKey, SortMode } from "./sort";
 
 interface SortControlProps {
   value: SortMode;
@@ -24,43 +24,45 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+/** The four ordering choices; each sets the flat list's (or in-group) key+direction. */
+const ORDERS: { label: string; key: SortKey; direction: SortDirection }[] = [
+  { label: "A→Z", key: "name", direction: "asc" },
+  { label: "Z→A", key: "name", direction: "desc" },
+  { label: "Price ↑", key: "price", direction: "asc" },
+  { label: "Price ↓", key: "price", direction: "desc" },
+];
+
 /**
- * The v3 3-chip sort: `[Grouped | Flat | Price ↓]`. Each chip emits a complete
- * {@link SortMode} — Grouped keeps the retained key/direction, Flat resets to
- * name A→Z, Price ↓ to price high→low. Purely presentational; persistence lives
- * in {@link DeckComparer}.
+ * The v3 sort row: a standalone `Grouped` toggle (by-type subsections) plus four
+ * order chips — `[A→Z | Z→A | Price ↑ | Price ↓]`. Grouped is independent of the
+ * order, so it composes with it: Grouped + Price ↓ groups by type and sorts each
+ * group price high→low, while toggling Grouped off flattens to one ordered list.
+ * Every chip emits a complete {@link SortMode} preserving the other axis. Purely
+ * presentational; persistence lives in {@link DeckComparer}.
  */
 export function SortControl({ value, onChange }: SortControlProps) {
-  const { layout, key } = value;
-  const flat = layout === "flat";
-
   return (
-    <div className="text-muted-foreground flex items-center gap-[6px] text-[11px]">
+    <div className="text-muted-foreground flex flex-wrap items-center gap-[6px] text-[11px]">
       <span>Sort</span>
       <Chip
-        active={!flat}
+        active={value.layout === "grouped"}
         onClick={() => {
-          onChange({ ...value, layout: "grouped" });
+          onChange({ ...value, layout: value.layout === "grouped" ? "flat" : "grouped" });
         }}
       >
         Grouped
       </Chip>
-      <Chip
-        active={flat && key === "name"}
-        onClick={() => {
-          onChange({ layout: "flat", key: "name", direction: "asc" });
-        }}
-      >
-        Flat
-      </Chip>
-      <Chip
-        active={flat && key === "price"}
-        onClick={() => {
-          onChange({ layout: "flat", key: "price", direction: "desc" });
-        }}
-      >
-        Price ↓
-      </Chip>
+      {ORDERS.map((order) => (
+        <Chip
+          key={order.label}
+          active={value.key === order.key && value.direction === order.direction}
+          onClick={() => {
+            onChange({ ...value, key: order.key, direction: order.direction });
+          }}
+        >
+          {order.label}
+        </Chip>
+      ))}
     </div>
   );
 }

@@ -34,15 +34,15 @@ function compareByName(a: DeckCard, b: DeckCard): number {
 }
 
 /**
- * Flatten every group's cards into one list ordered by `key`/`direction`.
+ * Order one flat card list by `key`/`direction`, returning a new array.
  *
  * Price: a `null` price is treated as "after" every real price regardless of
  * direction (unpriced cards always sink to the bottom); ties — and null-vs-null —
- * break by name A→Z so the order is stable. Pure: builds a new array, never
- * mutating the input groups.
+ * break by name A→Z so the order is stable. Name: A→Z for `asc`, Z→A for `desc`.
+ * Pure: copies the input, never mutating it.
  */
-export function flattenAndSort(groups: CardGroup[], key: SortKey, direction: SortDirection): DeckCard[] {
-  const flat = groups.flatMap((group) => group.cards);
+export function sortCards(cards: DeckCard[], key: SortKey, direction: SortDirection): DeckCard[] {
+  const flat = [...cards];
 
   flat.sort((a, b) => {
     if (key === "price") {
@@ -70,4 +70,17 @@ export function flattenAndSort(groups: CardGroup[], key: SortKey, direction: Sor
   });
 
   return flat;
+}
+
+/**
+ * Flatten every group's cards into one list ordered by `key`/`direction`. The
+ * flat-layout counterpart to the grouped-by-type default; thin wrapper over
+ * {@link sortCards}.
+ */
+export function flattenAndSort(groups: CardGroup[], key: SortKey, direction: SortDirection): DeckCard[] {
+  return sortCards(
+    groups.flatMap((group) => group.cards),
+    key,
+    direction,
+  );
 }

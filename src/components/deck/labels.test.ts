@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { CardCategory } from "@/lib/card-data";
 import type { CardGroup, DeckCard } from "@/lib/deck";
-import { categoryLabel, formatUsd, groupCopies } from "./labels";
+import { categoryLabel, formatSignedUsd, formatUsd, groupCopies } from "./labels";
 
 /** Build a minimal {@link DeckCard}; only name and quantity matter to groupCopies. */
 function deckCard(name: string, quantity = 1): DeckCard {
@@ -56,5 +56,29 @@ describe("formatUsd", () => {
 
   it("renders zero as an explicit ~$0.00", () => {
     expect(formatUsd(0)).toBe("~$0.00");
+  });
+});
+
+describe("formatSignedUsd", () => {
+  it("renders the em-dash marker for a null price regardless of sign", () => {
+    expect(formatSignedUsd(null, "add")).toBe("—");
+    expect(formatSignedUsd(null, "remove")).toBe("—");
+  });
+
+  it("prefixes added prices with a plus sign", () => {
+    expect(formatSignedUsd(94.38, "add")).toBe("+$94.38");
+  });
+
+  it("prefixes removed prices with a true minus glyph", () => {
+    expect(formatSignedUsd(4.77, "remove")).toBe("−$4.77");
+  });
+
+  it("renders to two decimals like formatUsd", () => {
+    expect(formatSignedUsd(1.5, "add")).toBe("+$1.50");
+    expect(formatSignedUsd(12, "remove")).toBe("−$12.00");
+  });
+
+  it("renders zero with an explicit sign", () => {
+    expect(formatSignedUsd(0, "add")).toBe("+$0.00");
   });
 });

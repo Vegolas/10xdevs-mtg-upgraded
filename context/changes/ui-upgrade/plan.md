@@ -679,33 +679,33 @@ churn mid-restyle. The `.dark` class removal is safe — nothing sets `.dark` on
 
 #### Automated
 
-- [x] 3.1 Build passes: `npm run build`
-- [x] 3.2 Type check passes: `npm run astro -- check`
-- [x] 3.3 Lint passes: `npm run lint`
-- [x] 3.4 Tests pass: `npm test`
+- [x] 3.1 Build passes: `npm run build` — 9edec05
+- [x] 3.2 Type check passes: `npm run astro -- check` — 9edec05
+- [x] 3.3 Lint passes: `npm run lint` — 9edec05
+- [x] 3.4 Tests pass: `npm test` — 9edec05
 
 #### Manual
 
-- [x] 3.5 Setup state: solid inputs + gold Calculate CTA builds immediately
-- [x] 3.6 After result, inputs collapse to strip; Edit reopens with text intact
-- [x] 3.7 Debounce auto-build preserved; stale runs never clobber newer
-- [x] 3.8 Red Remove / green Add headers + glyphs; 26×36 thumbs w/ hover-zoom
-- [x] 3.9 Gold cost headline; 3-chip sort reorders; unresolved Accept/Accept-all work
-- [x] 3.10 View toggle shows [Columns | Merged]; Columns renders the plan
+- [x] 3.5 Setup state: solid inputs + gold Calculate CTA builds immediately — 9edec05
+- [x] 3.6 After result, inputs collapse to strip; Edit reopens with text intact — 9edec05
+- [x] 3.7 Debounce auto-build preserved; stale runs never clobber newer — 9edec05
+- [x] 3.8 Red Remove / green Add headers + glyphs; 26×36 thumbs w/ hover-zoom — 9edec05
+- [x] 3.9 Gold cost headline; 3-chip sort reorders; unresolved Accept/Accept-all work — 9edec05
+- [x] 3.10 View toggle shows [Columns | Merged]; Columns renders the plan — 9edec05
 
 ### Phase 4: Main comparison — Merged view (State C)
 
 #### Automated
 
-- [ ] 4.1 Build passes: `npm run build`
-- [ ] 4.2 Lint passes: `npm run lint`
-- [ ] 4.3 Tests pass incl. signed formatter: `npm test`
+- [x] 4.1 Build passes: `npm run build`
+- [x] 4.2 Lint passes: `npm run lint`
+- [x] 4.3 Tests pass incl. signed formatter: `npm test`
 
 #### Manual
 
-- [ ] 4.4 Merged shows interleaved list; back to Columns instant (no recompute)
-- [ ] 4.5 Rows: correct −/+/= marker, type pill, colored border, signed price, "—" for missing
-- [ ] 4.6 Sort reorders merged list consistently with columns
+- [x] 4.4 Merged shows interleaved list; back to Columns instant (no recompute)
+- [x] 4.5 Rows: correct −/+/= marker, type pill, colored border, signed price, "—" for missing
+- [x] 4.6 Sort reorders merged list consistently with columns
 
 ### Phase 5: Auth — split-hero + tab links (Screen 2)
 
