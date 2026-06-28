@@ -12,4 +12,4 @@ export type { PlanOutcome, UnresolvedEntry, DeckSide, ResolvedDeck } from "./pla
 export { attachQuantities } from "./quantity";
 export { planAddCost } from "./cost";
 export type { PlanCost } from "./cost";
-export { applySuggestion, acceptAllSuggestions } from "./accept";
+export { applySuggestion, acceptAllSuggestions, applyAllSuggestions } from "./accept";

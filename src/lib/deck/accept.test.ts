@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { applySuggestion, acceptAllSuggestions } from "./accept";
+import { applySuggestion, acceptAllSuggestions, applyAllSuggestions } from "./accept";
 import type { UnresolvedEntry } from "./plan";
+import type { UnresolvedCard } from "@/lib/card-data";
 
 describe("applySuggestion", () => {
   it("preserves a leading numeric count prefix", () => {
@@ -61,5 +62,40 @@ describe("acceptAllSuggestions", () => {
     const result = acceptAllSuggestions("1 Sol Rng\n1 Bob", "1 Forest", entries);
 
     expect(result).toEqual({ baseText: "1 Sol Ring\n1 Bob", targetText: "1 Forest" });
+  });
+});
+
+describe("applyAllSuggestions", () => {
+  it("rewrites every suggestion-bearing entry in a single list, preserving count prefixes", () => {
+    const entries: UnresolvedCard[] = [
+      { name: "Sol Rng", reason: "not-found", suggestion: "Sol Ring" },
+      { name: "Forst", reason: "not-found", suggestion: "Forest" },
+    ];
+
+    const result = applyAllSuggestions("1 Sol Rng\n10 Forst", entries);
+
+    expect(result).toBe("1 Sol Ring\n10 Forest");
+  });
+
+  it("skips entries with a null suggestion, leaving their lines untouched", () => {
+    const entries: UnresolvedCard[] = [
+      { name: "Sol Rng", reason: "not-found", suggestion: "Sol Ring" },
+      { name: "Bob", reason: "ambiguous", suggestion: null },
+    ];
+
+    const result = applyAllSuggestions("1 Sol Rng\n1 Bob", entries);
+
+    expect(result).toBe("1 Sol Ring\n1 Bob");
+  });
+
+  it("leaves non-card lines (comment, section header, count-only) untouched", () => {
+    const text = "# notes\nDeck (99)\n4\n1 Sol Rng";
+    const entries: UnresolvedCard[] = [{ name: "Sol Rng", reason: "not-found", suggestion: "Sol Ring" }];
+
+    expect(applyAllSuggestions(text, entries)).toBe("# notes\nDeck (99)\n4\n1 Sol Ring");
+  });
+
+  it("returns the text unchanged for empty entries", () => {
+    expect(applyAllSuggestions("1 Sol Ring", [])).toBe("1 Sol Ring");
   });
 });

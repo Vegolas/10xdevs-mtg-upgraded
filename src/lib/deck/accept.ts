@@ -79,3 +79,26 @@ export function acceptAllSuggestions(
 
   return { baseText: nextBase, targetText: nextTarget };
 }
+
+/**
+ * Apply every suggestion-bearing entry to a *single* deck-list text in one pass —
+ * the one-list sibling of {@link acceptAllSuggestions} for surfaces that have a
+ * single list (the path builder) rather than a base/target pair.
+ *
+ * Folds {@link applySuggestion} over each entry whose `suggestion` is non-null
+ * (skipping ambiguous/malformed entries with no near match), threading the
+ * rewritten text. Reads only `name` + `suggestion`, so both an `UnresolvedCard`
+ * (untagged) and an `UnresolvedEntry` (deck-tagged) satisfy the parameter. Pure.
+ */
+export function applyAllSuggestions(text: string, entries: { name: string; suggestion: string | null }[]): string {
+  let next = text;
+
+  for (const entry of entries) {
+    if (entry.suggestion === null) {
+      continue;
+    }
+    next = applySuggestion(next, entry.name, entry.suggestion);
+  }
+
+  return next;
+}
