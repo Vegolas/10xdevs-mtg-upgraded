@@ -58,3 +58,35 @@ export function cumulativePathCost(steps: StepSnapshot[]): PlanCost {
 
   return { total, pricedCount, missingCount };
 }
+
+/** Total copies across a partition's groups — sum of per-card quantities, not distinct cards. */
+function totalCopies(groups: CardGroup[]): number {
+  return groups.reduce((sum, group) => sum + group.cards.reduce((groupSum, entry) => groupSum + entry.quantity, 0), 0);
+}
+
+/** The overall start→end delta of a path — what the whole path costs and how much it swaps. */
+export interface PathSummary {
+  addCount: number;
+  removeCount: number;
+  cost: PlanCost;
+}
+
+/**
+ * The path's base→final delta: a single diff of the *first* step's snapshot
+ * against the *last*, not a per-step sum. This is "what this whole path costs" —
+ * the headline a saved-deck card or detail subtitle shows. A path with fewer than
+ * two steps has no start/end pair to compare, so it is all zeros. Reuses the
+ * engine ({@link diffDecks} + {@link planAddCost}) over stored snapshots; pure.
+ */
+export function overallPathSummary(steps: StepSnapshot[]): PathSummary {
+  if (steps.length < 2) {
+    return { addCount: 0, removeCount: 0, cost: { total: 0, pricedCount: 0, missingCount: 0 } };
+  }
+
+  const plan = diffDecks(steps[0].cards, steps[steps.length - 1].cards);
+  return {
+    addCount: totalCopies(plan.add),
+    removeCount: totalCopies(plan.remove),
+    cost: planAddCost(plan.add),
+  };
+}

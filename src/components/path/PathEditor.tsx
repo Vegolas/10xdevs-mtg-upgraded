@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { resolveDeck } from "@/lib/deck";
 import type { UnresolvedEntry } from "@/lib/deck";
-import { cumulativePathCost, isUpgradePlan, stepPlan } from "@/lib/path";
+import { cumulativePathCost, isUpgradePlan, overallPathSummary, stepPlan } from "@/lib/path";
 import type { PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "@/components/deck/CardGroupColumn";
@@ -12,6 +12,7 @@ import { SharedCardsDisclosure } from "@/components/deck/SharedCardsDisclosure";
 import { SortControl } from "@/components/deck/SortControl";
 import { useSortMode } from "@/components/deck/useSortMode";
 import { formatUsd } from "@/components/deck/labels";
+import { formatSavedDate, visibilityLabel } from "@/components/path/metadata";
 import type { SortMode } from "@/components/deck/sort";
 
 interface PathEditorProps {
@@ -23,10 +24,18 @@ interface PathEditorProps {
 type AddState = { status: "idle" } | { status: "resolving" } | { status: "error"; message: string };
 
 const textareaClasses =
-  "h-40 w-full resize-y rounded-lg border border-white/20 bg-white/10 p-3 font-mono text-sm text-white placeholder-white/40 transition-colors focus:border-purple-400 focus:ring-2 focus:ring-purple-400 focus:outline-none";
+  "h-40 w-full resize-y rounded-md border border-border bg-input p-3 font-mono text-sm text-foreground placeholder-muted-foreground/60 transition-colors focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none";
 
 const textInputClasses =
-  "rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 transition-colors focus:border-purple-400 focus:ring-2 focus:ring-purple-400 focus:outline-none";
+  "rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder-muted-foreground/60 transition-colors focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none";
+
+/** A neutral v3 `btnD` action — Cinzel, uppercase, hairline border on the sidebar fill. */
+const btnDClass =
+  "font-display border-border bg-secondary text-secondary-foreground hover:text-foreground rounded-[5px] border text-[11px] tracking-[0.05em] uppercase transition-colors";
+
+/** The destructive `btnR` skin (delete actions) tuned to the v3 red palette. */
+const btnRClass =
+  "font-display rounded-[5px] border border-[#6e3a33] bg-[#2a1714] text-[#e0867d] hover:bg-[#3a201b] hover:text-[#f0a89f] text-[11px] tracking-[0.05em] uppercase transition-colors";
 
 /** No accept on a saved snapshot — checkpoints are immutable (FR-006). */
 const noop = (): void => {
@@ -60,12 +69,12 @@ function StepCard({ step, prev, sortMode }: { step: PathStep; prev: PathStep | n
   const unresolvedEntries = toReadOnlyEntries(step.snapshot.unresolved);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+    <section className="border-border bg-card space-y-4 rounded-md border p-5">
       <header className="flex items-baseline gap-2">
-        <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-xs font-medium text-purple-200">
+        <span className="bg-secondary text-accent rounded-full px-2 py-0.5 text-xs font-medium">
           {step.position === 0 ? "Base" : `Step ${step.position}`}
         </span>
-        <h2 className="text-lg font-semibold text-white">{step.name}</h2>
+        <h2 className="font-display text-foreground text-lg font-semibold">{step.name}</h2>
       </header>
 
       {unresolvedEntries.length > 0 ? (
@@ -77,7 +86,7 @@ function StepCard({ step, prev, sortMode }: { step: PathStep; prev: PathStep | n
           {plan.add.length > 0 ? <CostSummary add={plan.add} /> : null}
 
           {plan.remove.length === 0 && plan.add.length === 0 ? (
-            <p className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-blue-100/70">
+            <p className="border-border bg-input text-muted-foreground rounded-md border p-3 text-sm">
               Identical to the previous step — nothing to add or remove.
             </p>
           ) : (
@@ -127,6 +136,19 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   const addToken = useRef(0);
 
   const cumulative = cumulativePathCost(steps.map((step) => step.snapshot));
+  // Base→final delta for the header subtitle (in/out + cost); zeros for <2 steps.
+  const summary = overallPathSummary(steps.map((step) => step.snapshot));
+  const hasDelta = steps.length > 1;
+  const subtitle = [
+    `Saved ${formatSavedDate(path.updatedAt)}`,
+    visibilityLabel(path.visibility),
+    ...(hasDelta
+      ? [
+          `${summary.addCount} in / ${summary.removeCount} out`,
+          summary.cost.pricedCount > 0 ? formatUsd(summary.cost.total) : "—",
+        ]
+      : []),
+  ].join(" · ");
 
   const handleAddStep = useCallback(async () => {
     const trimmedName = name.trim();
@@ -236,16 +258,18 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   }, [path.id]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <a href="/paths" className="inline-flex items-center gap-1 text-sm text-blue-100/70 hover:text-white">
-          <ArrowLeft className="size-4" />
-          My Paths
+        <a
+          href="/paths"
+          className="font-display text-muted-foreground hover:text-foreground text-[11px] tracking-[0.05em]"
+        >
+          Saved decks ›
         </a>
         <SortControl value={sortMode} onChange={handleSortChange} />
       </div>
 
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         {renaming ? (
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -261,7 +285,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
               type="button"
               variant="outline"
               size="sm"
-              className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+              className={btnDClass}
               onClick={() => {
                 void handleRename();
               }}
@@ -273,7 +297,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
               type="button"
               variant="outline"
               size="sm"
-              className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+              className={btnDClass}
               onClick={() => {
                 setTitleDraft(title);
                 setRenaming(false);
@@ -285,14 +309,15 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <h1 className="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
-              {title}
-            </h1>
+            <div>
+              <h1 className="font-display text-foreground text-2xl font-semibold sm:text-3xl">{title}</h1>
+              <p className="font-body text-muted-foreground mt-1 text-xs italic">{subtitle}</p>
+            </div>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+              className={btnDClass}
               aria-label="Rename path"
               onClick={() => {
                 setTitleDraft(title);
@@ -303,40 +328,70 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             </Button>
           </div>
         )}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="border-red-400/40 bg-transparent text-red-100 hover:bg-red-500/10 hover:text-white"
-          onClick={() => {
-            void handleDeletePath();
-          }}
-        >
-          <Trash2 className="size-4" />
-          Delete path
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Static: the v3 owner-detail Edit/Duplicate pair — visual only (Duplicate is unwired). */}
+          <span className={`${btnDClass} cursor-default px-3 py-1.5`} aria-disabled="true">
+            ✎ Edit
+          </span>
+          <span className={`${btnDClass} cursor-default px-3 py-1.5`} aria-disabled="true">
+            ⎘ Duplicate
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={btnRClass}
+            onClick={() => {
+              void handleDeletePath();
+            }}
+          >
+            <Trash2 className="size-4" />
+            Delete path
+          </Button>
+        </div>
       </header>
 
+      {/* Static Share row — copy-link field + Copy + Public toggle, all inert (no backing endpoint). */}
+      <div className="border-border flex flex-wrap items-center gap-3 rounded-md border bg-[#1c1710] p-3">
+        <span className="font-display text-foreground text-[11px] font-semibold tracking-[0.05em] uppercase">
+          ⤴ Share
+        </span>
+        <span className="border-border bg-input text-muted-foreground flex-1 rounded-[5px] border px-3 py-1.5 font-mono text-[11px]">
+          deckdelta.app/s/share-link
+        </span>
+        <span className={`${btnDClass} cursor-default px-3 py-1.5`} aria-disabled="true">
+          Copy
+        </span>
+        <span
+          className="font-display bg-primary text-primary-foreground cursor-default rounded-[5px] border border-[#a9863f] px-3 py-1.5 text-[10px] font-semibold tracking-[0.05em] uppercase"
+          aria-disabled="true"
+        >
+          Public ◐
+        </span>
+      </div>
+
       {mutationError ? (
-        <p className="rounded-lg border border-red-500/30 bg-red-900/20 p-3 text-sm text-red-200">{mutationError}</p>
+        <p className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]">{mutationError}</p>
       ) : null}
 
       {steps.length > 1 ? (
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-          <p className="text-base font-semibold text-white">
+        <div className="border-border bg-card rounded-md border p-4">
+          <p className="text-foreground text-base font-semibold">
             Cumulative upgrade cost: {cumulative.pricedCount > 0 ? formatUsd(cumulative.total) : "—"}
             {cumulative.missingCount > 0 ? (
-              <span className="ml-1 text-sm font-normal text-blue-100/50">
+              <span className="text-muted-foreground ml-1 text-sm font-normal">
                 · {cumulative.missingCount} {cumulative.missingCount === 1 ? "card" : "cards"} without price data
               </span>
             ) : null}
           </p>
-          <p className="mt-1 text-xs text-blue-100/50">Sum of every checkpoint&apos;s additions across the path.</p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Sum of every checkpoint&apos;s additions across the path.
+          </p>
         </div>
       ) : null}
 
       {steps.length === 0 ? (
-        <p className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-blue-100/70">
+        <p className="border-border bg-card text-muted-foreground rounded-md border p-4 text-sm">
           No checkpoints yet. Add a base deck below to start the path.
         </p>
       ) : (
@@ -353,7 +408,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
+            className={btnRClass}
             onClick={() => {
               void handleDeleteLast();
             }}
@@ -364,10 +419,12 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
         </div>
       ) : null}
 
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-5">
-        <h2 className="text-lg font-semibold text-white">{steps.length === 0 ? "Add base deck" : "Add checkpoint"}</h2>
+      <section className="border-border bg-card space-y-3 rounded-md border p-5">
+        <h2 className="font-display text-foreground text-lg font-semibold">
+          {steps.length === 0 ? "Add base deck" : "Add checkpoint"}
+        </h2>
         <div>
-          <label htmlFor="step-name" className="mb-1 block text-sm font-medium text-blue-100/80">
+          <label htmlFor="step-name" className="text-muted-foreground mb-1 block text-sm font-medium">
             Checkpoint name
           </label>
           <input
@@ -382,7 +439,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
           />
         </div>
         <div>
-          <label htmlFor="step-list" className="mb-1 block text-sm font-medium text-blue-100/80">
+          <label htmlFor="step-list" className="text-muted-foreground mb-1 block text-sm font-medium">
             Deck list
           </label>
           <textarea
@@ -398,7 +455,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
         </div>
 
         {addState.status === "error" ? (
-          <p className="rounded-lg border border-red-500/30 bg-red-900/20 p-3 text-sm text-red-200">
+          <p className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]">
             {addState.message}
           </p>
         ) : null}
@@ -408,7 +465,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="border-purple-400/50 bg-purple-500/20 text-white hover:bg-purple-500/30"
+            className="font-display bg-primary text-primary-foreground border-[#a9863f] text-[11px] font-semibold tracking-[0.05em] uppercase transition-opacity hover:opacity-90"
             disabled={addState.status === "resolving"}
             onClick={() => {
               void handleAddStep();
@@ -416,7 +473,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
           >
             {addState.status === "resolving" ? (
               <>
-                <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                <span className="border-primary-foreground/40 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
                 Resolving…
               </>
             ) : (

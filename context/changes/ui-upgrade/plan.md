@@ -711,30 +711,30 @@ churn mid-restyle. The `.dark` class removal is safe — nothing sets `.dark` on
 
 #### Automated
 
-- [x] 5.1 Build passes: `npm run build`
-- [x] 5.2 Type check passes: `npm run astro -- check`
-- [x] 5.3 Lint passes: `npm run lint`
+- [x] 5.1 Build passes: `npm run build` — a761a8c
+- [x] 5.2 Type check passes: `npm run astro -- check` — a761a8c
+- [x] 5.3 Lint passes: `npm run lint` — a761a8c
 
 #### Manual
 
-- [x] 5.4 Split card + art hero renders; degrades to gradient on image fail
-- [x] 5.5 Tabs switch pages via links; active tab gold-underlined
-- [x] 5.6 Email/password sign-in + sign-up submit, redirect, surface server errors
-- [x] 5.7 Forgot/Google/Discord visible but inert; password toggle works
+- [x] 5.4 Split card + art hero renders; degrades to gradient on image fail — a761a8c
+- [x] 5.5 Tabs switch pages via links; active tab gold-underlined — a761a8c
+- [x] 5.6 Email/password sign-in + sign-up submit, redirect, surface server errors — a761a8c
+- [x] 5.7 Forgot/Google/Discord visible but inert; password toggle works — a761a8c
 
 ### Phase 6: Saved detail + visitor (Screens 3 & 4)
 
 #### Automated
 
-- [ ] 6.1 Build passes: `npm run build`
-- [ ] 6.2 Type check passes: `npm run astro -- check`
-- [ ] 6.3 Lint passes: `npm run lint`
+- [x] 6.1 Build passes: `npm run build`
+- [x] 6.2 Type check passes: `npm run astro -- check`
+- [x] 6.3 Lint passes: `npm run lint`
 
 #### Manual
 
-- [ ] 6.4 Detail breadcrumb + real subtitle; rename/delete/add-step still work
-- [ ] 6.5 Static [Edit | Duplicate] + Share row render and are inert
-- [ ] 6.6 Visitor/fork chrome renders per mock, clearly static, only via preview host
+- [x] 6.4 Detail breadcrumb + real subtitle; rename/delete/add-step still work
+- [x] 6.5 Static [Edit | Duplicate] + Share row render and are inert
+- [x] 6.6 Visitor/fork chrome renders per mock, clearly static, only via preview host
 
 ### Phase 7: Saved-decks grid + computed metadata (Screen 5)
 
