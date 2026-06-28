@@ -272,23 +272,23 @@ are untouched.
 
 #### Automated
 
-- [x] 1.1 Tests pass incl. new helper: `npm test`
-- [x] 1.2 Lint passes: `npm run lint`
-- [x] 1.3 Type check passes: `npm run astro -- check`
+- [x] 1.1 Tests pass incl. new helper: `npm test` — 90b9b4c
+- [x] 1.2 Lint passes: `npm run lint` — 90b9b4c
+- [x] 1.3 Type check passes: `npm run astro -- check` — 90b9b4c
 
 ### Phase 2: Wire the Check flow into PathEditor
 
 #### Automated
 
-- [ ] 2.1 Build passes: `npm run build`
-- [ ] 2.2 Type check passes: `npm run astro -- check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Existing tests still pass: `npm test`
+- [x] 2.1 Build passes: `npm run build`
+- [x] 2.2 Type check passes: `npm run astro -- check`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 Existing tests still pass: `npm test`
 
 #### Manual
 
-- [ ] 2.5 Check shows mistyped card with did-you-mean Accept
-- [ ] 2.6 Accept rewrites paste text + notice refreshes; Accept all fixes multiple
-- [ ] 2.7 Add after accept saves a snapshot with the corrected card
-- [ ] 2.8 Clean list shows "✓ all cards resolved"; saved steps stay read-only (no Accept)
-- [ ] 2.9 `/` comparer accept still works unchanged
+- [x] 2.5 Check shows mistyped card with did-you-mean Accept
+- [x] 2.6 Accept rewrites paste text + notice refreshes; Accept all fixes multiple
+- [x] 2.7 Add after accept saves a snapshot with the corrected card
+- [x] 2.8 Clean list shows "✓ all cards resolved"; saved steps stay read-only (no Accept)
+- [x] 2.9 `/` comparer accept still works unchanged

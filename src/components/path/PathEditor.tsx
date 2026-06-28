@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { resolveDeck } from "@/lib/deck";
+import { resolveDeck, applySuggestion, applyAllSuggestions } from "@/lib/deck";
 import type { UnresolvedEntry } from "@/lib/deck";
+import type { UnresolvedCard } from "@/lib/card-data";
 import { cumulativePathCost, isUpgradePlan, overallPathSummary, stepPlan } from "@/lib/path";
 import type { PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,9 @@ interface PathEditorProps {
 
 /** The "add checkpoint" lifecycle: resolving a pasted list, then persisting it. */
 type AddState = { status: "idle" } | { status: "resolving" } | { status: "error"; message: string };
+
+/** The pre-save "Check" lifecycle: resolve the pasted list to surface unresolved cards before save. */
+type CheckState = { status: "idle" } | { status: "checking" } | { status: "checked"; unresolved: UnresolvedCard[] };
 
 const textareaClasses =
   "h-40 w-full resize-y rounded-md border border-border bg-input p-3 font-mono text-sm text-foreground placeholder-muted-foreground/60 transition-colors focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none";
@@ -52,6 +56,21 @@ function toReadOnlyEntries(unresolved: UnresolvedLite[]): UnresolvedEntry[] {
     name: entry.name,
     reason: entry.reason,
     suggestion: null,
+    deck: "target" as const,
+  }));
+}
+
+/**
+ * Re-shape freshly-resolved unresolved cards for the *editable* pre-save notice:
+ * suggestions are KEPT (so Accept works) and the side tag is nominal (a single
+ * list has no base/target side). Sibling of {@link toReadOnlyEntries}, which
+ * strips suggestions for saved (immutable) steps.
+ */
+function toEditableEntries(unresolved: UnresolvedCard[]): UnresolvedEntry[] {
+  return unresolved.map((entry) => ({
+    name: entry.name,
+    reason: entry.reason,
+    suggestion: entry.suggestion,
     deck: "target" as const,
   }));
 }
@@ -134,6 +153,9 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
 
   // Only the latest add run may write the view (mirrors DeckComparer).
   const addToken = useRef(0);
+  // Only the latest Check run may write the check state (same guard, separate counter).
+  const checkToken = useRef(0);
+  const [checkState, setCheckState] = useState<CheckState>({ status: "idle" });
 
   const cumulative = cumulativePathCost(steps.map((step) => step.snapshot));
   // Base→final delta for the header subtitle (in/out + cost); zeros for <2 steps.
@@ -204,6 +226,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       setName("");
       setListText("");
       setAddState({ status: "idle" });
+      setCheckState({ status: "idle" });
     } catch {
       if (token !== addToken.current) {
         return;
@@ -211,6 +234,57 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       setAddState({ status: "error", message: "Couldn't save the checkpoint. Check your connection and retry." });
     }
   }, [name, listText, path.id]);
+
+  // Pre-save Check: resolve the pasted list (no POST) so unresolved cards surface
+  // with a one-click Accept before the immutable snapshot is written. Token-guarded
+  // so a slow resolve can't clobber a newer one (mirrors the add flow).
+  const runCheck = useCallback(async (text: string) => {
+    if (text.trim() === "") {
+      setCheckState({ status: "idle" });
+      return;
+    }
+    const token = ++checkToken.current;
+    setCheckState({ status: "checking" });
+    try {
+      const resolved = await resolveDeck(text);
+      if (token !== checkToken.current) {
+        return;
+      }
+      setCheckState({ status: "checked", unresolved: resolved.unresolved });
+    } catch (error) {
+      if (token !== checkToken.current) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : "Could not reach the card database.";
+      setAddState({ status: "error", message });
+      setCheckState({ status: "idle" });
+    }
+  }, []);
+
+  // Accept one fuzzy suggestion: rewrite the matching line(s) in the paste text,
+  // then re-check so the notice reflects the correction. Mirrors DeckComparer's
+  // accept loop, but explicit — the path builder has no debounce. Reads the
+  // rewritten text from `next`, not state, so the re-check isn't stale.
+  const handleAccept = useCallback(
+    (entry: UnresolvedEntry) => {
+      if (entry.suggestion === null) {
+        return;
+      }
+      const next = applySuggestion(listText, entry.name, entry.suggestion);
+      setListText(next);
+      void runCheck(next);
+    },
+    [listText, runCheck],
+  );
+
+  const handleAcceptAll = useCallback(() => {
+    if (checkState.status !== "checked") {
+      return;
+    }
+    const next = applyAllSuggestions(listText, checkState.unresolved);
+    setListText(next);
+    void runCheck(next);
+  }, [checkState, listText, runCheck]);
 
   const handleDeleteLast = useCallback(async () => {
     if (steps.length === 0) {
@@ -454,13 +528,37 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
           />
         </div>
 
+        {checkState.status === "checked" ? (
+          checkState.unresolved.length > 0 ? (
+            <UnresolvedNotice
+              entries={toEditableEntries(checkState.unresolved)}
+              onAccept={handleAccept}
+              onAcceptAll={handleAcceptAll}
+            />
+          ) : (
+            <p className="border-border bg-card text-add rounded-md border p-3 text-sm">✓ All cards resolved.</p>
+          )
+        ) : null}
+
         {addState.status === "error" ? (
           <p className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]">
             {addState.message}
           </p>
         ) : null}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={btnDClass}
+            disabled={listText.trim() === "" || checkState.status === "checking" || addState.status === "resolving"}
+            onClick={() => {
+              void runCheck(listText);
+            }}
+          >
+            {checkState.status === "checking" ? "Checking…" : "Check"}
+          </Button>
           <Button
             type="button"
             variant="outline"
