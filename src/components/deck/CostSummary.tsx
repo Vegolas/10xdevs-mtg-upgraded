@@ -18,16 +18,17 @@ export function CostSummary({ add }: CostSummaryProps) {
   const { total, pricedCount, missingCount } = planAddCost(add);
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-      <p className="text-base font-semibold text-white">
-        Total upgrade cost: {pricedCount > 0 ? formatUsd(total) : "—"}
+    <div className="border-accent/60 rounded-md border bg-gradient-to-b from-[#221c12] to-[#1a150e] p-4">
+      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.5px] uppercase">Total upgrade cost</p>
+      <p className="font-display text-foreground text-2xl font-bold">
+        {pricedCount > 0 ? formatUsd(total) : "—"}
         {missingCount > 0 ? (
-          <span className="ml-1 text-sm font-normal text-blue-100/50">
+          <span className="text-muted-foreground ml-2 text-sm font-normal">
             · {missingCount} {missingCount === 1 ? "card" : "cards"} without price data
           </span>
         ) : null}
       </p>
-      <p className="mt-1 text-xs text-blue-100/50">
+      <p className="text-muted-foreground mt-1 text-xs">
         Approximate prices from Scryfall; actual cost varies by vendor and region.
       </p>
     </div>

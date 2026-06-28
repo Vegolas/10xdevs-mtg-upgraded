@@ -18,9 +18,9 @@ const REASON_LABELS: Record<UnresolvedReason, string> = {
   malformed: "couldn't read",
 };
 
-/** Accept-button styling tuned to the red notice palette (mirrors Retry). */
+/** Accept-button styling tuned to the v3 red notice palette (`btnR`). */
 const acceptButtonClasses =
-  "h-6 border-red-400/40 bg-transparent px-2 text-red-100 hover:bg-red-500/10 hover:text-white";
+  "font-display h-6 border-[#6e3a33] bg-[#2a1714] px-2 text-[10px] uppercase tracking-[0.05em] text-[#e0867d] hover:bg-[#3a201b] hover:text-[#f0a89f]";
 
 /**
  * Lists the inputs that did not become real cards (typos, malformed lines,
@@ -34,9 +34,9 @@ export function UnresolvedNotice({ entries, onAccept, onAcceptAll }: UnresolvedN
   const suggestionCount = entries.filter((entry) => entry.suggestion).length;
 
   return (
-    <div className="rounded-lg border border-red-500/30 bg-red-900/20 p-4 text-sm text-red-200">
+    <div className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-4 text-sm text-[#b5847e]">
       <div className="flex items-center justify-between gap-3">
-        <p className="flex items-center gap-2 font-medium text-red-300">
+        <p className="text-destructive flex items-center gap-2 font-semibold">
           <CircleAlert className="size-4 shrink-0" />
           {entries.length === 1 ? "1 card couldn't be matched" : `${entries.length} cards couldn't be matched`}
         </p>
@@ -49,16 +49,16 @@ export function UnresolvedNotice({ entries, onAccept, onAcceptAll }: UnresolvedN
       <ul className="mt-2 space-y-1">
         {entries.map((entry, index) => (
           <li key={`${entry.deck}-${entry.name}-${index}`}>
-            <span className="font-medium text-red-100">{entry.name}</span>
-            <span className="text-red-200/70">
+            <span className="font-medium text-[#e8b0a8]">{entry.name}</span>
+            <span className="text-[#8a6058]">
               {" "}
               ({entry.deck}, {REASON_LABELS[entry.reason]})
             </span>
             {entry.suggestion ? (
               <>
-                <span className="text-red-200/90">
+                <span className="text-[#b5847e]">
                   {" "}
-                  — did you mean <strong className="text-red-100">{entry.suggestion}</strong>?
+                  — did you mean <strong className="text-[#e8b0a8]">{entry.suggestion}</strong>?
                 </span>{" "}
                 <Button
                   type="button"

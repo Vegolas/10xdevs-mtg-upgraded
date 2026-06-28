@@ -10,47 +10,61 @@ interface CardGroupColumnProps {
   sortMode: SortMode;
 }
 
+/** Header skin per side: red Remove (− glyph) vs green Add (+ glyph). */
+const TONES = {
+  remove: { glyph: "−", header: "bg-[#2a1714] border-b border-[#45211d]", text: "text-destructive" },
+  add: { glyph: "+", header: "bg-[#1c2616] border-b border-[#34471f]", text: "text-add" },
+} as const;
+
 /**
- * One side of the upgrade plan (Remove or Add): a labeled column with one
- * subsection per card-type group, or a muted "No changes" line when empty. In
- * flat mode the per-type subsections collapse into one list reordered by the
- * active sort; the title and total are unchanged either way.
+ * One side of the upgrade plan (Remove or Add): a v3 dark panel with a
+ * color-coded header (sign glyph + title + total) and one subsection per
+ * card-type group, or a muted "No changes" line when empty. In flat mode the
+ * per-type subsections collapse into one list reordered by the active sort; the
+ * title and total are unchanged either way. The `tone` is derived from `title`.
  */
 export function CardGroupColumn({ title, groups, sortMode }: CardGroupColumnProps) {
   const total = groups.reduce((sum, group) => sum + groupCopies(group), 0);
+  const tone = title.toLowerCase() === "remove" ? TONES.remove : TONES.add;
 
   return (
-    <section className="rounded-xl border border-white/10 bg-white/5 p-4">
-      <h3 className="mb-3 flex items-baseline gap-2 text-sm font-semibold tracking-wide text-white uppercase">
-        {title}
-        <span className="text-xs font-normal text-blue-100/50">{total}</span>
-      </h3>
+    <section className="border-border overflow-hidden rounded-md border bg-[#120e0a]">
+      <div className={`flex items-center justify-between px-3 py-[9px] ${tone.header}`}>
+        <h3
+          className={`font-display flex items-baseline gap-2 text-[12px] font-bold tracking-[0.06em] uppercase ${tone.text}`}
+        >
+          <span aria-hidden="true">{tone.glyph}</span> {title}
+        </h3>
+        <span className="text-muted-foreground text-[11px]">{total}</span>
+      </div>
 
-      {groups.length === 0 ? (
-        <p className="text-sm text-blue-100/40">No changes</p>
-      ) : sortMode.layout === "flat" ? (
-        <ul className="space-y-1">
-          {flattenAndSort(groups, sortMode.key, sortMode.direction).map((entry) => (
-            <CardRow key={entry.card.name} entry={entry} />
-          ))}
-        </ul>
-      ) : (
-        <div className="space-y-4">
-          {groups.map((group) => (
-            <div key={group.category}>
-              <h4 className="mb-1 flex items-baseline gap-2 text-xs font-medium tracking-wide text-purple-300 uppercase">
-                {categoryLabel(group.category)}
-                <span className="text-xs font-normal text-blue-100/50">{groupCopies(group)}</span>
-              </h4>
-              <ul className="space-y-1">
-                {group.cards.map((entry) => (
-                  <CardRow key={entry.card.name} entry={entry} />
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="p-3">
+        {groups.length === 0 ? (
+          <p className="text-muted-foreground/70 text-[12px]">No changes</p>
+        ) : sortMode.layout === "flat" ? (
+          <ul className="space-y-2">
+            {flattenAndSort(groups, sortMode.key, sortMode.direction).map((entry) => (
+              <CardRow key={entry.card.name} entry={entry} />
+            ))}
+          </ul>
+        ) : (
+          <div className="space-y-4">
+            {groups.map((group) => (
+              <div key={group.category}>
+                <h4 className="font-display text-accent mb-2 flex items-baseline gap-2 text-[11px] font-semibold tracking-[0.05em] uppercase">
+                  {categoryLabel(group.category)}
+                  <span className="text-muted-foreground text-[11px] font-normal">{groupCopies(group)}</span>
+                </h4>
+                <ul className="space-y-2">
+                  {group.cards.map((entry) => (
+                    <CardRow key={entry.card.name} entry={entry} />
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

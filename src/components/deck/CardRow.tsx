@@ -26,7 +26,7 @@ export function CardRow({ entry }: CardRowProps) {
   const [preview, setPreview] = useState(false);
 
   return (
-    <li className="flex items-center gap-2 text-sm text-blue-100/80">
+    <li className="text-secondary-foreground flex items-center gap-[9px] text-[12px]">
       {thumb !== null ? (
         <button
           type="button"
@@ -43,14 +43,14 @@ export function CardRow({ entry }: CardRowProps) {
           onBlur={() => {
             setPreview(false);
           }}
-          className="relative shrink-0 cursor-zoom-in rounded-sm p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+          className="focus-visible:ring-ring relative shrink-0 cursor-zoom-in rounded-sm p-0 focus:outline-none focus-visible:ring-2"
         >
           <img
             src={thumb}
             alt=""
             loading="lazy"
             decoding="async"
-            className="h-14 w-10 rounded-sm bg-white/5 object-cover"
+            className="border-border bg-card h-9 w-[26px] rounded-sm border object-cover"
           />
           {preview && card.imageUrl !== null ? (
             <img
@@ -64,13 +64,13 @@ export function CardRow({ entry }: CardRowProps) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-14 w-10 shrink-0 items-center justify-center rounded-sm border border-white/10 bg-white/5 text-center text-[8px] leading-tight text-blue-100/30"
+          className="border-border bg-card text-muted-foreground/60 flex h-9 w-[26px] shrink-0 items-center justify-center rounded-sm border text-center text-[7px] leading-tight"
         >
-          no image
+          no img
         </span>
       )}
-      <span>{label}</span>
-      <span className="ml-auto text-blue-100/50 tabular-nums">{formatUsd(card.priceUsd)}</span>
+      <span className="flex-1">{label}</span>
+      <span className="text-muted-foreground ml-auto text-[11px] tabular-nums">{formatUsd(card.priceUsd)}</span>
     </li>
   );
 }

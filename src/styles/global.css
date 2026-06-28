@@ -93,6 +93,37 @@
   background-image: linear-gradient(to bottom, #221e18, #1a160f, #221e18);
 }
 
+/*
+ * v3 "notch" frame: a clipped octagon for the one primary CTA per screen. The
+ * outer `notch` is the bronze/green edge; the inner `notchIn` is the fill. Used
+ * by `NotchButton` (Calculate, Sign in, Fork).
+ */
+@utility notch {
+  clip-path: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
+}
+
+@utility notchIn {
+  clip-path: polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  );
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

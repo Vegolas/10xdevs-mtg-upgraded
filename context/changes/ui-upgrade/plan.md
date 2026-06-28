@@ -663,35 +663,35 @@ churn mid-restyle. The `.dark` class removal is safe — nothing sets `.dark` on
 
 #### Automated
 
-- [x] 2.1 Build passes: `npm run build`
-- [x] 2.2 Type check passes: `npm run astro -- check`
-- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.1 Build passes: `npm run build` — b61b6b7
+- [x] 2.2 Type check passes: `npm run astro -- check` — b61b6b7
+- [x] 2.3 Lint passes: `npm run lint` — b61b6b7
 
 #### Manual
 
-- [x] 2.4 Sidebar shows on all app routes with correct active item
-- [x] 2.5 Shared/History disabled; New comparison/Saved decks navigate
-- [x] 2.6 Footer shows signed-in email; signed-out degrades gracefully
-- [x] 2.7 Top auth bar gone; sign-out still reachable
-- [x] 2.8 Sidebar collapses sensibly on narrow viewport
+- [x] 2.4 Sidebar shows on all app routes with correct active item — b61b6b7
+- [x] 2.5 Shared/History disabled; New comparison/Saved decks navigate — b61b6b7
+- [x] 2.6 Footer shows signed-in email; signed-out degrades gracefully — b61b6b7
+- [x] 2.7 Top auth bar gone; sign-out still reachable — b61b6b7
+- [x] 2.8 Sidebar collapses sensibly on narrow viewport — b61b6b7
 
 ### Phase 3: Main comparison — Setup/collapse + Columns (States A/B)
 
 #### Automated
 
-- [ ] 3.1 Build passes: `npm run build`
-- [ ] 3.2 Type check passes: `npm run astro -- check`
-- [ ] 3.3 Lint passes: `npm run lint`
-- [ ] 3.4 Tests pass: `npm test`
+- [x] 3.1 Build passes: `npm run build`
+- [x] 3.2 Type check passes: `npm run astro -- check`
+- [x] 3.3 Lint passes: `npm run lint`
+- [x] 3.4 Tests pass: `npm test`
 
 #### Manual
 
-- [ ] 3.5 Setup state: solid inputs + gold Calculate CTA builds immediately
-- [ ] 3.6 After result, inputs collapse to strip; Edit reopens with text intact
-- [ ] 3.7 Debounce auto-build preserved; stale runs never clobber newer
-- [ ] 3.8 Red Remove / green Add headers + glyphs; 26×36 thumbs w/ hover-zoom
-- [ ] 3.9 Gold cost headline; 3-chip sort reorders; unresolved Accept/Accept-all work
-- [ ] 3.10 View toggle shows [Columns | Merged]; Columns renders the plan
+- [x] 3.5 Setup state: solid inputs + gold Calculate CTA builds immediately
+- [x] 3.6 After result, inputs collapse to strip; Edit reopens with text intact
+- [x] 3.7 Debounce auto-build preserved; stale runs never clobber newer
+- [x] 3.8 Red Remove / green Add headers + glyphs; 26×36 thumbs w/ hover-zoom
+- [x] 3.9 Gold cost headline; 3-chip sort reorders; unresolved Accept/Accept-all work
+- [x] 3.10 View toggle shows [Columns | Merged]; Columns renders the plan
 
 ### Phase 4: Main comparison — Merged view (State C)
 

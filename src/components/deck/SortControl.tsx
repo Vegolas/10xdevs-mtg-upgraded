@@ -1,106 +1,66 @@
 import type { ReactNode } from "react";
-import { ArrowDown, ArrowUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { SortDirection, SortKey, SortMode } from "./sort";
+import type { SortMode } from "./sort";
 
 interface SortControlProps {
   value: SortMode;
   onChange: (mode: SortMode) => void;
 }
 
-/** Phrase the direction toggle for the active key (price reads as a range). */
-function directionLabel(key: SortKey, direction: SortDirection): string {
-  if (key === "price") {
-    return direction === "asc" ? "Low → High" : "High → Low";
-  }
-  return direction === "asc" ? "A → Z" : "Z → A";
-}
-
-/** A small segmented toggle button — purple-accented when active. */
-function ToggleButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+/** One sort chip — gold when active, muted `btnD`-style otherwise. */
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
-      size="sm"
       aria-pressed={active}
-      className={
-        active
-          ? "border-purple-400/50 bg-purple-500/20 text-white"
-          : "border-white/20 bg-transparent text-blue-100/70 hover:bg-white/10 hover:text-white"
-      }
       onClick={onClick}
+      className={`font-display rounded-[5px] border px-[9px] py-[5px] text-[10px] tracking-[0.05em] uppercase transition-colors ${
+        active
+          ? "bg-primary text-primary-foreground border-[#a9863f] font-semibold"
+          : "border-border bg-secondary text-secondary-foreground hover:text-foreground font-medium"
+      }`}
     >
       {children}
-    </Button>
+    </button>
   );
 }
 
 /**
- * The single global sort control: a Grouped ↔ Flat toggle, and — only in flat
- * mode — a Name/Price key picker plus a direction toggle. Purely presentational:
- * it reads `value` and emits a complete {@link SortMode} on every change. The
- * `key`/`direction` are preserved while grouped so toggling back to flat restores
- * the last flat sort. Persistence lives in {@link DeckComparer}, not here.
+ * The v3 3-chip sort: `[Grouped | Flat | Price ↓]`. Each chip emits a complete
+ * {@link SortMode} — Grouped keeps the retained key/direction, Flat resets to
+ * name A→Z, Price ↓ to price high→low. Purely presentational; persistence lives
+ * in {@link DeckComparer}.
  */
 export function SortControl({ value, onChange }: SortControlProps) {
-  const { layout, key, direction } = value;
+  const { layout, key } = value;
   const flat = layout === "flat";
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="text-blue-100/60">Sort</span>
-      <ToggleButton
+    <div className="text-muted-foreground flex items-center gap-[6px] text-[11px]">
+      <span>Sort</span>
+      <Chip
         active={!flat}
         onClick={() => {
           onChange({ ...value, layout: "grouped" });
         }}
       >
         Grouped
-      </ToggleButton>
-      <ToggleButton
-        active={flat}
+      </Chip>
+      <Chip
+        active={flat && key === "name"}
         onClick={() => {
-          onChange({ ...value, layout: "flat" });
+          onChange({ layout: "flat", key: "name", direction: "asc" });
         }}
       >
         Flat
-      </ToggleButton>
-
-      {flat ? (
-        <>
-          <span className="ml-1 text-blue-100/40">by</span>
-          <ToggleButton
-            active={key === "name"}
-            onClick={() => {
-              onChange({ ...value, key: "name" });
-            }}
-          >
-            Name
-          </ToggleButton>
-          <ToggleButton
-            active={key === "price"}
-            onClick={() => {
-              onChange({ ...value, key: "price" });
-            }}
-          >
-            Price
-          </ToggleButton>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label={`Direction: ${directionLabel(key, direction)}`}
-            className="border-white/20 bg-transparent text-blue-100 hover:bg-white/10 hover:text-white"
-            onClick={() => {
-              onChange({ ...value, direction: direction === "asc" ? "desc" : "asc" });
-            }}
-          >
-            {direction === "asc" ? <ArrowUp className="size-4" /> : <ArrowDown className="size-4" />}
-            {directionLabel(key, direction)}
-          </Button>
-        </>
-      ) : null}
+      </Chip>
+      <Chip
+        active={flat && key === "price"}
+        onClick={() => {
+          onChange({ layout: "flat", key: "price", direction: "desc" });
+        }}
+      >
+        Price ↓
+      </Chip>
     </div>
   );
 }
