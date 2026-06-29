@@ -1,10 +1,10 @@
 ---
 change_id: diff-style-checkpoint-entry
 title: Diff-mode checkpoint entry for the path builder (+/- card deltas)
-status: implemented
+status: archived
 created: 2026-06-29
 updated: 2026-06-29
-archived_at: null
+archived_at: 2026-06-29T12:13:28Z
 ---
 
 ## Notes
