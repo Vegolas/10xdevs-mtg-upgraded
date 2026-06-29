@@ -254,13 +254,13 @@ Persist the entered delta as an additive, nullable `delta_text` column and surfa
 
 #### Automated
 
-- [x] 2.1 Migration applies cleanly: `npm run db:reset`
-- [x] 2.2 Type checking passes after types update: `astro check`
-- [x] 2.3 Contract tests: `parseStepInput` with/without `deltaText`; `toPathStep` maps `delta_text`
-- [x] 2.4 Linting passes: `eslint .`
+- [x] 2.1 Migration applies cleanly: `npm run db:reset` — b227659
+- [x] 2.2 Type checking passes after types update: `astro check` — b227659
+- [x] 2.3 Contract tests: `parseStepInput` with/without `deltaText`; `toPathStep` maps `delta_text` — b227659
+- [x] 2.4 Linting passes: `eslint .` — b227659
 
 #### Manual
 
-- [x] 2.5 Diff-mode save persists the raw delta; badge shows on reopen
-- [x] 2.6 Full-paste save has `deltaText` null and no badge
-- [x] 2.7 Pre-migration steps render unchanged
+- [x] 2.5 Diff-mode save persists the raw delta; badge shows on reopen — b227659
+- [x] 2.6 Full-paste save has `deltaText` null and no badge — b227659
+- [x] 2.7 Pre-migration steps render unchanged — b227659
