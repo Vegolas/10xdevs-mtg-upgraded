@@ -10,7 +10,11 @@
  * `malformed`. See context/changes/diff-style-checkpoint-entry/plan.md.
  */
 
+import { resolutionKey } from "@/lib/card-data";
 import { splitCardLine } from "@/lib/deck/parse";
+
+/** Leading sign + the whitespace gap after it on a delta line, e.g. `+`, `+ `, `-`. */
+const DELTA_SIGN = /^([+-])(\s*)(.*)$/;
 
 /** One parsed diff line: an add/remove op, a card name, and a copy count. */
 export interface DeltaEntry {
@@ -69,4 +73,53 @@ export function parseDeltaList(text: string): ParsedDelta {
   }
 
   return { entries, malformed };
+}
+
+/**
+ * Rewrite every diff line whose card name matches `targetName` (by
+ * {@link resolutionKey}) to its accepted `suggestion`, preserving the leading
+ * sign, the gap after it, and the verbatim count prefix — the diff-mode sibling
+ * of `@/lib/deck`'s `applySuggestion`, which can't be reused because it matches
+ * the sign as part of the card name. So `+ Blck Lotus` → `+ Black Lotus` and
+ * `-2 Forrest` → `-2 Forest`. Blank, comment, and non-delta lines, and lines
+ * whose name does not match, are returned verbatim. Line endings normalize to
+ * `\n`.
+ */
+export function applyDeltaSuggestion(text: string, targetName: string, suggestion: string): string {
+  const targetKey = resolutionKey(targetName);
+
+  return text
+    .split(/\r?\n/)
+    .map((line) => {
+      const signed = DELTA_SIGN.exec(line.trim());
+      if (signed === null) {
+        return line;
+      }
+      const [, sign, gap, rest] = signed;
+      const split = splitCardLine(rest);
+      if (split === null || resolutionKey(split.name) !== targetKey) {
+        return line;
+      }
+      return `${sign}${gap}${split.prefix}${suggestion}`;
+    })
+    .join("\n");
+}
+
+/**
+ * Apply every suggestion-bearing entry to a diff-mode text in one pass — the
+ * diff-mode sibling of `@/lib/deck`'s `applyAllSuggestions`. Folds
+ * {@link applyDeltaSuggestion} over each entry whose `suggestion` is non-null
+ * (skipping ambiguous/malformed entries with no near match). Pure.
+ */
+export function applyAllDeltaSuggestions(text: string, entries: { name: string; suggestion: string | null }[]): string {
+  let next = text;
+
+  for (const entry of entries) {
+    if (entry.suggestion === null) {
+      continue;
+    }
+    next = applyDeltaSuggestion(next, entry.name, entry.suggestion);
+  }
+
+  return next;
 }

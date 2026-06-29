@@ -61,6 +61,7 @@ export const POST: APIRoute = async (context) => {
       name: input.name,
       list_text: input.listText,
       snapshot: serializeSnapshot(input.snapshot) as Json,
+      delta_text: input.deltaText ?? null,
     })
     .select("*")
     .single();

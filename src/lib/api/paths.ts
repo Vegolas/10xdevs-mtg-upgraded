@@ -88,6 +88,7 @@ export function toPathStep(row: StepRow): PathStep {
     name: row.name,
     listText: row.list_text,
     snapshot: parseSnapshot(row.snapshot) ?? { cards: [], unresolved: [] },
+    deltaText: row.delta_text,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

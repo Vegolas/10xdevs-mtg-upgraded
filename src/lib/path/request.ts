@@ -16,6 +16,8 @@ export interface StepInput {
   name: string;
   listText: string;
   snapshot: StepSnapshot;
+  /** Raw `+`/`-` provenance for a diff-entered checkpoint; `null` for full paste. */
+  deltaText: string | null;
 }
 
 /**
@@ -37,12 +39,14 @@ export function parseTitleInput(raw: unknown): string | null {
  * Validate an append-step body, returning a clean {@link StepInput} or `null`
  * when `name` is missing/blank, `listText` is not a string, or `snapshot` fails
  * {@link parseSnapshot}. The returned snapshot is the parsed (re-normalized) form.
+ * `deltaText` is optional provenance: a non-empty string is kept verbatim;
+ * absent, blank, or non-string collapses to `null` (the full-paste shape).
  */
 export function parseStepInput(raw: unknown): StepInput | null {
   if (typeof raw !== "object" || raw === null) {
     return null;
   }
-  const { name, listText, snapshot } = raw as Record<string, unknown>;
+  const { name, listText, snapshot, deltaText } = raw as Record<string, unknown>;
   if (typeof name !== "string" || name.trim() === "") {
     return null;
   }
@@ -53,5 +57,6 @@ export function parseStepInput(raw: unknown): StepInput | null {
   if (parsed === null) {
     return null;
   }
-  return { name: name.trim(), listText, snapshot: parsed };
+  const delta = typeof deltaText === "string" && deltaText.trim() !== "" ? deltaText : null;
+  return { name: name.trim(), listText, snapshot: parsed, deltaText: delta };
 }

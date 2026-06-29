@@ -238,29 +238,29 @@ Persist the entered delta as an additive, nullable `delta_text` column and surfa
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test` (parseDeltaList + deriveSnapshot cases)
-- [x] 1.2 `deckCardsToText` round-trips through `parseDeckList`
-- [x] 1.3 Type checking passes: `astro check`
-- [x] 1.4 Linting passes: `eslint .`
+- [x] 1.1 Unit tests pass: `npm test` (parseDeltaList + deriveSnapshot cases) — 75db53e
+- [x] 1.2 `deckCardsToText` round-trips through `parseDeckList` — 75db53e
+- [x] 1.3 Type checking passes: `astro check` — 75db53e
+- [x] 1.4 Linting passes: `eslint .` — 75db53e
 
 #### Manual
 
-- [x] 1.5 Toggle appears with a predecessor step, absent on an empty path
-- [x] 1.6 Check shows summary line + full derived list + warning for a bogus `-` line
-- [x] 1.7 Add saves a snapshot indistinguishable from the equivalent full paste
-- [x] 1.8 Full-paste mode is default and unchanged; switching modes clears the field
+- [x] 1.5 Toggle appears with a predecessor step, absent on an empty path — 75db53e
+- [x] 1.6 Check shows summary line + full derived list + warning for a bogus `-` line — 75db53e
+- [x] 1.7 Add saves a snapshot indistinguishable from the equivalent full paste — 75db53e
+- [x] 1.8 Full-paste mode is default and unchanged; switching modes clears the field — 75db53e
 
 ### Phase 2: Delta persistence + provenance display
 
 #### Automated
 
-- [ ] 2.1 Migration applies cleanly: `npm run db:reset`
-- [ ] 2.2 Type checking passes after types update: `astro check`
-- [ ] 2.3 Contract tests: `parseStepInput` with/without `deltaText`; `toPathStep` maps `delta_text`
-- [ ] 2.4 Linting passes: `eslint .`
+- [x] 2.1 Migration applies cleanly: `npm run db:reset`
+- [x] 2.2 Type checking passes after types update: `astro check`
+- [x] 2.3 Contract tests: `parseStepInput` with/without `deltaText`; `toPathStep` maps `delta_text`
+- [x] 2.4 Linting passes: `eslint .`
 
 #### Manual
 
-- [ ] 2.5 Diff-mode save persists the raw delta; badge shows on reopen
-- [ ] 2.6 Full-paste save has `deltaText` null and no badge
-- [ ] 2.7 Pre-migration steps render unchanged
+- [x] 2.5 Diff-mode save persists the raw delta; badge shows on reopen
+- [x] 2.6 Full-paste save has `deltaText` null and no badge
+- [x] 2.7 Pre-migration steps render unchanged

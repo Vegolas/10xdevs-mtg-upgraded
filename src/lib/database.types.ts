@@ -50,6 +50,7 @@ export interface Database {
           name: string;
           list_text: string;
           snapshot: Json;
+          delta_text: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -60,6 +61,7 @@ export interface Database {
           name: string;
           list_text: string;
           snapshot: Json;
+          delta_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -70,6 +72,7 @@ export interface Database {
           name?: string;
           list_text?: string;
           snapshot?: Json;
+          delta_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };

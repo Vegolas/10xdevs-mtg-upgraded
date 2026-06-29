@@ -42,6 +42,8 @@ export interface PathStep {
   name: string;
   listText: string;
   snapshot: StepSnapshot;
+  /** Raw `+`/`-` text when the checkpoint was diff-entered; `null` for full paste. */
+  deltaText: string | null;
   createdAt: string;
   updatedAt: string;
 }

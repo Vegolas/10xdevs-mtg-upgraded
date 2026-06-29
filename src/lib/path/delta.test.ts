@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDeltaList } from "./delta";
+import { parseDeltaList, applyDeltaSuggestion, applyAllDeltaSuggestions } from "./delta";
 
 describe("parseDeltaList", () => {
   it("reads a bare signed line as ±1", () => {
@@ -46,5 +46,40 @@ describe("parseDeltaList", () => {
     const result = parseDeltaList("+ Fire // Ice");
 
     expect(result.entries).toEqual([{ op: "+", name: "Fire // Ice", quantity: 1 }]);
+  });
+});
+
+describe("applyDeltaSuggestion", () => {
+  it("rewrites a matching line, preserving the sign and gap", () => {
+    expect(applyDeltaSuggestion("+ Blck Lotus", "Blck Lotus", "Black Lotus")).toBe("+ Black Lotus");
+  });
+
+  it("preserves a count prefix after the sign", () => {
+    expect(applyDeltaSuggestion("-2 Forrest", "Forrest", "Forest")).toBe("-2 Forest");
+  });
+
+  it("matches by resolutionKey (case-insensitive) and rewrites every matching line", () => {
+    expect(applyDeltaSuggestion("+ blck lotus\n- Sol Ring\n+ BLCK LOTUS", "Blck Lotus", "Black Lotus")).toBe(
+      "+ Black Lotus\n- Sol Ring\n+ Black Lotus",
+    );
+  });
+
+  it("leaves non-delta and non-matching lines verbatim", () => {
+    expect(applyDeltaSuggestion("# note\n+ Sol Ring\nIsland", "Blck Lotus", "Black Lotus")).toBe(
+      "# note\n+ Sol Ring\nIsland",
+    );
+  });
+});
+
+describe("applyAllDeltaSuggestions", () => {
+  it("applies every suggestion-bearing entry and skips null suggestions", () => {
+    const text = "+ Blck Lotus\n- Sol Rng";
+    const entries = [
+      { name: "Blck Lotus", suggestion: "Black Lotus" },
+      { name: "Sol Rng", suggestion: "Sol Ring" },
+      { name: "Mystery", suggestion: null },
+    ];
+
+    expect(applyAllDeltaSuggestions(text, entries)).toBe("+ Black Lotus\n- Sol Ring");
   });
 });

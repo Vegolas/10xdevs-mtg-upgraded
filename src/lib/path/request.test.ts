@@ -38,14 +38,34 @@ describe("parseTitleInput", () => {
 });
 
 describe("parseStepInput", () => {
-  it("accepts a valid body and trims the name", () => {
+  it("accepts a valid body and trims the name (full paste → deltaText null)", () => {
     const body = { name: "  $50 upgrade  ", listText: "1 Sol Ring", snapshot: serializeSnapshot(snapshot()) };
 
     expect(parseStepInput(body)).toEqual({
       name: "$50 upgrade",
       listText: "1 Sol Ring",
       snapshot: snapshot(),
+      deltaText: null,
     });
+  });
+
+  it("keeps a non-empty deltaText verbatim (diff-entered checkpoint)", () => {
+    const body = {
+      name: "Swap",
+      listText: "1 Black Lotus",
+      snapshot: serializeSnapshot(snapshot()),
+      deltaText: "+ Black Lotus\n- Sol Ring",
+    };
+
+    expect(parseStepInput(body)?.deltaText).toBe("+ Black Lotus\n- Sol Ring");
+  });
+
+  it("collapses a blank or non-string deltaText to null", () => {
+    const base = { name: "Step", listText: "1 Sol Ring", snapshot: serializeSnapshot(snapshot()) };
+
+    expect(parseStepInput({ ...base, deltaText: "   " })?.deltaText).toBeNull();
+    expect(parseStepInput({ ...base, deltaText: 42 })?.deltaText).toBeNull();
+    expect(parseStepInput(base)?.deltaText).toBeNull();
   });
 
   it("rejects a malformed snapshot body (the API's 400 gate)", () => {

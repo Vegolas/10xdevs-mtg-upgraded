@@ -3,7 +3,15 @@ import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { resolveDeck, applySuggestion, applyAllSuggestions, deckCardsToText } from "@/lib/deck";
 import type { UnresolvedEntry } from "@/lib/deck";
 import type { UnresolvedCard } from "@/lib/card-data";
-import { cumulativePathCost, deriveSnapshot, isUpgradePlan, overallPathSummary, stepPlan } from "@/lib/path";
+import {
+  applyAllDeltaSuggestions,
+  applyDeltaSuggestion,
+  cumulativePathCost,
+  deriveSnapshot,
+  isUpgradePlan,
+  overallPathSummary,
+  stepPlan,
+} from "@/lib/path";
 import type { DeriveResult, PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "@/components/deck/CardGroupColumn";
@@ -100,7 +108,24 @@ function StepCard({ step, prev, sortMode }: { step: PathStep; prev: PathStep | n
           {step.position === 0 ? "Base" : `Step ${step.position}`}
         </span>
         <h2 className="font-display text-foreground text-lg font-semibold">{step.name}</h2>
+        {step.deltaText !== null ? (
+          <span
+            className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-[0.05em] uppercase"
+            title="Entered as + / − changes"
+          >
+            diff
+          </span>
+        ) : null}
       </header>
+
+      {step.deltaText !== null ? (
+        <details className="border-border bg-input rounded-md border p-3 text-sm">
+          <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs select-none">
+            Entered changes
+          </summary>
+          <pre className="text-foreground mt-2 font-mono text-xs whitespace-pre-wrap">{step.deltaText}</pre>
+        </details>
+      ) : null}
 
       {unresolvedEntries.length > 0 ? (
         <UnresolvedNotice entries={unresolvedEntries} onAccept={noop} onAcceptAll={noop} />
@@ -203,6 +228,8 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
     // becomes the *derived* full list so the stored column stays meaningful.
     let snapshot: StepSnapshot;
     let postListText: string;
+    // Diff-mode persists the raw delta as provenance; full paste sends none.
+    let postDeltaText: string | null = null;
     try {
       if (activeMode === "diff") {
         const prior = steps.at(-1)?.snapshot;
@@ -216,6 +243,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
         }
         snapshot = result.snapshot;
         postListText = deckCardsToText(result.snapshot.cards);
+        postDeltaText = listText;
       } else {
         const resolved = await resolveDeck(listText);
         snapshot = {
@@ -245,7 +273,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       const response = await fetch(`/api/paths/${path.id}/steps`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, listText: postListText, snapshot }),
+        body: JSON.stringify({ name: trimmedName, listText: postListText, snapshot, deltaText: postDeltaText }),
       });
       if (token !== addToken.current) {
         return;
@@ -361,6 +389,30 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
     setListText(next);
     void runCheck(next);
   }, [checkState, listText, runCheck]);
+
+  // Diff-mode accept: same one-click fuzzy correction as full paste, but the
+  // rewrite preserves the `+`/`-` sign (see `applyDeltaSuggestion`) and re-runs
+  // the derive-based preview.
+  const handleDiffAccept = useCallback(
+    (entry: UnresolvedEntry) => {
+      if (entry.suggestion === null) {
+        return;
+      }
+      const next = applyDeltaSuggestion(listText, entry.name, entry.suggestion);
+      setListText(next);
+      void runDiffCheck(next);
+    },
+    [listText, runDiffCheck],
+  );
+
+  const handleDiffAcceptAll = useCallback(() => {
+    if (diffPreview.status !== "checked") {
+      return;
+    }
+    const next = applyAllDeltaSuggestions(listText, diffPreview.result.snapshot.unresolved);
+    setListText(next);
+    void runDiffCheck(next);
+  }, [diffPreview, listText, runDiffCheck]);
 
   const handleDeleteLast = useCallback(async () => {
     if (steps.length === 0) {
@@ -676,9 +728,9 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
               </pre>
             </details>
             <UnresolvedNotice
-              entries={toReadOnlyEntries(diffPreview.result.snapshot.unresolved)}
-              onAccept={noop}
-              onAcceptAll={noop}
+              entries={toEditableEntries(diffPreview.result.snapshot.unresolved)}
+              onAccept={handleDiffAccept}
+              onAcceptAll={handleDiffAcceptAll}
               deltaWarnings={diffPreview.result.warnings}
             />
           </div>
