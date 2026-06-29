@@ -238,17 +238,17 @@ Persist the entered delta as an additive, nullable `delta_text` column and surfa
 
 #### Automated
 
-- [ ] 1.1 Unit tests pass: `npm test` (parseDeltaList + deriveSnapshot cases)
-- [ ] 1.2 `deckCardsToText` round-trips through `parseDeckList`
-- [ ] 1.3 Type checking passes: `astro check`
-- [ ] 1.4 Linting passes: `eslint .`
+- [x] 1.1 Unit tests pass: `npm test` (parseDeltaList + deriveSnapshot cases)
+- [x] 1.2 `deckCardsToText` round-trips through `parseDeckList`
+- [x] 1.3 Type checking passes: `astro check`
+- [x] 1.4 Linting passes: `eslint .`
 
 #### Manual
 
-- [ ] 1.5 Toggle appears with a predecessor step, absent on an empty path
-- [ ] 1.6 Check shows summary line + full derived list + warning for a bogus `-` line
-- [ ] 1.7 Add saves a snapshot indistinguishable from the equivalent full paste
-- [ ] 1.8 Full-paste mode is default and unchanged; switching modes clears the field
+- [x] 1.5 Toggle appears with a predecessor step, absent on an empty path
+- [x] 1.6 Check shows summary line + full derived list + warning for a bogus `-` line
+- [x] 1.7 Add saves a snapshot indistinguishable from the equivalent full paste
+- [x] 1.8 Full-paste mode is default and unchanged; switching modes clears the field
 
 ### Phase 2: Delta persistence + provenance display
 

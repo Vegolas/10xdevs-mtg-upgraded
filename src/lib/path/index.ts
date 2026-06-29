@@ -9,3 +9,7 @@ export { stepPlan, cumulativePathCost, isUpgradePlan, overallPathSummary } from 
 export type { BaseStepPlan, PathSummary } from "./chain";
 export { parseTitleInput, parseStepInput } from "./request";
 export type { StepInput } from "./request";
+export { parseDeltaList } from "./delta";
+export type { DeltaEntry, ParsedDelta } from "./delta";
+export { deriveSnapshot } from "./derive";
+export type { DeriveResult, DeriveSummary, DeltaWarning } from "./derive";

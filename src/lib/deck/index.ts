@@ -5,6 +5,7 @@
 
 export { parseDeckList } from "./parse";
 export type { DeckEntry, ParsedDeck } from "./parse";
+export { deckCardsToText } from "./serialize";
 export { diffDecks, CATEGORY_ORDER, groupByCategory } from "./diff";
 export type { CardGroup, UpgradePlan, DeckCard } from "./diff";
 export { generateUpgradePlan, resolveDeck } from "./plan";

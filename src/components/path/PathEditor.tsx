@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { resolveDeck, applySuggestion, applyAllSuggestions } from "@/lib/deck";
+import { resolveDeck, applySuggestion, applyAllSuggestions, deckCardsToText } from "@/lib/deck";
 import type { UnresolvedEntry } from "@/lib/deck";
 import type { UnresolvedCard } from "@/lib/card-data";
-import { cumulativePathCost, isUpgradePlan, overallPathSummary, stepPlan } from "@/lib/path";
-import type { PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
+import { cumulativePathCost, deriveSnapshot, isUpgradePlan, overallPathSummary, stepPlan } from "@/lib/path";
+import type { DeriveResult, PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "@/components/deck/CardGroupColumn";
 import { CostSummary } from "@/components/deck/CostSummary";
@@ -26,6 +26,12 @@ type AddState = { status: "idle" } | { status: "resolving" } | { status: "error"
 
 /** The pre-save "Check" lifecycle: resolve the pasted list to surface unresolved cards before save. */
 type CheckState = { status: "idle" } | { status: "checking" } | { status: "checked"; unresolved: UnresolvedCard[] };
+
+/** The diff-mode "Check" lifecycle: derive the next snapshot from the prior step to preview the change. */
+type DiffPreview = { status: "idle" } | { status: "checking" } | { status: "checked"; result: DeriveResult };
+
+/** How the shared textarea is interpreted: a full pasted list, or `+`/`-` delta lines. */
+type AddMode = "full" | "diff";
 
 const textareaClasses =
   "h-40 w-full resize-y rounded-md border border-border bg-input p-3 font-mono text-sm text-foreground placeholder-muted-foreground/60 transition-colors focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none";
@@ -146,6 +152,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
 
   const [name, setName] = useState("");
   const [listText, setListText] = useState("");
+  const [mode, setMode] = useState<AddMode>("full");
   const [addState, setAddState] = useState<AddState>({ status: "idle" });
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -156,6 +163,11 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   // Only the latest Check run may write the check state (same guard, separate counter).
   const checkToken = useRef(0);
   const [checkState, setCheckState] = useState<CheckState>({ status: "idle" });
+  const [diffPreview, setDiffPreview] = useState<DiffPreview>({ status: "idle" });
+
+  // Diff-mode needs a predecessor to derive from; a fresh path is full-paste only.
+  const canDiff = steps.length >= 1;
+  const activeMode: AddMode = canDiff ? mode : "full";
 
   const cumulative = cumulativePathCost(steps.map((step) => step.snapshot));
   // Base→final delta for the header subtitle (in/out + cost); zeros for <2 steps.
@@ -175,24 +187,47 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   const handleAddStep = useCallback(async () => {
     const trimmedName = name.trim();
     if (trimmedName === "" || listText.trim() === "") {
-      setAddState({ status: "error", message: "Give the checkpoint a name and paste a deck list." });
+      const message =
+        activeMode === "diff"
+          ? "Give the checkpoint a name and enter some + / − changes."
+          : "Give the checkpoint a name and paste a deck list.";
+      setAddState({ status: "error", message });
       return;
     }
 
     const token = ++addToken.current;
     setAddState({ status: "resolving" });
 
+    // Build the snapshot per mode. Full-paste resolves the list as-is; diff-mode
+    // derives it from the prior step's frozen snapshot, and the POSTed `listText`
+    // becomes the *derived* full list so the stored column stays meaningful.
     let snapshot: StepSnapshot;
+    let postListText: string;
     try {
-      const resolved = await resolveDeck(listText);
-      snapshot = {
-        cards: resolved.deck,
-        unresolved: resolved.unresolved.map((entry) => ({
-          name: entry.name,
-          reason: entry.reason,
-          suggestion: entry.suggestion,
-        })),
-      };
+      if (activeMode === "diff") {
+        const prior = steps.at(-1)?.snapshot;
+        if (!prior) {
+          setAddState({ status: "error", message: "Diff mode needs a previous checkpoint to build on." });
+          return;
+        }
+        const result = await deriveSnapshot(prior, listText);
+        if (token !== addToken.current) {
+          return;
+        }
+        snapshot = result.snapshot;
+        postListText = deckCardsToText(result.snapshot.cards);
+      } else {
+        const resolved = await resolveDeck(listText);
+        snapshot = {
+          cards: resolved.deck,
+          unresolved: resolved.unresolved.map((entry) => ({
+            name: entry.name,
+            reason: entry.reason,
+            suggestion: entry.suggestion,
+          })),
+        };
+        postListText = listText;
+      }
     } catch (error) {
       if (token !== addToken.current) {
         return;
@@ -210,7 +245,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       const response = await fetch(`/api/paths/${path.id}/steps`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, listText, snapshot }),
+        body: JSON.stringify({ name: trimmedName, listText: postListText, snapshot }),
       });
       if (token !== addToken.current) {
         return;
@@ -227,13 +262,14 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       setListText("");
       setAddState({ status: "idle" });
       setCheckState({ status: "idle" });
+      setDiffPreview({ status: "idle" });
     } catch {
       if (token !== addToken.current) {
         return;
       }
       setAddState({ status: "error", message: "Couldn't save the checkpoint. Check your connection and retry." });
     }
-  }, [name, listText, path.id]);
+  }, [name, listText, path.id, activeMode, steps]);
 
   // Pre-save Check: resolve the pasted list (no POST) so unresolved cards surface
   // with a one-click Accept before the immutable snapshot is written. Token-guarded
@@ -259,6 +295,46 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       setAddState({ status: "error", message });
       setCheckState({ status: "idle" });
     }
+  }, []);
+
+  // Diff-mode pre-save Check: derive the next snapshot from the prior step (no
+  // POST) so the summary, full derived list, and unapplicable-line warnings
+  // preview before save. Token-guarded with the same counter as `runCheck`.
+  const runDiffCheck = useCallback(
+    async (text: string) => {
+      const prior = steps.at(-1)?.snapshot;
+      if (!prior || text.trim() === "") {
+        setDiffPreview({ status: "idle" });
+        return;
+      }
+      const token = ++checkToken.current;
+      setDiffPreview({ status: "checking" });
+      try {
+        const result = await deriveSnapshot(prior, text);
+        if (token !== checkToken.current) {
+          return;
+        }
+        setDiffPreview({ status: "checked", result });
+      } catch (error) {
+        if (token !== checkToken.current) {
+          return;
+        }
+        const message = error instanceof Error ? error.message : "Could not reach the card database.";
+        setAddState({ status: "error", message });
+        setDiffPreview({ status: "idle" });
+      }
+    },
+    [steps],
+  );
+
+  // Switching entry mode clears the field and every preview/error so the two
+  // surfaces never bleed into each other.
+  const switchMode = useCallback((next: AddMode) => {
+    setMode(next);
+    setListText("");
+    setCheckState({ status: "idle" });
+    setDiffPreview({ status: "idle" });
+    setAddState({ status: "idle" });
   }, []);
 
   // Accept one fuzzy suggestion: rewrite the matching line(s) in the paste text,
@@ -494,9 +570,47 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       ) : null}
 
       <section className="border-border bg-card space-y-3 rounded-md border p-5">
-        <h2 className="font-display text-foreground text-lg font-semibold">
-          {steps.length === 0 ? "Add base deck" : "Add checkpoint"}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-foreground text-lg font-semibold">
+            {steps.length === 0 ? "Add base deck" : "Add checkpoint"}
+          </h2>
+          {canDiff ? (
+            <div
+              className="border-border bg-input inline-flex rounded-[5px] border p-0.5"
+              role="group"
+              aria-label="Entry mode"
+            >
+              <button
+                type="button"
+                aria-pressed={activeMode === "full"}
+                onClick={() => {
+                  switchMode("full");
+                }}
+                className={`font-display rounded-[3px] px-3 py-1 text-[11px] tracking-[0.05em] uppercase transition-colors ${
+                  activeMode === "full"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Full list
+              </button>
+              <button
+                type="button"
+                aria-pressed={activeMode === "diff"}
+                onClick={() => {
+                  switchMode("diff");
+                }}
+                className={`font-display rounded-[3px] px-3 py-1 text-[11px] tracking-[0.05em] uppercase transition-colors ${
+                  activeMode === "diff"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Changes
+              </button>
+            </div>
+          ) : null}
+        </div>
         <div>
           <label htmlFor="step-name" className="text-muted-foreground mb-1 block text-sm font-medium">
             Checkpoint name
@@ -514,7 +628,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
         </div>
         <div>
           <label htmlFor="step-list" className="text-muted-foreground mb-1 block text-sm font-medium">
-            Deck list
+            {activeMode === "diff" ? "Changes (+ to add, − to remove)" : "Deck list"}
           </label>
           <textarea
             id="step-list"
@@ -522,13 +636,17 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             onChange={(event) => {
               setListText(event.target.value);
             }}
-            placeholder={"1 Sol Ring\n1 Arcane Signet\n1 Command Tower\n…"}
+            placeholder={
+              activeMode === "diff"
+                ? "+ Black Lotus\n- Sol Ring\n+2 Island\n-1 Forest\n…"
+                : "1 Sol Ring\n1 Arcane Signet\n1 Command Tower\n…"
+            }
             className={textareaClasses}
             spellCheck={false}
           />
         </div>
 
-        {checkState.status === "checked" ? (
+        {activeMode === "full" && checkState.status === "checked" ? (
           checkState.unresolved.length > 0 ? (
             <UnresolvedNotice
               entries={toEditableEntries(checkState.unresolved)}
@@ -538,6 +656,32 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
           ) : (
             <p className="border-border bg-card text-add rounded-md border p-3 text-sm">✓ All cards resolved.</p>
           )
+        ) : null}
+
+        {activeMode === "diff" && diffPreview.status === "checked" ? (
+          <div className="space-y-3">
+            <p className="border-border bg-input text-foreground rounded-md border p-3 text-sm">
+              <span className="text-add font-medium">+{diffPreview.result.summary.added} added</span>
+              {", "}
+              <span className="text-destructive font-medium">−{diffPreview.result.summary.removed} removed</span>
+              {", "}
+              {diffPreview.result.summary.unchanged} unchanged → {diffPreview.result.summary.total} cards
+            </p>
+            <details className="border-border bg-input rounded-md border p-3 text-sm">
+              <summary className="text-muted-foreground hover:text-foreground cursor-pointer select-none">
+                Derived list ({diffPreview.result.summary.total} cards)
+              </summary>
+              <pre className="text-foreground mt-2 max-h-60 overflow-auto font-mono text-xs whitespace-pre-wrap">
+                {deckCardsToText(diffPreview.result.snapshot.cards)}
+              </pre>
+            </details>
+            <UnresolvedNotice
+              entries={toReadOnlyEntries(diffPreview.result.snapshot.unresolved)}
+              onAccept={noop}
+              onAcceptAll={noop}
+              deltaWarnings={diffPreview.result.warnings}
+            />
+          </div>
         ) : null}
 
         {addState.status === "error" ? (
@@ -552,12 +696,19 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             variant="outline"
             size="sm"
             className={btnDClass}
-            disabled={listText.trim() === "" || checkState.status === "checking" || addState.status === "resolving"}
+            disabled={
+              listText.trim() === "" ||
+              checkState.status === "checking" ||
+              diffPreview.status === "checking" ||
+              addState.status === "resolving"
+            }
             onClick={() => {
-              void runCheck(listText);
+              void (activeMode === "diff" ? runDiffCheck(listText) : runCheck(listText));
             }}
           >
-            {checkState.status === "checking" ? "Checking…" : "Check"}
+            {(activeMode === "diff" ? diffPreview.status === "checking" : checkState.status === "checking")
+              ? "Checking…"
+              : "Check"}
           </Button>
           <Button
             type="button"
