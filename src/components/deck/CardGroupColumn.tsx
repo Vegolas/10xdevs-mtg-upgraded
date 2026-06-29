@@ -28,8 +28,8 @@ export function CardGroupColumn({ title, groups, sortMode }: CardGroupColumnProp
   const tone = title.toLowerCase() === "remove" ? TONES.remove : TONES.add;
 
   return (
-    <section className="border-border overflow-hidden rounded-md border bg-[#120e0a]">
-      <div className={`flex items-center justify-between px-3 py-[9px] ${tone.header}`}>
+    <section className="border-border rounded-md border bg-[#120e0a]">
+      <div className={`flex items-center justify-between rounded-t-md px-3 py-[9px] ${tone.header}`}>
         <h3
           className={`font-display flex items-baseline gap-2 text-[12px] font-bold tracking-[0.06em] uppercase ${tone.text}`}
         >

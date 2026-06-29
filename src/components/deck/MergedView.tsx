@@ -39,7 +39,7 @@ export function MergedView({ plan, sortMode }: MergedViewProps) {
   const ordered = flattenAndSort(allGroups, sortMode.key, sortMode.direction);
 
   return (
-    <ul className="border-border overflow-hidden rounded-md border bg-[#120e0a]">
+    <ul className="border-border rounded-md border bg-[#120e0a]">
       {ordered.map((entry) => {
         const kind = kindOf.get(entry) ?? "stay";
         return <MergedRow key={`${kind}:${entry.card.name}`} entry={entry} kind={kind} />;

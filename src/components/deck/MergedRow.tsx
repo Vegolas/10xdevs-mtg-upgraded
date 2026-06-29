@@ -48,7 +48,9 @@ export function MergedRow({ entry, kind }: MergedRowProps) {
   const [preview, setPreview] = useState(false);
 
   return (
-    <li className={`flex items-center gap-[10px] border-b border-b-[#241d12] px-[13px] py-[9px] ${skin.border}`}>
+    <li
+      className={`flex items-center gap-[10px] border-b border-b-[#241d12] px-[13px] py-[9px] first:rounded-t-md last:rounded-b-md last:border-b-0 ${skin.border}`}
+    >
       <span className={`font-display w-[14px] shrink-0 text-center ${skin.glyphClass}`} aria-hidden="true">
         {skin.glyph}
       </span>
