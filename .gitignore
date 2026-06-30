@@ -19,8 +19,9 @@ dist/
 # ---- Environment variables (NEVER commit secrets) ----
 .env
 .env.*
-# keep the committed template
+# keep the committed templates
 !.env.example
+!.env.test.example
 
 # ---- TypeScript ----
 *.tsbuildinfo
