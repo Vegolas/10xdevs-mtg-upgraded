@@ -441,23 +441,23 @@ about the missing seed file in CI, either create an empty `seed.sql` or disable 
 
 #### Automated
 
-- [x] 1.1 Unit suite still green and DB-free: `npm test`
-- [x] 1.2 Integration smoke passes: `npm run test:integration`
-- [x] 1.3 Type checking passes
-- [x] 1.4 Linting passes: `npm run lint`
+- [x] 1.1 Unit suite still green and DB-free: `npm test` — 7ba74c7
+- [x] 1.2 Integration smoke passes: `npm run test:integration` — 7ba74c7
+- [x] 1.3 Type checking passes — 7ba74c7
+- [x] 1.4 Linting passes: `npm run lint` — 7ba74c7
 
 #### Manual
 
-- [ ] 1.5 `.env.test` gitignored; `.env.test.example` tracked with no real secrets
-- [ ] 1.6 Killing the suite mid-run leaves no orphaned `astro dev` process
-- [ ] 1.7 Re-running the smoke test twice passes (no residue / id collision)
+- [x] 1.5 `.env.test` gitignored; `.env.test.example` tracked with no real secrets — 7ba74c7
+- [x] 1.6 Killing the suite mid-run leaves no orphaned `astro dev` process — 7ba74c7
+- [x] 1.7 Re-running the smoke test twice passes (no residue / id collision) — 7ba74c7
 
 ### Phase 2: Risk #1 — cross-owner / IDOR suite
 
 #### Automated
 
-- [ ] 2.1 Ownership suite passes: `npm run test:integration`
-- [ ] 2.2 Deliberate policy-widening break is caught by the step DB-state test (then reverted)
+- [x] 2.1 Ownership suite passes: `npm run test:integration`
+- [x] 2.2 Deliberate policy-widening break is caught by the step DB-state test (then reverted)
 
 #### Manual
 
