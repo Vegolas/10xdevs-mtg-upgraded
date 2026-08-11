@@ -1,10 +1,10 @@
 ---
 change_id: card-data-resolution
 title: Card data resolution
-status: implemented
+status: archived
 created: 2026-06-13
-updated: 2026-06-15
-archived_at: null
+updated: 2026-08-11
+archived_at: 2026-08-11T12:53:27Z
 ---
 
 ## Notes

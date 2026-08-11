@@ -3,7 +3,7 @@ project: DeckDelta
 version: 1
 status: draft
 created: 2026-06-09
-updated: 2026-06-27
+updated: 2026-08-11
 prd_version: 1
 main_goal: low-complexity
 top_blocker: external
@@ -77,7 +77,7 @@ What's in place in the codebase as of `2026-06-27` (refreshed from the original 
 - **Unknowns:**
   - Which authoritative card-data source meets the accuracy Guardrail (name-matching quality across MTGO/Arena/Moxfield paste variants)? — Owner: user. Block: no (selected during this foundation's planning).
 - **Risk:** This is the `external` top-blocker made concrete. Sequenced first because every display slice consumes it and the accuracy Guardrail is existential — a wrong card identity makes the tool untrustworthy. Kept minimal (resolution + error handling only) so it doesn't drift into building the whole card-data layer ahead of user-facing work; confirming the source is the first action.
-- **Status:** done — delivered with S-01 (no separate change/archive); the `src/lib/card-data` resolution module is in the codebase and every display slice consumes it.
+- **Status:** done — delivered with S-01; the `src/lib/card-data` resolution module is in the codebase and every display slice consumes it. Its change folder is archived at `context/archive/2026-06-13-card-data-resolution/`.
 
 ## Slices
 
@@ -223,3 +223,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 - **S-05: when a pasted card name doesn't resolve but the card-data source returns a near-match `suggestion`, the user can accept it in one click to substitute the corrected name in place and re-generate the plan — instead of only seeing the hint and retyping by hand.** — Archived 2026-06-16 → `context/archive/2026-06-16-did-you-mean-accept/`. Lesson: —.
 - **S-06: user can sort the cards within the upgrade plan by name, type, or price, rather than the fixed category-bucket-then-name order.** — Archived 2026-06-16 → `context/archive/2026-06-16-sortable-card-rows/`. Lesson: —.
 - **S-08: a signed-in user can build server-persisted, checkpointed upgrade paths reopenable from any device; the anonymous `/` comparer stays stateless.** — Archived 2026-06-27 → `context/archive/2026-06-26-user-accounts/`. Lesson: migrations must be pushed to the linked DB (`npm run db:push`) before the feature works against a remote Supabase — a missing push surfaced as a 500 on path create.
+- **F-01: (foundation) a card-data source is selected and a name→card-identity resolution path exists — returning the canonical card name and type line, and handling unrecognized names with a clear error rather than silent omission. The same lookup exposes the image and price fields that later slices surface.** — Archived 2026-08-11 → `context/archive/2026-06-13-card-data-resolution/`. Lesson: —.
