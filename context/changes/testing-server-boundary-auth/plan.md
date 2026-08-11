@@ -444,6 +444,18 @@ Note for future phases: a green local run cannot prove either of these. The loca
 carries implicit privileges a fresh one does not, so **CI on a fresh stack is the only
 honest verifier** for anything privilege- or bootstrap-shaped.
 
+**A third finding, from verifying the gate itself (step 4.4): a red job blocks nothing
+on its own.** The regression PR ([#1](https://github.com/Vegolas/10xdevs-mtg-upgraded/pull/1),
+one migration widening `path_steps` to `using (true)`) turned the `integration` job red
+exactly as designed — 18/19, the single failure being the step-route DELETE — while `ci`
+stayed green, so the failure was attributable to the DB-backed job alone. But `main` had
+**no branch protection**, so GitHub showed "some checks failed" and would still have let
+the merge through: the whole Phase-4 claim that the suite "gates PRs" rested on a
+convention, not an enforced rule. Closed by giving `main` classic protection with `ci` +
+`integration` as required status checks and `enforce_admins: true`; the same PR then
+reported `mergeStateStatus: BLOCKED`. Consequence to know: direct pushes to `main` are
+now rejected, so even a docs-only change goes through a PR.
+
 ## References
 
 - Research: [context/changes/testing-server-boundary-auth/research.md](context/changes/testing-server-boundary-auth/research.md)
@@ -505,6 +517,6 @@ honest verifier** for anything privilege- or bootstrap-shaped.
 
 #### Manual
 
-- [ ] 4.4 A PR with a deliberate cross-owner regression is blocked by the integration step — needs a real PR
+- [x] 4.4 A PR with a deliberate cross-owner regression is blocked by the integration step — PR #1 (run 31481614982): `integration` red, `ci` green, `mergeStateStatus: BLOCKED`; closed unmerged
 - [x] 4.5 No service-role key is committed; CI sources it from `supabase status` — c48ad38
 - [x] 4.6 test-plan §6.2 reads as a followable recipe, not a stub — c48ad38

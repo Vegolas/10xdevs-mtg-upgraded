@@ -152,6 +152,16 @@ server boundary. The integration job sources its keys — including service-role
 from `supabase status` on the running stack, so no long-lived service-role
 secret exists in the repo or in Actions secrets.
 
+**"Required" means required on the branch, not just in the workflow file.**
+`main` carries classic branch protection with `ci` + `integration` as required
+status checks and `enforce_admins: true`. Verified 2026-08-11 by a PR that
+deliberately widened the `path_steps` RLS policy to `using (true)`: `integration`
+went red on the step-route DELETE test, `ci` stayed green, and the PR reported
+`mergeStateStatus: BLOCKED`. Two consequences for contributors: every change to
+`main` — including docs-only ones — goes through a PR, and adding a gate to this
+table also means adding its job name to the required-check list, or the row is
+aspirational.
+
 ## 6. Cookbook Patterns
 
 How to add new tests in this project. Each sub-section is filled in once the
@@ -290,6 +300,15 @@ And a harness rule the same failure taught: **never assert a bare status code.**
 `expect(res.status).toBe(200)` discarded the `{"error": …}` body that named the
 cause, turning a one-line diagnosis into a blind CI round. Route status checks
 through `helpers/http.ts#assertStatus`, which puts the body in the message.
+
+**Closing the phase surfaced one more rule: a suite that goes red is not a gate.**
+The deliberate-regression PR proved the suite catches a cross-owner leak — and
+proved that nothing stopped the merge, because `main` was unprotected. A workflow
+file can only *report*; only a required status check *blocks*. So the last step of
+wiring any gate is enabling it on the branch and watching a real PR report
+`BLOCKED` — see §5. Corollary for the deliberate-break check itself: run it as a
+PR, not locally. A local revert proves the assertion fires; only the PR proves the
+red is load-bearing.
 
 ## 7. What We Deliberately Don't Test
 
