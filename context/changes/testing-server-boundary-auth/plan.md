@@ -480,12 +480,12 @@ about the missing seed file in CI, either create an empty `seed.sql` or disable 
 
 #### Automated
 
-- [ ] 4.1 CI config is valid YAML and the workflow parses
-- [ ] 4.2 CI run shows lint → unit test → build, plus the integration step green
-- [ ] 4.3 Integration step boots Supabase and runs `test:integration` against the local stack
+- [x] 4.1 CI config is valid YAML and the workflow parses — c48ad38
+- [ ] 4.2 CI run shows lint → unit test → build, plus the integration step green — needs a push; unverifiable locally
+- [ ] 4.3 Integration step boots Supabase and runs `test:integration` against the local stack — needs a push; the env-export pipeline and `test:integration` were verified locally, `supabase start` on a runner was not
 
 #### Manual
 
-- [ ] 4.4 A PR with a deliberate cross-owner regression is blocked by the integration step
-- [ ] 4.5 No service-role key is committed; CI sources it from `supabase status`
-- [ ] 4.6 test-plan §6.2 reads as a followable recipe, not a stub
+- [ ] 4.4 A PR with a deliberate cross-owner regression is blocked by the integration step — needs a real PR
+- [x] 4.5 No service-role key is committed; CI sources it from `supabase status` — c48ad38
+- [x] 4.6 test-plan §6.2 reads as a followable recipe, not a stub — c48ad38
