@@ -18,7 +18,41 @@ jobs:
       - run: npm ci
       - run: npx astro sync
       - run: npm run lint
+      # Unit suite is DB-free, so it needs no services and runs before the build.
+      - run: npm test
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  # DB-backed suite: real HTTP through `astro dev` against an EPHEMERAL local
+  # Supabase stack booted here — never the cloud project the build step targets.
+  # Separate job so it runs in parallel with lint/build and fails attributably.
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx astro sync
+      # `start` applies supabase/migrations, so RLS is live for the suite.
+      - name: Start local Supabase
+        run: npx supabase start
+      # Keys come from the running stack, NOT from repo secrets — the
+      # service-role key is ephemeral and dies with the job. `-o env` emits
+      # NAME="value": grep drops CLI warnings, sed strips the quotes.
+      - name: Export local Supabase env
+        run: |
+          npx supabase status -o env \
+            --override-name api.url=SUPABASE_URL \
+            --override-name auth.anon_key=SUPABASE_KEY \
+            --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            | grep -E '^(SUPABASE_URL|SUPABASE_KEY|SUPABASE_SERVICE_ROLE_KEY)=' \
+            | sed -E 's/^([A-Z_]+)="?([^"]*)"?$/\1=\2/' >> "$GITHUB_ENV"
+      - run: npm run test:integration
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop

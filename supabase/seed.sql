@@ -1,0 +1,9 @@
+-- Intentionally empty.
+--
+-- `[db.seed] enabled = true` in config.toml points at this file, so its absence
+-- makes `supabase start` / `supabase db reset` warn about a missing seed path in
+-- CI. Integration tests self-seed instead: each file creates its own owners with
+-- unique timestamp-suffixed emails and deletes them in `afterAll`, which keeps
+-- them independent and re-runnable (see tests/integration/helpers/owners.ts and
+-- helpers/cleanup.ts). Do not add fixture rows here — shared mutable seed data
+-- would couple the suites to each other.

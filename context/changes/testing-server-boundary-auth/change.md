@@ -1,9 +1,9 @@
 ---
 change_id: testing-server-boundary-auth
 title: Server-boundary auth & ownership tests (test-plan rollout Phase 1)
-status: implementing
+status: complete
 created: 2026-06-29
-updated: 2026-07-01
+updated: 2026-08-11
 archived_at: null
 ---
 

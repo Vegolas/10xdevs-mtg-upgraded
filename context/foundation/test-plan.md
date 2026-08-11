@@ -6,7 +6,8 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-29 (Phase 1 change opened)
+> Last updated: 2026-08-11 (§3 Phase 1 complete — integration harness, both
+> risk suites, and the CI gate landed; §6.2 cookbook filled)
 
 ## 1. Strategy
 
@@ -87,7 +88,7 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|------------|-----------------|----------------|------------|--------|---------------|
-| 1 | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite | #1, #2 | integration + CI gate | change opened | context/changes/testing-server-boundary-auth/ |
+| 1 | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite | #1, #2 | integration + CI gate | complete | context/changes/testing-server-boundary-auth/ |
 | 2 | API contract pinning | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly | #3, #6 | contract + integration + golden | not started | — |
 | 3 | Derive-to-persist correctness | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped | #4, #5 | integration | not started | — |
 
@@ -111,7 +112,7 @@ The classic test base for this project. AI-native tools (if any) carry a
 | Layer | Tool | Version | Notes |
 |-------|------|---------|-------|
 | unit (logic) | Vitest | ^4.1.9 | `node` env, `src/**/*.test.ts`, `@/*` alias. 20 test files, **all pure-logic** (`src/lib/{card-data,deck,path}` + deck helpers). `npm test` → `vitest run`. |
-| integration (API + boundary) | Vitest + local Supabase | ^4.1.9 | **none yet — see §3 Phase 1.** Exercise `/api/paths/*` handlers against the real query path (local Supabase / `supabase db reset`), not a mock that can't reproduce an RLS bypass. |
+| integration (API + boundary) | Vitest + local Supabase | ^4.1.9 | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2. |
 | contract | Vitest | ^4.1.9 | **none yet — see §3 Phase 2.** Pin request/response shapes of `/api/paths/*`. |
 | live (external) | Vitest | ^4.1.9 | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal. |
 | e2e | none | — | **deliberately deferred — see §7.** Re-evaluate only after Phases 1–3 land. |
@@ -137,16 +138,19 @@ lands; before that, the gate is `planned`.
 |------|-------|-----------|---------|
 | lint + typecheck | local + CI | required (already wired) | syntactic / type drift (ESLint strictTypeChecked, type-aware) |
 | build | local + CI | required (already wired) | broken Astro build |
-| unit (logic) | local; **CI after §3 Phase 1** | required after §3 Phase 1 | logic regressions (suite exists, CI does not yet run it) |
-| integration (API + ownership) | local + CI | required after §3 Phase 1 | cross-owner leak, signed-out gate failures |
+| unit (logic) | local + CI | **required (wired §3 Phase 1)** — `npm test` in the `ci` job between lint and build | logic regressions |
+| integration (API + ownership) | local + CI | **required (wired §3 Phase 1)** — `npm run test:integration` in the separate `integration` job, against an ephemeral local stack | cross-owner leak, signed-out gate failures |
 | contract (`/api/paths/*`) | local + CI | required after §3 Phase 2 | stale-caller / changed-shape breaks |
 | derive-to-persist integration | local + CI | required after §3 Phase 3 | corrupted or silently-wrong snapshots |
 | e2e on critical flows | CI on PR | deferred — see §7 | broken signed-in path flow (revisit post-rollout) |
 
-The load-bearing gate change is in **Phase 1**: add a `npm test` step to
-`.github/workflows/ci.yml` between lint and build, so the suite (existing +
-new integration tests) actually gates PRs. Until then, CI green is false
-confidence on a correctness-critical surface.
+The load-bearing gate change **landed in Phase 1**: `.github/workflows/ci.yml`
+now runs `npm test` between lint and build, plus a separate `integration` job
+that boots an ephemeral local Supabase and runs `npm run test:integration`, so
+both suites actually gate PRs. CI green is no longer false confidence on the
+server boundary. The integration job sources its keys — including service-role —
+from `supabase status` on the running stack, so no long-lived service-role
+secret exists in the repo or in Actions secrets.
 
 ## 6. Cookbook Patterns
 
@@ -164,9 +168,67 @@ relevant rollout phase ships; before that, the sub-section reads "TBD — see
 
 ### 6.2 Adding an integration test (API + ownership)
 
-- TBD — see §3 Phase 1. Will cover: exercising `/api/paths/*` against the
-  real query path with two distinct owners (cross-owner denial), signed-out
-  / expired-session rejection, and the local-Supabase setup/teardown pattern.
+- **Location**: `tests/integration/<risk>.int.test.ts` — outside `src/`, so
+  `npm test` (which globs `src/**/*.test.ts`) never picks it up.
+- **Naming**: `<risk-or-surface>.int.test.ts`. The `.int.` infix is what
+  `vitest.integration.config.ts` globs.
+- **Reference tests**: `ownership-steps.int.test.ts` (cross-owner + DB-state
+  read-back), `gate-api.int.test.ts` (401 gate), `smoke.int.test.ts` (thinnest
+  possible harness proof).
+- **Prerequisite**: local Supabase up (`npx supabase start`) and `.env.test`
+  filled from `npx supabase status` (copy `.env.test.example`). With Supabase
+  down the suite fails fast with that instruction, not a timeout.
+- **Run locally**: `npm run test:integration`. CI runs it in a separate
+  `integration` job against an ephemeral stack.
+
+The recipe, and why each piece is load-bearing:
+
+1. **Separate Vitest config**, not a second glob in the unit config
+   (`vitest.integration.config.ts`): loads `.env.test` into `process.env`,
+   forwards only the needed keys to worker forks via `test.env`, and keeps
+   `npm test` fast and DB-free. Real env vars win over the file, so CI
+   overrides without writing one.
+2. **`globalSetup` spawns a real `astro dev`** (`tests/integration/global-setup.ts`)
+   and polls until it answers. There is nothing in-process to mock without
+   bypassing the thing under test — the session check is one real network call
+   in middleware, and RLS only applies to a real query.
+3. **The dev server needs the env, not just the test process.** It gets the
+   local URL + **anon** key only. The service-role key stays in the test
+   process (admin seeding, teardown, DB read-back) and is never handed to the
+   server.
+4. **`.dev.vars` is overridden, not just the spawn env.** The Cloudflare
+   adapter resolves `astro:env/server` from `.dev.vars` via `getPlatformProxy`,
+   which *wins* over injected env. Setup snapshots the contributor's real file
+   to a `.intbak` sidecar and restores it on teardown; a leftover sidecar from
+   a killed run is recovered before the next snapshot.
+5. **Seed owners via the admin API, then sign in through the app's own
+   `/api/auth/signin`** (`helpers/owners.ts`) with `redirect: "manual"` so the
+   302 doesn't swallow `Set-Cookie`. Reassemble every `sb-*` cookie (including
+   the chunked `.0`/`.1` parts) into one replayable `Cookie` header. Hand-built
+   cookies would test a shape the app doesn't actually emit.
+6. **For the invalid-session case use `corruptCookies()`** — keep the real
+   cookie *names*, replace the values. A garbage token is the faithful proxy
+   for expiry: both collapse to the same observable behavior (302 for pages,
+   401 for the API), and no truly time-expired JWT has to be minted.
+7. **Denial is `404` (single resource) or a filtered `200` (list), never
+   `403`.** RLS makes other owners' rows invisible, so the handler cannot tell
+   "absent" from "not yours." Assert 404 + row absence.
+8. **Assert DB state, not just status, on any mutating cross-owner test.**
+   Read back with the service-role client (`helpers/owners.ts`). A 404 alone
+   would still pass if a too-broad policy 404'd the client *and* wrote the row.
+   This is the whole point of the `path_steps` tests — that table has no
+   `owner_id` and is protected transitively by an `EXISTS` subquery.
+9. **Self-seed and self-clean.** Unique timestamp-suffixed emails; delete
+   owners in `afterAll` (`helpers/cleanup.ts`) and let `on delete cascade`
+   drop their paths and steps. No `seed.sql` fixtures — the suite must pass
+   twice in a row.
+10. **Never use service-role for an assertion's subject.** Setup, teardown and
+    read-back only; asserting through a privileged client would bypass the
+    mechanism under test.
+
+Execution is serialized (`fileParallelism: false`, `pool: "forks"`) because the
+suite shares one DB and one dev server, with `testTimeout`/`hookTimeout` raised
+to 30s for boot + real network round-trips.
 
 ### 6.3 Adding a contract test for `/api/paths/*`
 
@@ -191,6 +253,20 @@ relevant rollout phase ships; before that, the sub-section reads "TBD — see
 
 (Optional. After each phase lands, `/10x-implement` appends a 2–3 line note
 here capturing anything surprising the rollout phase taught.)
+
+**Phase 1 (2026-08-11).** Three things cost real time and are worth knowing
+before Phase 2:
+
+- Injecting `SUPABASE_*` into the spawned `astro dev` env is **not enough** —
+  the Cloudflare adapter resolves `astro:env/server` from `.dev.vars` via
+  `getPlatformProxy`, which silently wins. The harness has to override that
+  file (and restore it) or the suite quietly runs against the cloud project.
+- Cross-owner denial surfaces as **404 / filtered 200, never 403**, so a
+  status-only assertion is nearly worthless on mutating routes. The
+  service-role read-back is what actually proves nothing leaked.
+- Killing the dev server needs a **process-tree** kill (`taskkill /t` on
+  Windows, negative-pid `SIGTERM` elsewhere); `child.kill()` alone orphaned
+  the server and the next run collided on the port.
 
 ## 7. What We Deliberately Don't Test
 
