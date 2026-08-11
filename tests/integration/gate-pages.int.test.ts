@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { BASE_URL } from "./helpers/env";
+import { assertStatus } from "./helpers/http";
 import { corruptCookies, createSignedInOwner } from "./helpers/owners";
 import { deleteOwners } from "./helpers/cleanup";
 
@@ -53,6 +54,6 @@ describe("auth gate — protected page redirect", () => {
       headers: { Cookie: validCookie },
     });
 
-    expect(res.status).toBe(200);
+    await assertStatus(res, 200, "GET /paths with a valid owner's cookies");
   });
 });

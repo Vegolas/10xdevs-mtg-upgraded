@@ -1,3 +1,4 @@
+import { assertStatus } from "./http";
 import { admin } from "./owners";
 
 /**
@@ -23,9 +24,7 @@ export async function createPath(baseUrl: string, cookieHeader: string, title: s
     headers: { "Content-Type": "application/json", Origin: baseUrl, Cookie: cookieHeader },
     body: JSON.stringify({ title }),
   });
-  if (res.status !== 201) {
-    throw new Error(`createPath("${title}") expected 201, got ${res.status}`);
-  }
+  await assertStatus(res, 201, `createPath("${title}")`);
   const body = (await res.json()) as CreatedPath;
   return { id: body.id, title: body.title };
 }
@@ -37,9 +36,7 @@ export async function addStep(baseUrl: string, cookieHeader: string, pathId: str
     headers: { "Content-Type": "application/json", Origin: baseUrl, Cookie: cookieHeader },
     body: JSON.stringify({ name, listText: "", snapshot: { cards: [], unresolved: [] } }),
   });
-  if (res.status !== 201) {
-    throw new Error(`addStep(${pathId}) expected 201, got ${res.status}`);
-  }
+  await assertStatus(res, 201, `addStep(${pathId})`);
   const body = (await res.json()) as { id: string };
   return body.id;
 }

@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { BASE_URL } from "./helpers/env";
+import { assertStatus } from "./helpers/http";
 import { createOwner, signIn } from "./helpers/owners";
 import { deleteOwners } from "./helpers/cleanup";
 
@@ -26,7 +27,7 @@ describe("integration harness smoke", () => {
       headers: { Cookie: cookieHeader },
     });
 
-    expect(res.status).toBe(200);
+    await assertStatus(res, 200, "GET /api/paths as the seeded owner");
     const body: unknown = await res.json();
     expect(Array.isArray(body)).toBe(true);
   });

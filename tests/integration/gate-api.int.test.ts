@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { BASE_URL } from "./helpers/env";
+import { assertStatus } from "./helpers/http";
 import { corruptCookies, createSignedInOwner } from "./helpers/owners";
 import { deleteOwners } from "./helpers/cleanup";
 
@@ -48,6 +49,6 @@ describe("auth gate — API 401", () => {
   it("lets a valid owner call GET /api/paths (200)", async () => {
     const res = await fetch(`${BASE_URL}/api/paths`, { headers: { Cookie: validCookie } });
 
-    expect(res.status).toBe(200);
+    await assertStatus(res, 200, "GET /api/paths with a valid owner's cookies");
   });
 });
