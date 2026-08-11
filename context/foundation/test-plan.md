@@ -268,6 +268,29 @@ before Phase 2:
   Windows, negative-pid `SIGTERM` elsewhere); `child.kill()` alone orphaned
   the server and the next run collided on the port.
 
+**The phase paid for itself on its first CI run.** Against a freshly created
+stack, every authenticated query returned 500 —
+`permission denied for table upgrade_paths` — while the 401 gate tests passed.
+The first migration had created both tables and their RLS policies but never
+granted table-level privileges, leaning on the `public` schema defaults a stack
+bootstraps. **Privileges are checked before RLS**, so a valid JWT died before any
+policy was consulted, and the policies (which are correct) were never the
+problem. Long-lived local volumes and the existing cloud project carry those
+defaults, so no local run could see it; any newly provisioned environment would
+have had a dead `/api/paths/*`. Two durable rules follow:
+
+- **Migrations must grant explicitly.** Never rely on implicit default
+  privileges — assert the grant in the migration that creates the table.
+- **A green local suite is not evidence for anything bootstrap- or
+  privilege-shaped.** The local DB carries state a fresh one does not; CI on a
+  fresh stack is the only honest verifier. This is also why the integration job
+  boots its own stack rather than reusing a warm one.
+
+And a harness rule the same failure taught: **never assert a bare status code.**
+`expect(res.status).toBe(200)` discarded the `{"error": …}` body that named the
+cause, turning a one-line diagnosis into a blind CI round. Route status checks
+through `helpers/http.ts#assertStatus`, which puts the body in the message.
+
 ## 7. What We Deliberately Don't Test
 
 Exclusions agreed during the rollout (Phase 2 interview, Q5). Future

@@ -421,9 +421,28 @@ mutable path state across tests.
 
 ## Migration Notes
 
-No schema changes. `seed.sql` stays absent (tests self-seed); if `supabase db reset` warns
-about the missing seed file in CI, either create an empty `seed.sql` or disable the
-`[db.seed]` entry — decided at implement time, not a blocker.
+**Both assumptions in this section turned out wrong at implement time. Recorded here
+rather than quietly edited away, because each cost a CI round.**
+
+1. **"No schema changes" — false.** The suite's first CI run against a *freshly created*
+   Supabase stack failed every authenticated query with `permission denied for table
+   upgrade_paths` (500), while the 401 gate tests passed. The first migration created both
+   tables and their RLS policies but never granted table-level privileges, relying on the
+   `public` schema default privileges a stack bootstraps. Privileges are checked **before**
+   RLS, so a valid JWT died before any policy was consulted. Long-lived local volumes and
+   the existing cloud project carry those defaults and hid the gap; any newly provisioned
+   environment would have had a dead `/api/paths/*`. Fixed by
+   [20260811081145_grant_table_privileges.sql](supabase/migrations/20260811081145_grant_table_privileges.sql)
+   — explicit grants to `authenticated` + `service_role`, `anon` deliberately left out
+   until the unlisted-sharing slice lands with its read policy. This is a genuine product
+   bug the plan did not anticipate, found by the suite on its first honest run.
+2. **"`seed.sql` stays absent" — reversed.** `[db.seed] enabled = true` points at
+   `./seed.sql`, so a fresh `supabase start` warns on the missing path. Created it empty
+   with a comment explaining that tests self-seed and it must stay empty.
+
+Note for future phases: a green local run cannot prove either of these. The local DB
+carries implicit privileges a fresh one does not, so **CI on a fresh stack is the only
+honest verifier** for anything privilege- or bootstrap-shaped.
 
 ## References
 
@@ -481,8 +500,8 @@ about the missing seed file in CI, either create an empty `seed.sql` or disable 
 #### Automated
 
 - [x] 4.1 CI config is valid YAML and the workflow parses — c48ad38
-- [ ] 4.2 CI run shows lint → unit test → build, plus the integration step green — needs a push; unverifiable locally
-- [ ] 4.3 Integration step boots Supabase and runs `test:integration` against the local stack — needs a push; the env-export pipeline and `test:integration` were verified locally, `supabase start` on a runner was not
+- [x] 4.2 CI run shows lint → unit test → build, plus the integration step green — 5b69abb (run 31472287455)
+- [x] 4.3 Integration step boots Supabase and runs `test:integration` against the local stack — 5b69abb (run 31472287455; 19/19 on a fresh stack)
 
 #### Manual
 
