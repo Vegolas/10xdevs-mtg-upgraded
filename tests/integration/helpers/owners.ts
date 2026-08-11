@@ -69,6 +69,22 @@ export async function signIn(baseUrl: string, email: string, password: string): 
   return pairs.join("; ");
 }
 
+/**
+ * Turn a valid `Cookie` header into a present-but-invalid one: keep the real
+ * `sb-*` cookie NAMES (so the client actually parses them) but replace every
+ * value with garbage. `getUser()` then fails server-side validation and returns
+ * a null user — the faithful proxy for an expired session (both collapse to the
+ * same observable behavior: 302 for pages, 401 for the API).
+ */
+export function corruptCookies(cookieHeader: string): string {
+  return cookieHeader
+    .split(";")
+    .map((pair) => pair.trim())
+    .filter((pair) => pair.length > 0)
+    .map((pair) => `${pair.split("=")[0]}=invalid-token`)
+    .join("; ");
+}
+
 /** Convenience: create an owner and return them already signed in with a replayable cookie header. */
 export async function createSignedInOwner(baseUrl: string, label: string): Promise<Owner & { cookieHeader: string }> {
   const owner = await createOwner(label);
