@@ -456,25 +456,25 @@ about the missing seed file in CI, either create an empty `seed.sql` or disable 
 
 #### Automated
 
-- [x] 2.1 Ownership suite passes: `npm run test:integration`
-- [x] 2.2 Deliberate policy-widening break is caught by the step DB-state test (then reverted)
+- [x] 2.1 Ownership suite passes: `npm run test:integration` — 8c80fc7
+- [x] 2.2 Deliberate policy-widening break is caught by the step DB-state test (then reverted) — 8c80fc7
 
 #### Manual
 
-- [ ] 2.3 Every cross-owner test asserts row-absence / DB-state, not merely status
-- [ ] 2.4 No test builds its expected result from the code under test (no tautological oracle)
+- [x] 2.3 Every cross-owner test asserts row-absence / DB-state, not merely status — 8c80fc7
+- [x] 2.4 No test builds its expected result from the code under test (no tautological oracle) — 8c80fc7
 
 ### Phase 3: Risk #2 — auth-gate suite
 
 #### Automated
 
-- [ ] 3.1 Gate suite passes: `npm run test:integration`
-- [ ] 3.2 Deliberate `PROTECTED_ROUTES` break is caught by the page-redirect test (then reverted)
+- [x] 3.1 Gate suite passes: `npm run test:integration` — 0bdea21
+- [x] 3.2 Deliberate `PROTECTED_ROUTES` break is caught by the page-redirect test (then reverted) — 0bdea21
 
 #### Manual
 
-- [ ] 3.3 Both no-cookie and invalid-token cases are exercised
-- [ ] 3.4 Valid-owner case proves a real session is not bounced
+- [x] 3.3 Both no-cookie and invalid-token cases are exercised — 0bdea21
+- [x] 3.4 Valid-owner case proves a real session is not bounced — 0bdea21
 
 ### Phase 4: CI wiring + cookbook
 
