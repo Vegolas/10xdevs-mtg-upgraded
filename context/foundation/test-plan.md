@@ -6,8 +6,9 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-11 (§3 Phase 1 complete — integration harness, both
-> risk suites, and the CI gate landed; §6.2 cookbook filled)
+> Last updated: 2026-08-12 (§3 Phase 1 complete — integration harness, both
+> risk suites, and the CI gate landed; §6.2 cookbook filled. Phase 2 opened:
+> context/changes/testing-api-contract-pinning/)
 
 ## 1. Strategy
 
@@ -89,7 +90,7 @@ orchestrator updates Status as artifacts appear on disk.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|------------|-----------------|----------------|------------|--------|---------------|
 | 1 | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite | #1, #2 | integration + CI gate | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
-| 2 | API contract pinning | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly | #3, #6 | contract + integration + golden | not started | — |
+| 2 | API contract pinning | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly | #3, #6 | contract + integration + golden | change opened | context/changes/testing-api-contract-pinning/ |
 | 3 | Derive-to-persist correctness | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped | #4, #5 | integration | not started | — |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
