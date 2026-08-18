@@ -890,16 +890,16 @@ recomputed through `groupByCategory` on every read, so no stored data is affecte
 
 #### Automated
 
-- [x] 4.1 Linting passes: `npm run lint`
-- [x] 4.2 Both suites pass: `npm test`, `npm run test:integration`
-- [x] 4.3 Every registry row resolves to an existing path and export
-- [ ] 4.4 `ci` + `integration` green on the PR
+- [x] 4.1 Linting passes: `npm run lint` — 40cb6e6
+- [x] 4.2 Both suites pass: `npm test`, `npm run test:integration` — 40cb6e6
+- [x] 4.3 Every registry row resolves to an existing path and export — 40cb6e6
+- [x] 4.4 `ci` + `integration` green on the PR — 40cb6e6
 
 #### Manual
 
-- [x] 4.5 §6.3 is followable without reading this plan
-- [x] 4.6 Every registry claim verified against code, not copied from research
-- [x] 4.7 Each of the three findings names a file and line that still exist
+- [x] 4.5 §6.3 is followable without reading this plan — 40cb6e6
+- [x] 4.6 Every registry claim verified against code, not copied from research — 40cb6e6
+- [x] 4.7 Each of the three findings names a file and line that still exist — 40cb6e6
 
 ### Phase 5: Deliberate-break PR
 
