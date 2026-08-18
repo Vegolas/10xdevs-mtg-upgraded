@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { UpgradePath } from "@/lib/path";
+import { requestJson } from "@/lib/api/client";
+import type { PathTitleRequest, UpgradePath } from "@/lib/api/contract";
 
 const textInputClasses =
   "w-full rounded-[5px] border border-border bg-input px-3 py-2 text-sm text-foreground placeholder-muted-foreground/60 transition-colors focus:border-ring focus:ring-2 focus:ring-ring focus:outline-none";
@@ -24,24 +25,24 @@ export default function NewPathForm() {
     }
     setPending(true);
     setError(null);
-    try {
-      const response = await fetch("/api/paths", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: trimmed }),
-      });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(body?.error ?? `Couldn't create the path (${response.status}).`);
-        setPending(false);
-        return;
-      }
-      const created = (await response.json()) as UpgradePath;
-      window.location.href = `/paths/${created.id}`;
-    } catch {
-      setError("Couldn't create the path. Check your connection and retry.");
+    const request: PathTitleRequest = { title: trimmed };
+    const result = await requestJson<UpgradePath>("/api/paths", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!result.ok) {
+      setError(
+        result.kind === "transport"
+          ? "Couldn't create the path. Check your connection and retry."
+          : result.fromBody
+            ? result.error
+            : `Couldn't create the path (${result.status}).`,
+      );
       setPending(false);
+      return;
     }
+    window.location.href = `/paths/${result.data.id}`;
   }, [title, pending]);
 
   return (

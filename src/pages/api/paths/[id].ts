@@ -1,5 +1,14 @@
 import type { APIRoute } from "astro";
-import { jsonResponse, requireUser, toUpgradePath, toPathStep } from "@/lib/api/paths";
+import {
+  errorResponse,
+  jsonResponse,
+  parsePathId,
+  requireUser,
+  serverError,
+  toUpgradePath,
+  toPathStep,
+} from "@/lib/api/paths";
+import type { PathWithStepsResponse, UpgradePath } from "@/lib/api/contract";
 import { parseTitleInput } from "@/lib/path";
 
 /** GET /api/paths/[id] — the path plus its ordered steps. 404 when not owned/absent (RLS). */
@@ -8,9 +17,9 @@ export const GET: APIRoute = async (context) => {
   if (auth instanceof Response) {
     return auth;
   }
-  const id = context.params.id;
-  if (!id) {
-    return jsonResponse({ error: "Not found" }, 404);
+  const id = parsePathId(context);
+  if (id === null) {
+    return errorResponse("Not found", 404);
   }
 
   const { data: pathRow, error: pathError } = await auth.supabase
@@ -20,10 +29,10 @@ export const GET: APIRoute = async (context) => {
     .maybeSingle();
 
   if (pathError) {
-    return jsonResponse({ error: pathError.message }, 500);
+    return serverError(pathError);
   }
   if (!pathRow) {
-    return jsonResponse({ error: "Not found" }, 404);
+    return errorResponse("Not found", 404);
   }
 
   const { data: stepRows, error: stepsError } = await auth.supabase
@@ -33,10 +42,10 @@ export const GET: APIRoute = async (context) => {
     .order("position", { ascending: true });
 
   if (stepsError) {
-    return jsonResponse({ error: stepsError.message }, 500);
+    return serverError(stepsError);
   }
 
-  return jsonResponse({
+  return jsonResponse<PathWithStepsResponse>({
     path: toUpgradePath(pathRow),
     steps: stepRows.map(toPathStep),
   });
@@ -48,15 +57,15 @@ export const PATCH: APIRoute = async (context) => {
   if (auth instanceof Response) {
     return auth;
   }
-  const id = context.params.id;
-  if (!id) {
-    return jsonResponse({ error: "Not found" }, 404);
+  const id = parsePathId(context);
+  if (id === null) {
+    return errorResponse("Not found", 404);
   }
 
   const body = (await context.request.json().catch(() => null)) as unknown;
   const title = parseTitleInput(body);
   if (title === null) {
-    return jsonResponse({ error: "Title is required" }, 400);
+    return errorResponse("Title is required", 400);
   }
 
   const { data, error } = await auth.supabase
@@ -67,12 +76,12 @@ export const PATCH: APIRoute = async (context) => {
     .maybeSingle();
 
   if (error) {
-    return jsonResponse({ error: error.message }, 500);
+    return serverError(error);
   }
   if (!data) {
-    return jsonResponse({ error: "Not found" }, 404);
+    return errorResponse("Not found", 404);
   }
-  return jsonResponse(toUpgradePath(data));
+  return jsonResponse<UpgradePath>(toUpgradePath(data));
 };
 
 /** DELETE /api/paths/[id] — delete the path (steps cascade). 404 when not owned/absent (RLS). */
@@ -81,18 +90,18 @@ export const DELETE: APIRoute = async (context) => {
   if (auth instanceof Response) {
     return auth;
   }
-  const id = context.params.id;
-  if (!id) {
-    return jsonResponse({ error: "Not found" }, 404);
+  const id = parsePathId(context);
+  if (id === null) {
+    return errorResponse("Not found", 404);
   }
 
   const { data, error } = await auth.supabase.from("upgrade_paths").delete().eq("id", id).select("id");
 
   if (error) {
-    return jsonResponse({ error: error.message }, 500);
+    return serverError(error);
   }
   if (data.length === 0) {
-    return jsonResponse({ error: "Not found" }, 404);
+    return errorResponse("Not found", 404);
   }
   return new Response(null, { status: 204 });
 };

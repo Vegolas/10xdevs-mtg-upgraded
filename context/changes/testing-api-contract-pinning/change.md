@@ -1,9 +1,9 @@
 ---
 change_id: testing-api-contract-pinning
 title: API contract pinning + engine golden output (test-plan rollout Phase 2)
-status: preparing
+status: implementing
 created: 2026-08-11
-updated: 2026-08-12
+updated: 2026-08-18
 archived_at: null
 ---
 
@@ -53,5 +53,29 @@ code** (route through `tests/integration/helpers/http.ts#assertStatus`, which pu
 response body in the failure message), and **a suite that goes red is not a gate** — run the
 deliberate-break check as a PR, not locally.
 
-Next: `/10x-research testing-api-contract-pinning` — the contract surface and its consumers
-need grounding before a plan can name what to pin.
+Research landed 2026-08-12 (`research.md`) and the plan landed 2026-08-13 (`plan.md` +
+`plan-brief.md`): 5 phases, production-first. The plan carries a **decided-contract table** that is
+the oracle every assertion cites — `documented` where the archived design docs speak,
+`decided` where they are silent — so no assertion is mirrored from a handler's current output.
+
+Sixteen decisions were settled during planning; the load-bearing ones:
+
+- **Types + tests, not tests alone.** A new types-only `src/lib/api/contract.ts` plus an explicitly
+  parameterized `jsonResponse<T>` turns four of research's ranked seams into `tsc` errors. This
+  required a discovery the plan acts on: **nothing typechecks in CI today** — ESLint doesn't report
+  assignability errors and `astro build` doesn't typecheck — so `astro check` is wired into `ci` or
+  the type layer gates nothing.
+- **Two contract holes get fixed** (the 500 body's raw `PostgrestError.message` leak, the missing
+  `[id]` UUID validation that produces those 500s); three are filed as findings. Redacting the 500
+  body would silently destroy Phase 1's "never assert a bare status code" diagnosis rule, because
+  `global-setup.ts` captures the dev-server log and prints it only on boot failure — so the
+  log-surfacing change lands with the redaction.
+- **Multiset, not byte, equality** for "diff-mode ≡ full paste". The archived promise is stronger
+  than the code. The live copy of the claim is `src/lib/path/derive.ts:6` and gets corrected; the two
+  archived copies are immutable and stand superseded (recorded in test-plan §6.6).
+- **Goldens use `toMatchSnapshot`** (user's call over hand-authored literals), guarded by PR review of
+  the first recording, committed `.snap` files, and CI's refusal to write missing snapshots.
+- **No branch-protection change.** Contract suites use the `.int.test.ts` infix so they ride the
+  already-required `integration` job; goldens ride `ci` via `npm test`.
+
+Next: `/10x-implement testing-api-contract-pinning phase 1`.

@@ -84,7 +84,11 @@ export function groupByCategory(cards: DeckCard[]): CardGroup[] {
   for (const category of CATEGORY_ORDER) {
     const bucket = buckets.get(category);
     if (bucket && bucket.length > 0) {
-      bucket.sort((a, b) => a.card.name.localeCompare(b.card.name));
+      // Explicit locale: the runtime default varies between a contributor's machine,
+      // CI and a Cloudflare worker, so an implicit collation makes in-group order
+      // environment-dependent — a user-visible ordering bug, and the one source of
+      // nondeterminism that survives full stubbing.
+      bucket.sort((a, b) => a.card.name.localeCompare(b.card.name, "en"));
       groups.push({ category, cards: bucket });
     }
   }
