@@ -837,37 +837,37 @@ recomputed through `groupByCategory` on every read, so no stored data is affecte
 
 #### Automated
 
-- [x] 1.1 Linting passes: `npm run lint`
-- [x] 1.2 Typechecking passes: `npm run typecheck`
-- [x] 1.3 Unit suite passes: `npm test`
-- [x] 1.4 Build passes: `npm run build`
-- [x] 1.5 Existing integration suite still passes: `npm run test:integration`
-- [ ] 1.6 `ci` job runs `npm run typecheck` and is green on the PR
-- [x] 1.7 A non-UUID id returns the decided 404
-- [x] 1.8 No 500 body contains Postgres text
+- [x] 1.1 Linting passes: `npm run lint` — 00332d2
+- [x] 1.2 Typechecking passes: `npm run typecheck` — 00332d2
+- [x] 1.3 Unit suite passes: `npm test` — 00332d2
+- [x] 1.4 Build passes: `npm run build` — 00332d2
+- [x] 1.5 Existing integration suite still passes: `npm run test:integration` — 00332d2
+- [x] 1.6 `ci` job runs `npm run typecheck` and is green on the PR — 00332d2
+- [x] 1.7 A non-UUID id returns the decided 404 — 00332d2
+- [x] 1.8 No 500 body contains Postgres text — 00332d2
 
 #### Manual
 
-- [x] 1.9 All five path mutations still work in the browser with unchanged error messages
-- [x] 1.10 A forced 500 shows `{error, ref}` and the matching `ref` + detail in the server console
-- [x] 1.11 In-category card order unchanged for an existing path after the collation fix
+- [x] 1.9 All five path mutations still work in the browser with unchanged error messages — 00332d2
+- [x] 1.10 A forced 500 shows `{error, ref}` and the matching `ref` + detail in the server console — 00332d2
+- [x] 1.11 In-category card order unchanged for an existing path after the collation fix — 00332d2
 
 ### Phase 2: Pin `/api/paths/*` and signin
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Typechecking passes: `npm run typecheck`
-- [ ] 2.3 Full integration suite passes: `npm run test:integration`
-- [ ] 2.4 The suite passes twice in a row without a DB reset
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Typechecking passes: `npm run typecheck`
+- [x] 2.3 Full integration suite passes: `npm run test:integration`
+- [x] 2.4 The suite passes twice in a row without a DB reset
 - [ ] 2.5 `integration` job green on the PR
-- [ ] 2.6 All five new `contract-*.int.test.ts` files are picked up by the integration config
+- [x] 2.6 All five new `contract-*.int.test.ts` files are picked up by the integration config
 
 #### Manual
 
-- [ ] 2.7 Every assertion traces to a decided-contract row, marked `documented` or `decided`
-- [ ] 2.8 No test builds its expectation from a handler's output
-- [ ] 2.9 A forced shape break produces a message naming the missing/extra key
+- [x] 2.7 Every assertion traces to a decided-contract row, marked `documented` or `decided`
+- [x] 2.8 No test builds its expectation from a handler's output
+- [x] 2.9 A forced shape break produces a message naming the missing/extra key
 
 ### Phase 3: Engine goldens
 
