@@ -856,35 +856,35 @@ recomputed through `groupByCategory` on every read, so no stored data is affecte
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Typechecking passes: `npm run typecheck`
-- [x] 2.3 Full integration suite passes: `npm run test:integration`
-- [x] 2.4 The suite passes twice in a row without a DB reset
-- [ ] 2.5 `integration` job green on the PR
-- [x] 2.6 All five new `contract-*.int.test.ts` files are picked up by the integration config
+- [x] 2.1 Linting passes: `npm run lint` — 6fedd2b
+- [x] 2.2 Typechecking passes: `npm run typecheck` — 6fedd2b
+- [x] 2.3 Full integration suite passes: `npm run test:integration` — 6fedd2b
+- [x] 2.4 The suite passes twice in a row without a DB reset — 6fedd2b
+- [x] 2.5 `integration` job green on the PR — 6fedd2b
+- [x] 2.6 All five new `contract-*.int.test.ts` files are picked up by the integration config — 6fedd2b
 
 #### Manual
 
-- [x] 2.7 Every assertion traces to a decided-contract row, marked `documented` or `decided`
-- [x] 2.8 No test builds its expectation from a handler's output
-- [x] 2.9 A forced shape break produces a message naming the missing/extra key
+- [x] 2.7 Every assertion traces to a decided-contract row, marked `documented` or `decided` — 6fedd2b
+- [x] 2.8 No test builds its expectation from a handler's output — 6fedd2b
+- [x] 2.9 A forced shape break produces a message naming the missing/extra key — 6fedd2b
 
 ### Phase 3: Engine goldens
 
 #### Automated
 
-- [ ] 3.1 Unit suite passes: `npm test`
-- [ ] 3.2 Linting and typechecking pass
-- [ ] 3.3 Both `.snap` files exist and are git-tracked
-- [ ] 3.4 CI refuses to write a missing snapshot (`CI=1` run fails, then restore)
-- [ ] 3.5 Re-running `npm test` produces no snapshot churn
+- [x] 3.1 Unit suite passes: `npm test`
+- [x] 3.2 Linting and typechecking pass
+- [x] 3.3 Both `.snap` files exist and are git-tracked
+- [x] 3.4 CI refuses to write a missing snapshot (`CI=1` run fails, then restore)
+- [x] 3.5 Re-running `npm test` produces no snapshot churn
 - [ ] 3.6 `ci` job green on the PR
 
 #### Manual
 
-- [ ] 3.7 Each recorded `.snap` read in full and matched to the fixture's hand-computed expectation
-- [ ] 3.8 The `planAddCost` golden total is a clean decimal, not a float artifact
-- [ ] 3.9 The "array order differs" assertion holds, documenting the real guarantee
+- [x] 3.7 Each recorded `.snap` read in full and matched to the fixture's hand-computed expectation
+- [x] 3.8 The `planAddCost` golden total is a clean decimal, not a float artifact
+- [x] 3.9 The "array order differs" assertion holds, documenting the real guarantee
 
 ### Phase 4: Gate, cookbook, registry
 

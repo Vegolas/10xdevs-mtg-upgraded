@@ -1,0 +1,197 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`diffDecks golden output > pins the whole UpgradePlan for the fixture pair 1`] = `
+{
+  "add": [
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "land",
+            "imageUrl": "https://cards.example.test/island.png",
+            "name": "Island",
+            "priceEur": 0.75,
+            "priceUsd": 0.5,
+            "typeLine": "Basic Land — Island",
+          },
+          "quantity": 4,
+        },
+      ],
+      "category": "land",
+    },
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "creature",
+            "imageUrl": "https://cards.example.test/anafenza.png",
+            "name": "Anafenza, the Foremost",
+            "priceEur": 2.25,
+            "priceUsd": 2.5,
+            "typeLine": "Legendary Creature — Human Soldier",
+          },
+          "quantity": 1,
+        },
+        {
+          "card": {
+            "category": "creature",
+            "imageUrl": "https://cards.example.test/meren.png",
+            "name": "Meren of Clan Nel Toth",
+            "priceEur": 4.5,
+            "priceUsd": 4.75,
+            "typeLine": "Legendary Creature — Human Shaman",
+          },
+          "quantity": 2,
+        },
+        {
+          "card": {
+            "category": "creature",
+            "imageUrl": null,
+            "name": "Zurgo Helmsmasher",
+            "priceEur": null,
+            "priceUsd": null,
+            "typeLine": "Legendary Creature — Orc Warrior",
+          },
+          "quantity": 1,
+        },
+      ],
+      "category": "creature",
+    },
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "instant",
+            "imageUrl": "https://cards.example.test/brainstorm.png",
+            "name": "Brainstorm",
+            "priceEur": 0.25,
+            "priceUsd": 0.25,
+            "typeLine": "Instant",
+          },
+          "quantity": 3,
+        },
+      ],
+      "category": "instant",
+    },
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "enchantment",
+            "imageUrl": "https://cards.example.test/rhystic-study.png",
+            "name": "Rhystic Study",
+            "priceEur": 11.75,
+            "priceUsd": 12.5,
+            "typeLine": "Enchantment",
+          },
+          "quantity": 1,
+        },
+      ],
+      "category": "enchantment",
+    },
+  ],
+  "remove": [
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "land",
+            "imageUrl": "https://cards.example.test/mountain.png",
+            "name": "Mountain",
+            "priceEur": 0.25,
+            "priceUsd": 0.25,
+            "typeLine": "Basic Land — Mountain",
+          },
+          "quantity": 3,
+        },
+      ],
+      "category": "land",
+    },
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "instant",
+            "imageUrl": "https://cards.example.test/counterspell.png",
+            "name": "Counterspell",
+            "priceEur": 0.5,
+            "priceUsd": 0.75,
+            "typeLine": "Instant",
+          },
+          "quantity": 2,
+        },
+      ],
+      "category": "instant",
+    },
+  ],
+  "shared": [
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "land",
+            "imageUrl": "https://cards.example.test/island.png",
+            "name": "Island",
+            "priceEur": 0.5,
+            "priceUsd": 0.25,
+            "typeLine": "Basic Land — Island",
+          },
+          "quantity": 6,
+        },
+        {
+          "card": {
+            "category": "land",
+            "imageUrl": "https://cards.example.test/mountain.png",
+            "name": "Mountain",
+            "priceEur": 0.25,
+            "priceUsd": 0.25,
+            "typeLine": "Basic Land — Mountain",
+          },
+          "quantity": 5,
+        },
+      ],
+      "category": "land",
+    },
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "creature",
+            "imageUrl": "https://cards.example.test/meren.png",
+            "name": "Meren of Clan Nel Toth",
+            "priceEur": 4.5,
+            "priceUsd": 4.75,
+            "typeLine": "Legendary Creature — Human Shaman",
+          },
+          "quantity": 1,
+        },
+      ],
+      "category": "creature",
+    },
+    {
+      "cards": [
+        {
+          "card": {
+            "category": "artifact",
+            "imageUrl": "https://cards.example.test/sol-ring.png",
+            "name": "Sol Ring",
+            "priceEur": 1.25,
+            "priceUsd": 1.5,
+            "typeLine": "Artifact",
+          },
+          "quantity": 1,
+        },
+      ],
+      "category": "artifact",
+    },
+  ],
+}
+`;
+
+exports[`planAddCost golden output > pins the cost of that plan's add partition 1`] = `
+{
+  "missingCount": 1,
+  "pricedCount": 5,
+  "total": 27.25,
+}
+`;

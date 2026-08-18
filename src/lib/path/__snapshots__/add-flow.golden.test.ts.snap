@@ -1,0 +1,84 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`add-flow equality: diff-mode vs full paste > pins the canonicalised derived snapshot 1`] = `
+{
+  "cards": [
+    {
+      "card": {
+        "category": "creature",
+        "imageUrl": null,
+        "name": "Birds of Paradise",
+        "priceEur": null,
+        "priceUsd": null,
+        "typeLine": "Creature — Bird",
+      },
+      "quantity": 2,
+    },
+    {
+      "card": {
+        "category": "land",
+        "imageUrl": "https://cards.example.test/command-tower.png",
+        "name": "Command Tower",
+        "priceEur": 1.5,
+        "priceUsd": 1.25,
+        "typeLine": "Land",
+      },
+      "quantity": 3,
+    },
+    {
+      "card": {
+        "category": "sorcery",
+        "imageUrl": "https://cards.example.test/cultivate.png",
+        "name": "Cultivate",
+        "priceEur": 0.5,
+        "priceUsd": 0.75,
+        "typeLine": "Sorcery",
+      },
+      "quantity": 1,
+    },
+    {
+      "card": {
+        "category": "land",
+        "imageUrl": "https://cards.example.test/forest.png",
+        "name": "Forest",
+        "priceEur": 0.25,
+        "priceUsd": 0.25,
+        "typeLine": "Basic Land — Forest",
+      },
+      "quantity": 8,
+    },
+    {
+      "card": {
+        "category": "creature",
+        "imageUrl": "https://cards.example.test/llanowar-elves.png",
+        "name": "Llanowar Elves",
+        "priceEur": 0.25,
+        "priceUsd": 0.5,
+        "typeLine": "Creature — Elf Druid",
+      },
+      "quantity": 6,
+    },
+  ],
+  "unresolved": [
+    {
+      "name": "Forbidden Orchrd",
+      "reason": "not-found",
+      "suggestion": "Forbidden Orchard",
+    },
+    {
+      "name": "Sword of Feast",
+      "reason": "ambiguous",
+      "suggestion": null,
+    },
+  ],
+}
+`;
+
+exports[`add-flow equality: diff-mode vs full paste > pins the derive summary 1`] = `
+{
+  "added": 6,
+  "removed": 3,
+  "total": 20,
+  "unchanged": 14,
+}
+`;
