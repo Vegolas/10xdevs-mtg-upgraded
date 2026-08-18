@@ -873,33 +873,33 @@ recomputed through `groupByCategory` on every read, so no stored data is affecte
 
 #### Automated
 
-- [x] 3.1 Unit suite passes: `npm test`
-- [x] 3.2 Linting and typechecking pass
-- [x] 3.3 Both `.snap` files exist and are git-tracked
-- [x] 3.4 CI refuses to write a missing snapshot (`CI=1` run fails, then restore)
-- [x] 3.5 Re-running `npm test` produces no snapshot churn
-- [ ] 3.6 `ci` job green on the PR
+- [x] 3.1 Unit suite passes: `npm test` — a0c41bd
+- [x] 3.2 Linting and typechecking pass — a0c41bd
+- [x] 3.3 Both `.snap` files exist and are git-tracked — a0c41bd
+- [x] 3.4 CI refuses to write a missing snapshot (`CI=1` run fails, then restore) — a0c41bd
+- [x] 3.5 Re-running `npm test` produces no snapshot churn — a0c41bd
+- [x] 3.6 `ci` job green on the PR — a0c41bd
 
 #### Manual
 
-- [x] 3.7 Each recorded `.snap` read in full and matched to the fixture's hand-computed expectation
-- [x] 3.8 The `planAddCost` golden total is a clean decimal, not a float artifact
-- [x] 3.9 The "array order differs" assertion holds, documenting the real guarantee
+- [x] 3.7 Each recorded `.snap` read in full and matched to the fixture's hand-computed expectation — a0c41bd
+- [x] 3.8 The `planAddCost` golden total is a clean decimal, not a float artifact — a0c41bd
+- [x] 3.9 The "array order differs" assertion holds, documenting the real guarantee — a0c41bd
 
 ### Phase 4: Gate, cookbook, registry
 
 #### Automated
 
-- [ ] 4.1 Linting passes: `npm run lint`
-- [ ] 4.2 Both suites pass: `npm test`, `npm run test:integration`
-- [ ] 4.3 Every registry row resolves to an existing path and export
+- [x] 4.1 Linting passes: `npm run lint`
+- [x] 4.2 Both suites pass: `npm test`, `npm run test:integration`
+- [x] 4.3 Every registry row resolves to an existing path and export
 - [ ] 4.4 `ci` + `integration` green on the PR
 
 #### Manual
 
-- [ ] 4.5 §6.3 is followable without reading this plan
-- [ ] 4.6 Every registry claim verified against code, not copied from research
-- [ ] 4.7 Each of the three findings names a file and line that still exist
+- [x] 4.5 §6.3 is followable without reading this plan
+- [x] 4.6 Every registry claim verified against code, not copied from research
+- [x] 4.7 Each of the three findings names a file and line that still exist
 
 ### Phase 5: Deliberate-break PR
 
