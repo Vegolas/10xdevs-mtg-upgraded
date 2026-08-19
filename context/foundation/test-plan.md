@@ -175,7 +175,11 @@ nothing. The rows above are now split so the distinction stays visible.
 status checks and `enforce_admins: true`. Verified 2026-08-11 by a PR that
 deliberately widened the `path_steps` RLS policy to `using (true)`: `integration`
 went red on the step-route DELETE test, `ci` stayed green, and the PR reported
-`mergeStateStatus: BLOCKED`. Two consequences for contributors: every change to
+`mergeStateStatus: BLOCKED`. Re-verified 2026-08-19 for the Phase 2 gates by PR #5,
+which returned the raw DB row from `POST /api/paths/[id]/steps`: `ci` went red on
+`typecheck` in 1m07s, and with the type argument dropped so the break compiled,
+`integration` went red alone on `contract-steps.int.test.ts` — both runs `BLOCKED`
+with `mergeable: MERGEABLE` (see §6.6). Two consequences for contributors: every change to
 `main` — including docs-only ones — goes through a PR, and adding a gate to this
 table also means adding its job name to the required-check list, or the row is
 aspirational.
@@ -459,6 +463,49 @@ thing that went right cheaply enough to copy.
   and `ci` jobs, so §5 gained two required rows with zero branch-protection work.
   Worth copying in Phase 3: pick the filename that lands the suite in a required job
   before inventing a job.
+
+**Phase 2, the closing gate check (2026-08-19).** The deliberate-break PR (#5, closed unmerged) reproduced
+research's #1 seam — `POST /api/paths/[id]/steps` returning the raw DB row instead of the
+mapped `PathStep` — and ran it twice, once against each gate layer. The observed order:
+
+| Run                                     | `ci`                                            | `integration`                          |
+| --------------------------------------- | ----------------------------------------------- | -------------------------------------- |
+| 1 — explicit `jsonResponse<PathStep>`   | **fail 1m07s** — `ts(2345)` at `steps.ts:80`    | fail 3m44s — `contract-steps`, 7 of 17 |
+| 2 — bare `jsonResponse`, type arg dropped | pass 1m17s — **0 errors, the break compiles**  | **fail 3m24s** — same 7, same message  |
+
+Four things worth carrying:
+
+- **The declared contract is the cheaper gate by ~2.5 minutes, and it is genuinely
+  independent of the suite.** Run 1 caught the break at 1m07s without booting a database;
+  run 2 proved the suite still blocks alone once the compiler is bypassed. Neither layer is
+  redundant: dropping the explicit type argument is a one-token edit that silently disarms
+  the first, which is exactly why `jsonResponse<T>`'s docstring insists the argument is
+  written, not inferred.
+- **A deliberate break has to be lint-clean, or it proves the wrong gate.** Swapping the
+  mapper out orphaned the `toPathStep` import, and `@typescript-eslint/no-unused-vars` is an
+  error — `ci` runs `lint` *before* `typecheck`, so the job would have died at the lint step
+  and the typecheck observation would never have happened. Generalization: when staging a
+  break to test gate N, keep gates 1..N-1 green by hand, or you measure the wrong one.
+- **The closed key set fired; the `deltaText` rule never did.** The plan predicted failure
+  "on both the closed key set and the `deltaText` rule". All seven failures — including the
+  four `deltaText`-named cases — carried the key-set message
+  (`missing [pathId, listText, deltaText, createdAt, updatedAt], extra [path_id, …]`),
+  because `expectExactKeys` throws before `expectPathStep` reaches its `deltaText` branch.
+  The seam is caught, but by the outer guard. Generalization: **a layered asserter reports
+  its outermost violated rule, not every violated rule.** A rule you want named in the log
+  must either fail first, or be reached by a break narrow enough to leave the outer guards
+  satisfied.
+- **`BLOCKED` only means something read next to `mergeable`.** Both runs reported
+  `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE` — refused by the required checks
+  with `enforce_admins` on, not by a merge conflict. `BLOCKED` alone does not distinguish
+  the two, and only one of them is evidence about the gate.
+
+Attribution was exact: one failing file of nine, seven failing tests of seventeen, and the
+message names the missing and extra key sets in full — diagnosable from the CI log without
+reproducing locally. One process note: the plan's Phase 5 success criteria assumed `main` already
+carried the plan's Phase 4 commit, but phases 1–4 were still open in draft PR #4 when the phase
+started; the change was merged first (`c3fc395`) so the break could fork from a `main` that
+actually contains the contract suite.
 
 ## 7. What We Deliberately Don't Test
 
