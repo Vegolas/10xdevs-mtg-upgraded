@@ -2,11 +2,20 @@
  * Diff-mode snapshot derivation (diff-style-checkpoint-entry).
  *
  * Apply a parsed `+`/`-` delta to the prior checkpoint's frozen, resolved cards
- * and produce a new {@link StepSnapshot} that is exactly `prior ± delta` —
- * byte-equivalent to the snapshot the same list entered via full paste would
- * build. Only genuinely new `+` cards (absent from the prior list) hit the
- * card-data source; existing cards are re-quantified from the frozen snapshot, so
- * a derive is as cheap as the number of new cards.
+ * and produce a new {@link StepSnapshot} that is exactly `prior ± delta`.
+ *
+ * The equality with full paste is a **multiset** equality, not a byte one: the
+ * derived snapshot holds the same `(card, quantity)` pairs the same list entered
+ * via full paste would produce, but `cards` array *order* is unspecified — this
+ * function emits `working` Map insertion order (prior cards first, then newly
+ * resolved ones), while full paste emits the resolver's order
+ * (`@/lib/deck`'s `attachQuantities`). Nothing user-visible depends on the
+ * difference because every surface re-groups through `groupByCategory`, which
+ * sorts. Treat the two as interchangeable holdings, never as identical bytes.
+ *
+ * Only genuinely new `+` cards (absent from the prior list) hit the card-data
+ * source; existing cards are re-quantified from the frozen snapshot, so a derive
+ * is as cheap as the number of new cards.
  *
  * Identity is {@link resolutionKey} everywhere — the same front-face, lowercased
  * key the resolver and deck layer join on — so DFC spellings and casing collapse

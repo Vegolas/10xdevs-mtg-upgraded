@@ -30,7 +30,9 @@ export const DEFAULT_SORT_MODE: SortMode = { layout: "grouped", key: "name", dir
 
 /** Stable A→Z name comparison, the deterministic tie-break for every key. */
 function compareByName(a: DeckCard, b: DeckCard): number {
-  return a.card.name.localeCompare(b.card.name);
+  // Explicit locale for the same reason as `diff.ts`'s in-group sort: the runtime
+  // default collation differs between a dev machine, CI and a Cloudflare worker.
+  return a.card.name.localeCompare(b.card.name, "en");
 }
 
 /**

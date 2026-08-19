@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
-import { jsonResponse, requireUser, toPathStep } from "@/lib/api/paths";
+import { errorResponse, jsonResponse, parsePathId, requireUser, serverError, toPathStep } from "@/lib/api/paths";
+import type { PathStep } from "@/lib/api/contract";
 import { parseStepInput, serializeSnapshot } from "@/lib/path";
 import type { Json } from "@/lib/database.types";
 
@@ -9,21 +10,25 @@ import type { Json } from "@/lib/database.types";
  * Server computes `position = max(position) + 1` (base is 0), validates the
  * snapshot via {@link parseStepInput} (400 on a malformed body), stores it, and
  * bumps the parent's `updated_at`. 404 when the path is not owned/absent (RLS).
+ *
+ * Body validation runs BEFORE the ownership check, so a malformed body aimed at
+ * another owner's path answers 400, not 404. That ordering is part of the decided
+ * contract, not an accident — keep it.
  */
 export const POST: APIRoute = async (context) => {
   const auth = requireUser(context);
   if (auth instanceof Response) {
     return auth;
   }
-  const id = context.params.id;
-  if (!id) {
-    return jsonResponse({ error: "Not found" }, 404);
+  const id = parsePathId(context);
+  if (id === null) {
+    return errorResponse("Not found", 404);
   }
 
   const body = (await context.request.json().catch(() => null)) as unknown;
   const input = parseStepInput(body);
   if (input === null) {
-    return jsonResponse({ error: "Invalid step payload" }, 400);
+    return errorResponse("Invalid step payload", 400);
   }
 
   // Confirm the path exists and is owned (RLS-scoped) before appending.
@@ -34,10 +39,10 @@ export const POST: APIRoute = async (context) => {
     .maybeSingle();
 
   if (pathError) {
-    return jsonResponse({ error: pathError.message }, 500);
+    return serverError(pathError);
   }
   if (!pathRow) {
-    return jsonResponse({ error: "Not found" }, 404);
+    return errorResponse("Not found", 404);
   }
 
   const { data: last, error: lastError } = await auth.supabase
@@ -49,7 +54,7 @@ export const POST: APIRoute = async (context) => {
     .maybeSingle();
 
   if (lastError) {
-    return jsonResponse({ error: lastError.message }, 500);
+    return serverError(lastError);
   }
   const position = (last?.position ?? -1) + 1;
 
@@ -67,27 +72,31 @@ export const POST: APIRoute = async (context) => {
     .single();
 
   if (error) {
-    return jsonResponse({ error: error.message }, 500);
+    return serverError(error);
   }
 
   await auth.supabase.from("upgrade_paths").update({ updated_at: new Date().toISOString() }).eq("id", id);
 
-  return jsonResponse(toPathStep(data), 201);
+  return jsonResponse<PathStep>(toPathStep(data), 201);
 };
 
 /**
  * DELETE /api/paths/[id]/steps — remove only the highest-position step
  * (delete-last invariant), then bump the parent's `updated_at`. 404 when the
  * path has no steps or is not owned/absent (RLS).
+ *
+ * This route never queries `upgrade_paths`, so a cross-owner call is answered by
+ * RLS hiding the steps: `{error: "No steps to delete"}`, indistinguishable from an
+ * empty own path. Correct, and a pinned contract fact.
  */
 export const DELETE: APIRoute = async (context) => {
   const auth = requireUser(context);
   if (auth instanceof Response) {
     return auth;
   }
-  const id = context.params.id;
-  if (!id) {
-    return jsonResponse({ error: "Not found" }, 404);
+  const id = parsePathId(context);
+  if (id === null) {
+    return errorResponse("Not found", 404);
   }
 
   const { data: last, error: lastError } = await auth.supabase
@@ -99,15 +108,15 @@ export const DELETE: APIRoute = async (context) => {
     .maybeSingle();
 
   if (lastError) {
-    return jsonResponse({ error: lastError.message }, 500);
+    return serverError(lastError);
   }
   if (!last) {
-    return jsonResponse({ error: "No steps to delete" }, 404);
+    return errorResponse("No steps to delete", 404);
   }
 
   const { error } = await auth.supabase.from("path_steps").delete().eq("id", last.id);
   if (error) {
-    return jsonResponse({ error: error.message }, 500);
+    return serverError(error);
   }
 
   await auth.supabase.from("upgrade_paths").update({ updated_at: new Date().toISOString() }).eq("id", id);

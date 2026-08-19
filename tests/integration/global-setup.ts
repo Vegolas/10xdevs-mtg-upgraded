@@ -119,12 +119,19 @@ export default async function setup(): Promise<() => Promise<void>> {
     },
   );
 
+  // Two consumers of the child's output. The buffer is only read when boot fails
+  // (the throw below). The passthrough to our own stderr is what keeps 500s
+  // diagnosable now that the response body is redacted: `serverError` logs the
+  // correlation `ref` plus the Postgres detail server-side, and without this the
+  // dev server's stdout is captured and discarded, so that line would go nowhere.
   let log = "";
   child.stdout.on("data", (chunk: Buffer) => {
     log += chunk.toString();
+    process.stderr.write(chunk);
   });
   child.stderr.on("data", (chunk: Buffer) => {
     log += chunk.toString();
+    process.stderr.write(chunk);
   });
 
   const deadline = Date.now() + BOOT_TIMEOUT_MS;

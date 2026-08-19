@@ -13,6 +13,8 @@ import {
   stepPlan,
 } from "@/lib/path";
 import type { DeriveResult, PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
+import { requestJson } from "@/lib/api/client";
+import type { PathTitleRequest, StepCreateRequest } from "@/lib/api/contract";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "@/components/deck/CardGroupColumn";
 import { CostSummary } from "@/components/deck/CostSummary";
@@ -269,34 +271,36 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
 
-    try {
-      const response = await fetch(`/api/paths/${path.id}/steps`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, listText: postListText, snapshot, deltaText: postDeltaText }),
-      });
-      if (token !== addToken.current) {
-        return;
-      }
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        const message = body?.error ?? `Couldn't save the checkpoint (${response.status}).`;
-        setAddState({ status: "error", message });
-        return;
-      }
-      const created = (await response.json()) as PathStep;
-      setSteps((prev) => [...prev, created]);
-      setName("");
-      setListText("");
-      setAddState({ status: "idle" });
-      setCheckState({ status: "idle" });
-      setDiffPreview({ status: "idle" });
-    } catch {
-      if (token !== addToken.current) {
-        return;
-      }
-      setAddState({ status: "error", message: "Couldn't save the checkpoint. Check your connection and retry." });
+    const request: StepCreateRequest = {
+      name: trimmedName,
+      listText: postListText,
+      snapshot,
+      deltaText: postDeltaText,
+    };
+    const result = await requestJson<PathStep>(`/api/paths/${path.id}/steps`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (token !== addToken.current) {
+      return;
     }
+    if (!result.ok) {
+      const message =
+        result.kind === "transport"
+          ? "Couldn't save the checkpoint. Check your connection and retry."
+          : result.fromBody
+            ? result.error
+            : `Couldn't save the checkpoint (${result.status}).`;
+      setAddState({ status: "error", message });
+      return;
+    }
+    setSteps((prev) => [...prev, result.data]);
+    setName("");
+    setListText("");
+    setAddState({ status: "idle" });
+    setCheckState({ status: "idle" });
+    setDiffPreview({ status: "idle" });
   }, [name, listText, path.id, activeMode, steps]);
 
   // Pre-save Check: resolve the pasted list (no POST) so unresolved cards surface
@@ -419,8 +423,9 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
     setMutationError(null);
-    const response = await fetch(`/api/paths/${path.id}/steps`, { method: "DELETE" });
-    if (response.ok) {
+    // 204 on success — no body to read, so success alone is the signal.
+    const result = await requestJson<null>(`/api/paths/${path.id}/steps`, { method: "DELETE" });
+    if (result.ok) {
       setSteps((prev) => prev.slice(0, -1));
     } else {
       setMutationError("Couldn't delete the last checkpoint.");
@@ -433,14 +438,16 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
     setMutationError(null);
-    const response = await fetch(`/api/paths/${path.id}`, {
+    const request: PathTitleRequest = { title: trimmed };
+    // The PATCH response body is load-bearing: the new title comes from the server,
+    // not from the draft, so a server-side transform (trimming) shows immediately.
+    const result = await requestJson<UpgradePath>(`/api/paths/${path.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ title: trimmed }),
+      body: JSON.stringify(request),
     });
-    if (response.ok) {
-      const updated = (await response.json()) as UpgradePath;
-      setTitle(updated.title);
+    if (result.ok) {
+      setTitle(result.data.title);
       setRenaming(false);
     } else {
       setMutationError("Couldn't rename the path.");
@@ -451,8 +458,9 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
     if (!window.confirm("Delete this path and all of its checkpoints? This can't be undone.")) {
       return;
     }
-    const response = await fetch(`/api/paths/${path.id}`, { method: "DELETE" });
-    if (response.ok) {
+    // 204 on success — no body to read, so success alone is the signal.
+    const result = await requestJson<null>(`/api/paths/${path.id}`, { method: "DELETE" });
+    if (result.ok) {
       window.location.href = "/paths";
     } else {
       setMutationError("Couldn't delete the path.");

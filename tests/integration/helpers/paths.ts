@@ -1,3 +1,4 @@
+import type { PathStep, PathTitleRequest, StepCreateRequest, UpgradePath } from "@/lib/api/contract";
 import { assertStatus } from "./http";
 import { admin } from "./owners";
 
@@ -10,35 +11,37 @@ import { admin } from "./owners";
  * there / unchanged" after A's request, since RLS hides B's rows from A.
  * Service-role is used for setup + assertions-about-DB-state ONLY, never as the
  * oracle for whether A's request was allowed (that is the HTTP status).
+ *
+ * These are **setup**, not assertions. The request and response types come from
+ * `@/lib/api/contract` rather than a local re-declaration, so this file states the
+ * create contract once instead of a third time; the contract itself is pinned in
+ * `contract-paths.int.test.ts` / `contract-steps.int.test.ts`, never here. The
+ * `assertStatus` calls stay: a setup failure must remain diagnosable (a bare
+ * status throw would hide the body that explains it).
  */
 
-export interface CreatedPath {
-  id: string;
-  title: string;
-}
-
 /** Create a path as the given owner via `POST /api/paths` (201). */
-export async function createPath(baseUrl: string, cookieHeader: string, title: string): Promise<CreatedPath> {
+export async function createPath(baseUrl: string, cookieHeader: string, title: string): Promise<UpgradePath> {
+  const body: PathTitleRequest = { title };
   const res = await fetch(`${baseUrl}/api/paths`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: baseUrl, Cookie: cookieHeader },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify(body),
   });
   await assertStatus(res, 201, `createPath("${title}")`);
-  const body = (await res.json()) as CreatedPath;
-  return { id: body.id, title: body.title };
+  return (await res.json()) as UpgradePath;
 }
 
-/** Append a checkpoint step as the given owner via `POST /api/paths/{id}/steps` (201). Returns the step id. */
-export async function addStep(baseUrl: string, cookieHeader: string, pathId: string, name = "base"): Promise<string> {
+/** Append a checkpoint step as the given owner via `POST /api/paths/{id}/steps` (201). */
+export async function addStep(baseUrl: string, cookieHeader: string, pathId: string, name = "base"): Promise<PathStep> {
+  const body: StepCreateRequest = { name, listText: "", snapshot: { cards: [], unresolved: [] } };
   const res = await fetch(`${baseUrl}/api/paths/${pathId}/steps`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: baseUrl, Cookie: cookieHeader },
-    body: JSON.stringify({ name, listText: "", snapshot: { cards: [], unresolved: [] } }),
+    body: JSON.stringify(body),
   });
   await assertStatus(res, 201, `addStep(${pathId})`);
-  const body = (await res.json()) as { id: string };
-  return body.id;
+  return (await res.json()) as PathStep;
 }
 
 /** Service-role read-back: the path's current title, or `null` if the row is gone. */

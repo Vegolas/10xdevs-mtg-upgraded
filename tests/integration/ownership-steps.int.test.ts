@@ -25,7 +25,7 @@ describe("cross-owner isolation — step routes /api/paths/[id]/steps", () => {
 
     const bPath = await createPath(BASE_URL, b.cookieHeader, "B's path with a step");
     bPathId = bPath.id;
-    bStepId = await addStep(BASE_URL, b.cookieHeader, bPathId, "base");
+    bStepId = (await addStep(BASE_URL, b.cookieHeader, bPathId, "base")).id;
   });
 
   afterAll(async () => {

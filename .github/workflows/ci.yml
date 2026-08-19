@@ -18,6 +18,11 @@ jobs:
       - run: npm ci
       - run: npx astro sync
       - run: npm run lint
+      # The ONLY typechecker in the pipeline: ESLint is type-aware but does not
+      # report assignability errors, and `astro build` does not typecheck at all.
+      # Without this step the declared wire contract (src/lib/api/contract.ts plus
+      # the explicitly parameterized `jsonResponse<T>`) gates nothing.
+      - run: npm run typecheck
       # Unit suite is DB-free, so it needs no services and runs before the build.
       - run: npm test
       - run: npm run build
