@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { errorResponse, jsonResponse, parsePathId, requireUser, serverError } from "@/lib/api/paths";
-import type { PathStep } from "@/lib/api/contract";
 import { parseStepInput, serializeSnapshot } from "@/lib/path";
 import type { Json } from "@/lib/database.types";
 
@@ -77,7 +76,7 @@ export const POST: APIRoute = async (context) => {
 
   await auth.supabase.from("upgrade_paths").update({ updated_at: new Date().toISOString() }).eq("id", id);
 
-  return jsonResponse<PathStep>(data, 201);
+  return jsonResponse(data, 201);
 };
 
 /**
