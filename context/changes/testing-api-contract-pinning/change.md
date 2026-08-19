@@ -1,7 +1,7 @@
 ---
 change_id: testing-api-contract-pinning
 title: API contract pinning + engine golden output (test-plan rollout Phase 2)
-status: implemented
+status: impl_reviewed
 created: 2026-08-11
 updated: 2026-08-19
 archived_at: null

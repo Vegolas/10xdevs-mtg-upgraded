@@ -80,6 +80,15 @@ export async function requestJson<T>(input: string, init?: RequestInit): Promise
 
   const text = await response.text();
   if (text.trim() === "") {
+    // The one unchecked cast left in this module, and it is load-bearing only for
+    // `requestJson<null>` callers (the two 204 deletes). For any other `T` this
+    // hands back a `null` the type says cannot be null, so a route that started
+    // answering 204 would surface as a TypeError at the call site
+    // (`PathEditor.tsx` reads `result.data.title` after a rename) rather than as a
+    // typed failure here. What prevents that is a test, not the compiler:
+    // `contract-paths.int.test.ts` pins PATCH -> 200 + UpgradePath. Keep it that
+    // way deliberately — if a route is ever redeclared as no-content, change its
+    // call site to `requestJson<null>` in the same commit.
     return { ok: true, data: null as T };
   }
   try {
