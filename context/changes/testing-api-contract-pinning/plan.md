@@ -494,7 +494,7 @@ unchanged; no existing suite's assertions move.
 - Full integration suite passes: `npm run test:integration`
 - The suite passes **twice in a row** without a DB reset (self-cleaning, per §6.2 rule 9)
 - `integration` job green on the PR
-- Every new file is globbed by the integration config: the run reports the five new
+- Every new file is globbed by the integration config: the run reports the four new
   `contract-*.int.test.ts` files
 
 #### Manual Verification
@@ -861,7 +861,7 @@ recomputed through `groupByCategory` on every read, so no stored data is affecte
 - [x] 2.3 Full integration suite passes: `npm run test:integration` — 6fedd2b
 - [x] 2.4 The suite passes twice in a row without a DB reset — 6fedd2b
 - [x] 2.5 `integration` job green on the PR — 6fedd2b
-- [x] 2.6 All five new `contract-*.int.test.ts` files are picked up by the integration config — 6fedd2b
+- [x] 2.6 All four new `contract-*.int.test.ts` files are picked up by the integration config — 6fedd2b
 
 #### Manual
 
