@@ -905,12 +905,12 @@ recomputed through `groupByCategory` on every read, so no stored data is affecte
 
 #### Automated
 
-- [x] 5.1 `gh pr checks` shows `integration` failing on `contract-steps.int.test.ts`
-- [x] 5.2 `gh pr view --json mergeStateStatus` reports `BLOCKED`
-- [x] 5.3 After closing the PR, `main` is unchanged
+- [x] 5.1 `gh pr checks` shows `integration` failing on `contract-steps.int.test.ts` — 5ce0977
+- [x] 5.2 `gh pr view --json mergeStateStatus` reports `BLOCKED` — 5ce0977
+- [x] 5.3 After closing the PR, `main` is unchanged — 5ce0977
 
 #### Manual
 
-- [x] 5.4 The CI log alone is enough to diagnose the break
-- [x] 5.5 The typecheck failure arrives before the test failure
-- [x] 5.6 §6.6 records the observed order of failures
+- [x] 5.4 The CI log alone is enough to diagnose the break — 5ce0977
+- [x] 5.5 The typecheck failure arrives before the test failure — 5ce0977
+- [x] 5.6 §6.6 records the observed order of failures — 5ce0977
