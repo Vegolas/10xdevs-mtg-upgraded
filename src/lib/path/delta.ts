@@ -76,6 +76,25 @@ export function parseDeltaList(text: string): ParsedDelta {
 }
 
 /**
+ * Reconstruct a display line from a parsed {@link DeltaEntry} — the inverse of
+ * {@link parseDeltaList}, near enough for a human to read back.
+ *
+ * Deliberately lossy and canonical rather than verbatim: the sign is followed by
+ * the count only when it is above one (`- Sol Ring`, `-2 Forest`), so two spellings
+ * of the same entry format identically. Lives here, next to the parser whose shape
+ * it mirrors, because two callers need the same string for the same reason —
+ * `@/lib/path`'s `deriveSnapshot` names the offending line in a preview
+ * {@link DeltaWarning}, and `verifyDerived` names it in the rejection the server
+ * sends back. A second copy would let the two drift apart. Not on the module barrel
+ * (like `@/lib/deck`'s `splitCardLine`): callers inside `src/lib/path` import it
+ * from here.
+ */
+export function formatDeltaLine(entry: DeltaEntry): string {
+  const count = entry.quantity > 1 ? `${entry.quantity} ` : " ";
+  return `${entry.op}${count}${entry.name}`;
+}
+
+/**
  * Rewrite every diff line whose card name matches `targetName` (by
  * {@link resolutionKey}) to its accepted `suggestion`, preserving the leading
  * sign, the gap after it, and the verbatim count prefix — the diff-mode sibling

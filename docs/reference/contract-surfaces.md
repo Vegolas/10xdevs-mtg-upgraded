@@ -133,3 +133,28 @@ declares it. Returning a row directly is the drift this section exists to preven
 | `realisticSnapshot`                                                        | function | `tests/integration/helpers/snapshot.ts`        | The round-trip `StepSnapshot` fixture — nullable prices, a null `imageUrl`, one entry per `unresolved` reason, prices as exact binary fractions. Returns a fresh object per call.                                                                                                                                                                                                              |
 | `assertStatus`                                                             | function | `tests/integration/helpers/http.ts`            | The only sanctioned status assertion; puts the response body in the failure message. Never `expect(res.status).toBe(…)`.                                                                                                                                                                                                                                                                       |
 | `resolutionOf`, `canonicalizedTo`, `unattributed`                          | function | `src/lib/card-data/__fixtures__/resolution.ts` | `ResolutionResult` builders for tests that mock `resolveCards`. `matched` is required, and a _wrong_ `matched` silently sends the join down its fallback path and passes for the wrong reason — so mocks build results here, never inline. `canonicalizedTo` is the differently-keyed canonical case; `unattributed` is the degrade path. Test-only. _(Added in `testing-derive-to-persist`.)_ |
+
+## Derive-to-persist verification (test-plan §3 Phase 3 · `testing-derive-to-persist`)
+
+The server never derives. `deriveSnapshot` runs in the browser, so "this checkpoint is
+`prior ± delta`" was a client-side promise nothing checked. These are the names that make it
+a server-enforced invariant.
+
+| Surface            | Kind     | Location                 | Purpose                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------ | -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `verifyDerived`    | function | `src/lib/path/verify.ts` | `(prior, submitted, deltaText) => DerivedVerdict`. Decides whether a submitted snapshot is the prior snapshot plus its own `deltaText`. **Resolution-free and pure** — `parseDeltaList`, `formatDeltaLine`, and `resolutionKey` are its only runtime imports; no Astro, no Supabase, no card-data call, nothing awaited, so a request path may call it without adding a lookup.                        |
+| `DerivedViolation` | type     | `src/lib/path/verify.ts` | The **closed** reason set: `unapplicable-removal`, `quantity-mismatch`, `untouched-card-changed`, `unresolved-prefix`, `excess-new-cards`. Closed because each member maps to its own 400 body — adding one is a wire-contract change, not an internal edit. First violation wins, in a fixed order (every `-` line, then `prior.cards` order, then the new-card bound, then the `unresolved` prefix). |
+| `DerivedVerdict`   | type     | `src/lib/path/verify.ts` | `{ok: true} \| {ok: false; reason: DerivedViolation; detail: string}`. `detail` names the offending card or delta line, so the refusal is diagnosable from the response alone.                                                                                                                                                                                                                         |
+| `formatDeltaLine`  | function | `src/lib/path/delta.ts`  | `(entry: DeltaEntry) => string`. The one delta-line renderer: `- Sol Ring`, `-2 Forest`. Shared by `deriveSnapshot`'s preview `DeltaWarning.line` and `verifyDerived`'s `detail` so the line a user is warned about and the line a refusal names cannot drift. Not on the `@/lib/path` barrel — in-module callers import it from `./delta`.                                                            |
+
+**What the verifier deliberately does not prove.** Keys the prior list already holds are
+checked exactly (`prior + Σ(+n) − Σ(−n)`, and an unnamed card must come back byte-identical).
+A genuinely new `+` line is not: the card-data source canonicalizes names past
+`resolutionKey`'s reach, so the server cannot know which key a new `+` resolves into without
+resolving it. New keys are therefore bounded by **count** only, and the listed quantity of a
+new card stays `derive.test.ts`'s job. Card _data_ on a card the delta names, and `unresolved`
+entries appended past the prior's prefix, are also unchecked — both are client-authored on
+every path, including full paste.
+
+**Comparison is holdings-per-key, never array order** — the same multiset semantics
+`add-flow.golden.test.ts` pins and `jsonb` forces (test-plan §6.6).

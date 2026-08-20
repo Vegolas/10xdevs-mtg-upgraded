@@ -685,30 +685,30 @@ persisted before this change are not re-validated.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Type checking passes: `npm run typecheck`
-- [x] 1.3 Linting passes: `npm run lint`
-- [x] 1.4 The new canonicalization cases fail against the pre-fix join
+- [x] 1.1 Unit tests pass: `npm test` — c62211b
+- [x] 1.2 Type checking passes: `npm run typecheck` — c62211b
+- [x] 1.3 Linting passes: `npm run lint` — c62211b
+- [x] 1.4 The new canonicalization cases fail against the pre-fix join — c62211b
 
 #### Manual
 
-- [x] 1.5 Golden snapshot diffs reviewed line by line, each change attributable to the join fix
-- [x] 1.6 A diff-mode checkpoint with a canonicalizing name persists the typed quantity in the running app
-- [x] 1.7 Full-paste add flow behaves identically to before for ordinary lists
+- [x] 1.5 Golden snapshot diffs reviewed line by line, each change attributable to the join fix — c62211b
+- [x] 1.6 A diff-mode checkpoint with a canonicalizing name persists the typed quantity in the running app — c62211b
+- [x] 1.7 Full-paste add flow behaves identically to before for ordinary lists — c62211b
 
 ### Phase 2: The pure derive-to-persist verifier
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Type checking passes: `npm run typecheck`
-- [ ] 2.3 Linting passes: `npm run lint`
-- [ ] 2.4 The verifier accepts real `deriveSnapshot` output for every `add-flow.golden` delta-table fixture
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Type checking passes: `npm run typecheck`
+- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.4 The verifier accepts real `deriveSnapshot` output for every `add-flow.golden` delta-table fixture
 
 #### Manual
 
-- [ ] 2.5 The reason set reads as closed and exhaustive against `deriveSnapshot`'s branches
-- [ ] 2.6 No import in `verify.ts` reaches the network, Supabase, or Astro
+- [x] 2.5 The reason set reads as closed and exhaustive against `deriveSnapshot`'s branches
+- [x] 2.6 No import in `verify.ts` reaches the network, Supabase, or Astro
 
 ### Phase 3: Enforce at the boundary
 

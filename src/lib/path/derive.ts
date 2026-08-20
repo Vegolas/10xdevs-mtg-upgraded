@@ -36,8 +36,7 @@
 import { quantifyResolved, resolveCards, resolutionKey } from "@/lib/card-data";
 import type { DeckCard } from "@/lib/deck";
 import type { StepSnapshot, UnresolvedLite } from "./types";
-import { parseDeltaList } from "./delta";
-import type { DeltaEntry } from "./delta";
+import { formatDeltaLine, parseDeltaList } from "./delta";
 
 /** A delta line that could not be applied — surfaced in the preview, never persisted. */
 export interface DeltaWarning {
@@ -64,12 +63,6 @@ export interface DeriveResult {
   snapshot: StepSnapshot;
   warnings: DeltaWarning[];
   summary: DeriveSummary;
-}
-
-/** Reconstruct a delta line for a warning, e.g. `- Sol Ring`, `+2 Island`. */
-function formatDeltaLine(entry: DeltaEntry): string {
-  const count = entry.quantity > 1 ? `${entry.quantity} ` : " ";
-  return `${entry.op}${count}${entry.name}`;
 }
 
 /** Sum copies per {@link resolutionKey} across a deck (defensive: prior is already unique). */
