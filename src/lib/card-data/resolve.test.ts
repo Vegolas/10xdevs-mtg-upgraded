@@ -269,6 +269,126 @@ describe("resolveCards", () => {
   });
 });
 
+describe("resolveCards · input attribution (matched)", () => {
+  /** A responder that answers `sent` with a card named `canonical` instead. */
+  function canonicalizingResponder(renames: Record<string, string>): (identifiers: string[]) => unknown {
+    return (identifiers) => {
+      const data: unknown[] = [];
+      const notFound: { name: string }[] = [];
+      for (const name of identifiers) {
+        const canonical = renames[name];
+        if (canonical) {
+          data.push(cardPayload(canonical));
+        } else if (KNOWN_CARDS[name.trim().toLowerCase()]) {
+          data.push(KNOWN_CARDS[name.trim().toLowerCase()]);
+        } else {
+          notFound.push({ name });
+        }
+      }
+      return { data, not_found: notFound };
+    };
+  }
+
+  it("pairs each fetched card with the input key that asked for it", async () => {
+    installFetch({ collection: scryfallResponder });
+
+    const result = await resolveCards(["Sol Ring", "Llanowar Elves"]);
+
+    expect([...result.matched.keys()].sort()).toEqual(["llanowar elves", "sol ring"]);
+    expect(result.matched.get("sol ring")?.name).toBe("Sol Ring");
+  });
+
+  it("pairs a cache hit with the key that found it", async () => {
+    installFetch({ collection: scryfallResponder });
+    await resolveCards(["Sol Ring"]);
+    requestedBatches = [];
+
+    const result = await resolveCards(["Sol Ring"]);
+
+    // Served from the session cache — no request — and still attributed.
+    expect(requestedBatches).toEqual([]);
+    expect(result.matched.get("sol ring")?.name).toBe("Sol Ring");
+  });
+
+  it("pairs a lone canonicalized card back to the name that was typed", async () => {
+    // The case `matched` exists for: `resolutionKey` is front-face + lowercase, so
+    // the corrected name keys differently and a canonical-key join would miss.
+    installFetch({
+      collection: canonicalizingResponder({ "Jace the Mind Sculptor": "Jace, the Mind Sculptor" }),
+    });
+
+    const result = await resolveCards(["Jace the Mind Sculptor"]);
+
+    expect(result.resolved.map((card) => card.name)).toEqual(["Jace, the Mind Sculptor"]);
+    expect(result.matched.get("jace the mind sculptor")?.name).toBe("Jace, the Mind Sculptor");
+    // The canonical key is NOT a key of `matched` — only the caller's input is.
+    expect(result.matched.has("jace, the mind sculptor")).toBe(false);
+  });
+
+  it("attributes nothing when two canonicalized cards make the pairing ambiguous", async () => {
+    // Two residual cards and two residual identifiers: pairing them would rest on
+    // the source returning cards in submitted order, and a wrong pair would swap
+    // two real copy counts. Recording nothing degrades to the old rule instead.
+    installFetch({
+      collection: canonicalizingResponder({
+        "Jace the Mind Sculptor": "Jace, the Mind Sculptor",
+        "Tezzeret the Seeker": "Tezzeret the Seeker, Agent of Bolas",
+      }),
+    });
+
+    const result = await resolveCards(["Jace the Mind Sculptor", "Tezzeret the Seeker"]);
+
+    expect(result.resolved).toHaveLength(2);
+    expect(result.matched.size).toBe(0);
+  });
+
+  it("still pairs the direct matches when one card in the batch is ambiguous", async () => {
+    // Pass 1 is exact and order-independent, so an ambiguous straggler only costs
+    // its own attribution — never a neighbour's.
+    installFetch({
+      collection: canonicalizingResponder({ "Jace the Mind Sculptor": "Jace, the Mind Sculptor" }),
+    });
+
+    const result = await resolveCards(["Sol Ring", "Jace the Mind Sculptor", "Llanowar Elves"]);
+
+    expect(result.matched.get("sol ring")?.name).toBe("Sol Ring");
+    expect(result.matched.get("llanowar elves")?.name).toBe("Llanowar Elves");
+    // Sole residual on both sides, so it pairs too.
+    expect(result.matched.get("jace the mind sculptor")?.name).toBe("Jace, the Mind Sculptor");
+  });
+
+  it("excludes not-found identifiers from the pairing candidates", async () => {
+    installFetch({
+      collection: canonicalizingResponder({ "Jace the Mind Sculptor": "Jace, the Mind Sculptor" }),
+      fuzzy: (query) => ({ status: 404, payload: notFoundError(query) }),
+    });
+
+    // "Notacard" misses, so it must not be treated as the residual identifier that
+    // produced the canonicalized Jace.
+    const result = await resolveCards(["Notacard", "Jace the Mind Sculptor"]);
+
+    expect(result.matched.get("jace the mind sculptor")?.name).toBe("Jace, the Mind Sculptor");
+    expect(result.matched.has("notacard")).toBe(false);
+    expect(result.matched.size).toBe(1);
+  });
+
+  it("never records a key the caller did not pass", async () => {
+    installFetch({
+      collection: scryfallResponder,
+      fuzzy: (query) => ({ status: 404, payload: notFoundError(query) }),
+    });
+
+    const names = ["Sol Ring", "Delver of Secrets // Insectile Aberration", "Notacard"];
+    const result = await resolveCards(names);
+
+    const callerKeys = new Set(names.map((name) => name.split("//")[0].trim().toLowerCase()));
+    for (const key of result.matched.keys()) {
+      expect(callerKeys.has(key)).toBe(true);
+    }
+    expect(result.matched.size).toBeLessThanOrEqual(result.resolved.length);
+  });
+});
+
 describe("resolveCards · fuzzy suggestions", () => {
   it("suggests a correction for a misspelled name", async () => {
     installFetch({

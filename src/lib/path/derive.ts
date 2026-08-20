@@ -33,7 +33,7 @@
  * context/changes/diff-style-checkpoint-entry/plan.md.
  */
 
-import { resolveCards, resolutionKey } from "@/lib/card-data";
+import { quantifyResolved, resolveCards, resolutionKey } from "@/lib/card-data";
 import type { DeckCard } from "@/lib/deck";
 import type { StepSnapshot, UnresolvedLite } from "./types";
 import { parseDeltaList } from "./delta";
@@ -159,9 +159,18 @@ export async function deriveSnapshot(prior: StepSnapshot, deltaText: string): Pr
 
   if (newByKey.size > 0) {
     const resolution = await resolveCards([...newByKey.values()].map((pending) => pending.name));
+    // Join through the resolution's input association, not the canonical name: a
+    // `+3` line whose name the source canonicalizes ("Jace the Mind Sculptor" →
+    // "Jace, the Mind Sculptor") keys differently, and looking the count up by the
+    // resolved name used to miss and silently persist one copy. Shared with full
+    // paste via `quantifyResolved` so both flows degrade identically.
+    const quantities = quantifyResolved(
+      resolution,
+      new Map([...newByKey].map(([key, pending]) => [key, pending.quantity])),
+    );
     for (const card of resolution.resolved) {
       const key = resolutionKey(card.name);
-      working.set(key, { card, quantity: newByKey.get(key)?.quantity ?? 1 });
+      working.set(key, { card, quantity: quantities.get(key) ?? 1 });
     }
     for (const miss of resolution.unresolved) {
       unresolved.push({ name: miss.name, reason: miss.reason, suggestion: miss.suggestion });

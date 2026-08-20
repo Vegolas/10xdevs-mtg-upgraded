@@ -63,7 +63,7 @@ export async function resolveDeck(text: string): Promise<ResolvedDeck> {
   const names = parsed.entries.map((entry) => entry.name);
 
   const resolution = await resolveCards(names);
-  const deck = attachQuantities(resolution.resolved, parsed.entries);
+  const deck = attachQuantities(resolution, parsed.entries);
 
   const unresolved: UnresolvedCard[] = [
     ...parsed.malformed.map((name) => ({ name, reason: "malformed" as const, suggestion: null })),
