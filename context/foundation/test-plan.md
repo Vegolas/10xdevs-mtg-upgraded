@@ -6,9 +6,11 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-12 (§3 Phase 1 complete — integration harness, both
-> risk suites, and the CI gate landed; §6.2 cookbook filled. Phase 2 opened:
-> context/changes/testing-api-contract-pinning/)
+> Last updated: 2026-08-20 (§3 Phase 3 complete — the rollout is done. The
+> derive-to-persist verifier, its integration suite and the gate landed; §6.4
+> cookbook filled and §6.6 noted. §7's E2E / component-render exclusions are
+> now eligible for re-evaluation, which is the next decision, not the next
+> phase.)
 
 ## 1. Strategy
 
@@ -87,11 +89,11 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                       | Goal (one line)                                                                                                                        | Risks covered | Test types                      | Status       | Change folder                                                                  |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | ------------ | ------------------------------------------------------------------------------ |
-| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                          | #1, #2        | integration + CI gate           | complete     | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
-| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly | #3, #6        | contract + integration + golden | complete     | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)                                 |
-| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped           | #4, #5        | integration                     | change opened | context/changes/testing-derive-to-persist/ |
+| #   | Phase name                       | Goal (one line)                                                                                                                        | Risks covered | Test types                      | Status   | Change folder                                                                  |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                          | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
+| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19) |
+| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped           | #4, #5        | integration                     | complete | context/changes/testing-derive-to-persist/                                     |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -145,7 +147,7 @@ lands; before that, the gate is `planned`.
 | golden (engine output)        | local + CI | **required (wired §3 Phase 2)** — the `*.golden.test.ts` files ride `npm test` in the `ci` job                                   | silent drift in the diff/cost engine's rendered output, or in the preserved full-paste add flow                                                              |
 | integration (API + ownership) | local + CI | **required (wired §3 Phase 1)** — `npm run test:integration` in the separate `integration` job, against an ephemeral local stack | cross-owner leak, signed-out gate failures                                                                                                                   |
 | contract (`/api/paths/*`)     | local + CI | **required (wired §3 Phase 2)** — the `contract-*.int.test.ts` files ride `npm run test:integration` in the `integration` job    | stale-caller / changed-shape breaks                                                                                                                          |
-| derive-to-persist integration | local + CI | required after §3 Phase 3                                                                                                        | corrupted or silently-wrong snapshots                                                                                                                        |
+| derive-to-persist integration | local + CI | **required (wired §3 Phase 3)** — `derive-persist.int.test.ts` rides `npm run test:integration` in the `integration` job         | corrupted or silently-wrong snapshots — a persisted checkpoint that is not `prior ± delta`, or a dropped unapplicable/unresolved line                        |
 | e2e on critical flows         | CI on PR   | deferred — see §7                                                                                                                | broken signed-in path flow (revisit post-rollout)                                                                                                            |
 
 The load-bearing gate change **landed in Phase 1**: `.github/workflows/ci.yml`
@@ -162,6 +164,18 @@ infix, so `vitest.integration.config.ts` globs them and they ride the already-re
 `npm test` in the already-required `ci` job. No job name was added and no
 branch-protection change was needed — the cheap way to add a gate here, and worth
 copying in Phase 3.
+
+**Phase 3 copied it: one gate, no jobs, no workflow change.** `derive-persist.int.test.ts`
+carries the same `.int.` infix, so it rides `npm run test:integration` in the
+`integration` job. The required-check list on `main` was re-read before claiming the
+row — `["ci", "integration"]` with `enforce_admins: true` and `strict: false`, verified
+2026-08-20 via `gh api repos/…/branches/main/protection` — so `integration` was already
+required and no branch-protection change was needed. Stating that explicitly is the
+point: per Phase 2's lesson, "the suite will catch it" is a claim about a CI step, so
+the row is only honest once the job name has been confirmed present in that list.
+Phase 3 also widened what the `ci` job gates without touching it, for the same reason:
+`verify.test.ts` and the Phase 1 canonicalization cases are plain `src/**/*.test.ts`
+files and ride `npm test`.
 
 The one workflow change Phase 2 did need was `npm run typecheck`. Until it landed,
 **nothing in the pipeline typechecked**: `eslint` is type-aware but does not report
@@ -358,9 +372,86 @@ The recipe, and why each piece is load-bearing:
 
 ### 6.4 Adding a derive-to-persist correctness test
 
-- TBD — see §3 Phase 3. Will cover: asserting the persisted snapshot equals
-  an independently-constructed `prior ± delta` through the POST→persist path,
-  and that unapplicable/unresolved lines are flagged rather than dropped.
+- **Location**: `tests/integration/derive-persist.int.test.ts`, fixtures in
+  `tests/integration/helpers/derive.ts`. Same harness as §6.2 — the claim is about the
+  `jsonb` column and the route, so a mock of either proves nothing. The `.int.` infix is
+  what makes it ride the already-required `integration` job (see §5).
+- **Naming**: `<seam>-persist.int.test.ts`.
+- **Reference tests**: `derive-persist.int.test.ts` (the whole seam),
+  `src/lib/path/verify.test.ts` (the pure rule set the route enforces),
+  `src/lib/path/add-flow.golden.test.ts` (the independent full-paste oracle at the unit
+  layer).
+- **Prerequisite / run locally**: identical to §6.2 — local Supabase up
+  (`npx supabase start`), `.env.test` filled, then `npm run test:integration`.
+
+The recipe, and why each piece is load-bearing:
+
+1. **Check who actually derives before writing a single assertion.** The claim reads
+   "the persisted snapshot equals `prior ± delta`", which sounds like a test-only task
+   and is not: `deriveSnapshot` runs in the **browser**, and until Phase 3 the route
+   stored whatever snapshot arrived. Verifying a client-side promise from the client
+   side is circular. Find the party that can be held to the invariant — here, a pure
+   server-side `verifyDerived` the route calls — then test the wiring.
+2. **Test the wiring, not the derivation.** `derive.test.ts`, `add-flow.golden.test.ts`
+   and `verify.test.ts` own the branches, the multiset equality and the rule set. What
+   only integration can show is that a derive whose prior came back out of `jsonb` still
+   lands as the same holdings, that a chain does not drift, and that each refusal
+   refuses. Re-deriving unit coverage here is the duplication §1 principle 1 forbids.
+3. **Never build an expectation by calling the function under test.** A tautological
+   oracle is the named anti-pattern for this risk. `deriveSnapshot` may appear exactly
+   once — building the request payload the way `handleAddStep` does — and no persisted
+   value may ever be compared against its output.
+4. **Publish each delta next to two independent statements of its result**, in the
+   fixture module rather than in the test: a hand-written holdings record, and the
+   equivalent full-paste deck-list text. Keeping them adjacent is what stops a delta and
+   its expectation from drifting; taking the second one through `resolveDeck` →
+   `attachQuantities` is what makes it a genuine cross-check rather than a restatement.
+5. **Compare holdings, never `cards` arrays.** Fold both sides to copies-per-card
+   (`helpers/derive.ts#holdingsOf`) and `toEqual` the records. `jsonb` does not preserve
+   array order and the two add flows emit their cards in different orders **by design**
+   (see §6.6, Phase 2's third note), so an array comparison fails for a reason nobody
+   cares about.
+6. **Derive from the _persisted_ prior, not from the literal you posted.** Read the base
+   back through the GET route and feed _that_ snapshot to the derive. The whole gap this
+   suite exists to close is a chain that re-round-trips the same card objects at every
+   step; posting a literal and deriving from the same literal never touches the column.
+7. **Mock only the card-data edge, and only in the test process.**
+   `vi.mock("@/lib/card-data", importOriginal)` with `resolveCards` replaced and
+   `resolutionKey` kept **real**, so quantities join on exactly the key production uses.
+   There is no cross-process concern precisely because the server never resolves a card
+   in a request path — check that that is still true before relying on it.
+8. **Build the mock's `ResolutionResult` through the sanctioned builders**
+   (`src/lib/card-data/__fixtures__/resolution.ts`), never as an inline literal.
+   `matched` is the association the quantity join runs through, and a _wrong_ `matched`
+   quietly sends the join down its `?? 1` fallback — making a canonicalization test pass
+   for the wrong reason.
+9. **A canonicalizing name needs a hand-authored oracle.** The card-data source answers
+   `Jace the Mind Sculptor` with `Jace, the Mind Sculptor`, a different `resolutionKey`.
+   Before the join fix **both** add flows fell back to one copy there, so full-paste
+   equivalence shares the defect and cannot see the class. Write the expected count out
+   by hand.
+10. **Assert the rejection _and_ the non-persistence.** A 400 alone would still pass if
+    the route answered 400 and wrote the row anyway. Every refusal case checks the status
+    through `assertStatus`, the exact body through `expectApiError`, and `countSteps`
+    unchanged via the service-role read-back (§6.2 rule 8, same reasoning).
+11. **Break narrowly, one rule at a time, and drive the cases from a `Record` over the
+    reason set.** The verifier is layered and reports its **outermost** violated rule
+    (§6.6, Phase 2's third closing note), so a submission that breaks two rules names the
+    earlier one and the expected message is wrong. A `Record<DerivedViolation, …>` makes
+    `tsc` demand a case for every new rule, mirroring the route's own message map.
+12. **Expected messages are literal strings, transcribed from the decided contract.**
+    There is no second implementation of "which rule broke", so the message cannot be
+    cross-checked the way holdings can — and reading it back out of the response would
+    assert nothing. Same reasoning as §6.3 rule 3's literal key arrays.
+13. **A second derived column gets asserted, not enforced.** `list_text` is rendered
+    from the derived cards and never re-parsed on read, so a disagreement with `snapshot`
+    misleads a human rather than corrupting a plan. Parse it back and compare holdings in
+    the suite; do not make it a 400.
+14. **Prove the red is load-bearing with a break that reproduces a real seam.** Reverting
+    the quantity join to its pre-fix form — one token, lint- and typecheck-clean — reddens
+    the unit canonicalization case and the integration one together. Run it as a PR, not
+    locally (§6.6, Phase 1's closing note), and keep the earlier gates green by hand or
+    you measure the wrong one.
 
 ### 6.5 Adding a test for a new API endpoint
 
@@ -468,10 +559,10 @@ thing that went right cheaply enough to copy.
 research's #1 seam — `POST /api/paths/[id]/steps` returning the raw DB row instead of the
 mapped `PathStep` — and ran it twice, once against each gate layer. The observed order:
 
-| Run                                     | `ci`                                            | `integration`                          |
-| --------------------------------------- | ----------------------------------------------- | -------------------------------------- |
-| 1 — explicit `jsonResponse<PathStep>`   | **fail 1m07s** — `ts(2345)` at `steps.ts:80`    | fail 3m44s — `contract-steps`, 7 of 17 |
-| 2 — bare `jsonResponse`, type arg dropped | pass 1m17s — **0 errors, the break compiles**  | **fail 3m24s** — same 7, same message  |
+| Run                                       | `ci`                                          | `integration`                          |
+| ----------------------------------------- | --------------------------------------------- | -------------------------------------- |
+| 1 — explicit `jsonResponse<PathStep>`     | **fail 1m07s** — `ts(2345)` at `steps.ts:80`  | fail 3m44s — `contract-steps`, 7 of 17 |
+| 2 — bare `jsonResponse`, type arg dropped | pass 1m17s — **0 errors, the break compiles** | **fail 3m24s** — same 7, same message  |
 
 Four things worth carrying:
 
@@ -483,7 +574,7 @@ Four things worth carrying:
   written, not inferred.
 - **A deliberate break has to be lint-clean, or it proves the wrong gate.** Swapping the
   mapper out orphaned the `toPathStep` import, and `@typescript-eslint/no-unused-vars` is an
-  error — `ci` runs `lint` *before* `typecheck`, so the job would have died at the lint step
+  error — `ci` runs `lint` _before_ `typecheck`, so the job would have died at the lint step
   and the typecheck observation would never have happened. Generalization: when staging a
   break to test gate N, keep gates 1..N-1 green by hand, or you measure the wrong one.
 - **The closed key set fired; the `deltaText` rule never did.** The plan predicted failure
@@ -506,6 +597,48 @@ reproducing locally. One process note: the plan's Phase 5 success criteria assum
 carried the plan's Phase 4 commit, but phases 1–4 were still open in draft PR #4 when the phase
 started; the change was merged first (`c3fc395`) so the break could fork from a `main` that
 actually contains the contract suite.
+
+**Phase 3 (2026-08-20).** The phase's own framing was the first thing that had to change,
+and the rest follows from it.
+
+- **"Prove the persisted snapshot equals `prior ± delta`" was not a test task, because
+  the server never derived.** `deriveSnapshot` runs in the browser; the route validated
+  the snapshot's _shape_ and stored whatever arrived, so any structurally valid snapshot
+  was accepted alongside any `deltaText`. Written as planned, the suite would have
+  asserted a client-side promise from the client side — a test that passes by
+  construction. The phase became production-first: a pure, resolution-free
+  `verifyDerived` plus one owner-scoped read of the prior step, and only then a suite over
+  the seam. Generalization: **before testing an invariant, find the party that can be held
+  to it.** If the only enforcer is the caller, the test is circular and the missing piece
+  is production code, not coverage.
+- **The verifier is deliberately asymmetric, and saying so beat papering over it.** Keys
+  the prior list already holds are fully checkable (`prior + adds − removes`, and an
+  unnamed card must come back byte-identical). A genuinely new `+` line is not: the source
+  canonicalizes names past `resolutionKey`'s reach, so the server cannot know which key a
+  new line resolves into without resolving it — the one thing a request path must not do.
+  New keys are therefore bounded by **count** only, and the docstring says which
+  corruption remains merely count-bounded. Generalization: a gate that overstates its own
+  coverage is worse than a narrower one that names its edge.
+- **Research found a live silent-corruption bug, and Phase 2's oracle was structurally
+  blind to it.** Both add flows looked a typed copy count up by the _canonical_ key, so
+  `+3 Jace the Mind Sculptor` → `Jace, the Mind Sculptor` missed and fell through a
+  documented `?? 1` to one copy — no warning, no `unresolved` entry. Full-paste
+  equivalence could not see it because **both flows shared the defect**, and the golden's
+  mock returned cards whose names matched the typed names exactly. Generalization: an
+  equivalence oracle only catches divergence, never a defect the two sides share — and a
+  mock that never exercises canonicalization guarantees they share it. Any case that turns
+  on identity normalization needs a hand-authored expectation.
+- **The resolver had to degrade rather than guess.** Fixing the join needed a query-key →
+  card association, but pairing a returned card back to the identifier that fetched it is
+  only positional once direct key matches are exhausted. Positional pairing of two or more
+  residuals would rest on a response-ordering guarantee this codebase has never depended
+  on, and a _mis_-assigned quantity is worse than the missing one being fixed. So
+  `pairBatch` pairs directly, then pairs a **sole** residual, and otherwise records
+  nothing and lets the old `?? 1` stand. Generalization: when an association is
+  ambiguous, absent beats guessed — degrade to the pre-existing behavior, and make the
+  degrade path a test case (`unattributed`).
+- **One gate, no jobs, no workflow change** — the `.int.` infix again (see §5). Worth
+  noting that Phase 2's advice held on the third try, which is when it stops being luck.
 
 ## 7. What We Deliberately Don't Test
 
@@ -530,8 +663,13 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-29 — §3 (status), §4 (contract + unit rows)
-  and §5 (gates) updated 2026-08-18 by rollout Phase 2; §1–§2 unreviewed since
+- Strategy (§1–§5) last reviewed: 2026-08-20 — §3 (status) and §5 (gates, plus the
+  branch-protection re-read) updated 2026-08-20 by rollout Phase 3; §4 (contract + unit
+  rows) updated 2026-08-18 by Phase 2; §1–§2 unreviewed since 2026-06-29
+- Cookbook (§6) last reviewed: 2026-08-20 — §6.4 filled by rollout Phase 3; §6.5 is
+  still a TBD stub
+- Rollout complete: §3 Phases 1–3 all `complete` as of 2026-08-20, which is the trigger
+  §7 names for re-evaluating the E2E and component-render exclusions
 - Stack versions last verified: 2026-06-29
 - AI-native tool references last verified: 2026-06-29
 

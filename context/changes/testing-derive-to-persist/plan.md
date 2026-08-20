@@ -730,22 +730,22 @@ persisted before this change are not re-validated.
 
 #### Automated
 
-- [x] 4.1 Integration tests pass: `npm run test:integration`
-- [x] 4.2 Unit tests pass: `npm test`
-- [x] 4.3 Type checking passes: `npm run typecheck`
-- [x] 4.4 Linting passes: `npm run lint`
-- [x] 4.5 Each rejection case fails with the expected rule's message, not an outer guard's
+- [x] 4.1 Integration tests pass: `npm run test:integration` — 50702cd
+- [x] 4.2 Unit tests pass: `npm test` — 50702cd
+- [x] 4.3 Type checking passes: `npm run typecheck` — 50702cd
+- [x] 4.4 Linting passes: `npm run lint` — 50702cd
+- [x] 4.5 Each rejection case fails with the expected rule's message, not an outer guard's — 50702cd
 
 #### Manual
 
-- [x] 4.6 Every expected value traces to a hand-written oracle or the full-paste path — none built by calling `deriveSnapshot`
-- [x] 4.7 A deliberate one-line break in `verify.ts` makes the intended case red locally
+- [x] 4.6 Every expected value traces to a hand-written oracle or the full-paste path — none built by calling `deriveSnapshot` — 50702cd
+- [x] 4.7 A deliberate one-line break in `verify.ts` makes the intended case red locally — 50702cd
 
 ### Phase 5: Gate, cookbook, and the deliberate-break check
 
 #### Automated
 
-- [ ] 5.1 Full suite green on the change branch: lint, typecheck, unit, integration
+- [x] 5.1 Full suite green on the change branch: lint, typecheck, unit, integration
 - [ ] 5.2 CI green on the change PR, with `integration` reporting `derive-persist`
 - [ ] 5.3 The break PR's `integration` job red, with the failure message naming the expected rule
 
