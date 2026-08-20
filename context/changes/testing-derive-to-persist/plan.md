@@ -714,32 +714,32 @@ persisted before this change are not re-validated.
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test`
-- [x] 3.2 Type checking passes: `npm run typecheck`
-- [x] 3.3 Linting passes: `npm run lint`
-- [x] 3.4 Integration tests pass: `npm run test:integration`
-- [x] 3.5 Pre-existing contract and ownership suites pass with no assertion changed beyond the deliberate additions
+- [x] 3.1 Unit tests pass: `npm test` — 59a21d0
+- [x] 3.2 Type checking passes: `npm run typecheck` — 59a21d0
+- [x] 3.3 Linting passes: `npm run lint` — 59a21d0
+- [x] 3.4 Integration tests pass: `npm run test:integration` — 59a21d0
+- [x] 3.5 Pre-existing contract and ownership suites pass with no assertion changed beyond the deliberate additions — 59a21d0
 
 #### Manual
 
-- [x] 3.6 A diff checkpoint with an unapplicable `−` line is refused in the app, with a readable message and no step added
-- [x] 3.7 Two tabs on one path: the second append is refused with the reload message
-- [x] 3.8 An ordinary full-paste checkpoint still saves with no extra latency
+- [x] 3.6 A diff checkpoint with an unapplicable `−` line is refused in the app, with a readable message and no step added — 59a21d0
+- [x] 3.7 Two tabs on one path: the second append is refused with the reload message — 59a21d0
+- [x] 3.8 An ordinary full-paste checkpoint still saves with no extra latency — 59a21d0
 
 ### Phase 4: The derive-to-persist integration suite
 
 #### Automated
 
-- [ ] 4.1 Integration tests pass: `npm run test:integration`
-- [ ] 4.2 Unit tests pass: `npm test`
-- [ ] 4.3 Type checking passes: `npm run typecheck`
-- [ ] 4.4 Linting passes: `npm run lint`
-- [ ] 4.5 Each rejection case fails with the expected rule's message, not an outer guard's
+- [x] 4.1 Integration tests pass: `npm run test:integration`
+- [x] 4.2 Unit tests pass: `npm test`
+- [x] 4.3 Type checking passes: `npm run typecheck`
+- [x] 4.4 Linting passes: `npm run lint`
+- [x] 4.5 Each rejection case fails with the expected rule's message, not an outer guard's
 
 #### Manual
 
-- [ ] 4.6 Every expected value traces to a hand-written oracle or the full-paste path — none built by calling `deriveSnapshot`
-- [ ] 4.7 A deliberate one-line break in `verify.ts` makes the intended case red locally
+- [x] 4.6 Every expected value traces to a hand-written oracle or the full-paste path — none built by calling `deriveSnapshot`
+- [x] 4.7 A deliberate one-line break in `verify.ts` makes the intended case red locally
 
 ### Phase 5: Gate, cookbook, and the deliberate-break check
 
