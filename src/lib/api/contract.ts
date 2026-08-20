@@ -56,10 +56,18 @@ export interface PathTitleRequest {
  * Request body for `POST /api/paths/[id]/steps`. `position` is server-owned and
  * ignored if sent. `deltaText` is optional provenance: a blank or absent value
  * collapses to `null` (the full-paste shape) rather than failing validation.
+ *
+ * `priorStepId` is the optimistic-concurrency token for a diff-authored
+ * checkpoint: the id of the step whose frozen snapshot the client derived from.
+ * It is **required whenever `deltaText` is non-null** and ignored for full paste,
+ * but it is not part of the structural guard — a diff body without it answers its
+ * own `400`, not the generic `"Invalid step payload"`, because the two failures
+ * need different words. Request-only: never stored.
  */
 export interface StepCreateRequest {
   name: string;
   listText: string;
   snapshot: StepSnapshot;
   deltaText?: string | null;
+  priorStepId?: string | null;
 }

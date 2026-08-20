@@ -57,6 +57,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Card } from "@/lib/card-data";
 import { resolveCards } from "@/lib/card-data";
+import { resolutionOf } from "@/lib/card-data/__fixtures__/resolution";
 import { resolveDeck } from "@/lib/deck";
 import type { DeckCard } from "@/lib/deck";
 import { deriveSnapshot } from "./derive";
@@ -203,10 +204,10 @@ async function runBothFlows(
   derivedResolved: Card[],
   fullPasteResolved: Card[],
 ): Promise<{ derived: DeriveResult; fullPaste: StepSnapshot }> {
-  resolveCardsMock.mockResolvedValueOnce({ resolved: derivedResolved, unresolved: [DELTA_MISS] });
+  resolveCardsMock.mockResolvedValueOnce(resolutionOf(derivedResolved, [DELTA_MISS]));
   const derived = await deriveSnapshot(PRIOR, DELTA_TEXT);
 
-  resolveCardsMock.mockResolvedValueOnce({ resolved: fullPasteResolved, unresolved: [PRIOR_MISS, DELTA_MISS] });
+  resolveCardsMock.mockResolvedValueOnce(resolutionOf(fullPasteResolved, [PRIOR_MISS, DELTA_MISS]));
   const resolvedDeck = await resolveDeck(FULL_PASTE_TEXT);
   // Mirrors the production full-paste seam verbatim (PathEditor.tsx:250-259): the
   // resolved deck becomes `cards`, and each `UnresolvedCard` is narrowed to an

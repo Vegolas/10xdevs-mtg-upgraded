@@ -46,6 +46,7 @@ describe("parseStepInput", () => {
       listText: "1 Sol Ring",
       snapshot: snapshot(),
       deltaText: null,
+      priorStepId: null,
     });
   });
 
@@ -66,6 +67,34 @@ describe("parseStepInput", () => {
     expect(parseStepInput({ ...base, deltaText: "   " })?.deltaText).toBeNull();
     expect(parseStepInput({ ...base, deltaText: 42 })?.deltaText).toBeNull();
     expect(parseStepInput(base)?.deltaText).toBeNull();
+  });
+
+  it("keeps a non-empty priorStepId verbatim (the diff-mode concurrency token)", () => {
+    const body = {
+      name: "Swap",
+      listText: "1 Black Lotus",
+      snapshot: serializeSnapshot(snapshot()),
+      deltaText: "+ Black Lotus",
+      priorStepId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+    };
+
+    expect(parseStepInput(body)?.priorStepId).toBe("3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d");
+  });
+
+  // The collapse, not a rejection, is the contract: "a diff checkpoint that named
+  // no prior" is the route's own 400, which says something the caller can act on.
+  it("collapses a blank, non-string, or absent priorStepId to null — even alongside a deltaText", () => {
+    const base = {
+      name: "Swap",
+      listText: "1 Black Lotus",
+      snapshot: serializeSnapshot(snapshot()),
+      deltaText: "+ Black Lotus",
+    };
+
+    expect(parseStepInput({ ...base, priorStepId: "   " })?.priorStepId).toBeNull();
+    expect(parseStepInput({ ...base, priorStepId: 42 })?.priorStepId).toBeNull();
+    expect(parseStepInput(base)?.priorStepId).toBeNull();
+    expect(parseStepInput(base)).not.toBeNull();
   });
 
   it("rejects a malformed snapshot body (the API's 400 gate)", () => {

@@ -52,6 +52,57 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
+ * Attribute one batch's returned cards back to the identifiers that fetched them,
+ * recording only unambiguous pairs in `matched`.
+ *
+ * Two passes, and the second is deliberately timid:
+ *
+ *  1. **Direct.** A returned card whose own `resolutionKey` equals a sent
+ *     identifier's key pairs with it. This is the overwhelming majority and needs
+ *     no assumption about response ordering.
+ *  2. **Sole residual.** Whatever is left over is a card the source canonicalized
+ *     past `resolutionKey`'s reach ("Jace the Mind Sculptor" → "Jace, the Mind
+ *     Sculptor"). Pair it **only when exactly one card and exactly one identifier
+ *     remain**, where the association is unambiguous no matter what order the
+ *     response came back in.
+ *
+ * Positionally pairing two or more residuals would rest on the source returning
+ * found cards in submitted order — a guarantee this codebase has never depended on.
+ * If it did not hold, two cards would silently swap copy counts, which is a worse
+ * failure than the one `matched` exists to fix. So a multi-residual batch records
+ * nothing and its cards fall back to {@link quantifyResolved}'s old rule: the fix
+ * simply does not apply, exactly as before. Revisit only with a cited ordering
+ * guarantee.
+ */
+function pairBatch(
+  batch: { key: string; identifier: string }[],
+  cards: Card[],
+  notFound: { name?: string }[],
+  matched: Map<string, Card>,
+): void {
+  const missedKeys = new Set(notFound.map((miss) => resolutionKey(miss.name ?? "")));
+  const candidates = batch.filter((item) => !missedKeys.has(item.key));
+
+  const pairedKeys = new Set<string>();
+  const residualCards: Card[] = [];
+  for (const card of cards) {
+    const canonical = resolutionKey(card.name);
+    const direct = candidates.find((item) => item.key === canonical && !pairedKeys.has(item.key));
+    if (direct) {
+      matched.set(direct.key, card);
+      pairedKeys.add(direct.key);
+    } else {
+      residualCards.push(card);
+    }
+  }
+
+  const residualKeys = candidates.filter((item) => !pairedKeys.has(item.key));
+  if (residualCards.length === 1 && residualKeys.length === 1) {
+    matched.set(residualKeys[0].key, residualCards[0]);
+  }
+}
+
+/**
  * Resolve a list of card names against the card-data source.
  *
  * A `Front // Back` name (double-faced, split, adventure, MDFC) is reduced to its
@@ -73,6 +124,8 @@ function delay(ms: number): Promise<void> {
 export async function resolveCards(names: string[]): Promise<ResolutionResult> {
   const resolved: Card[] = [];
   const unresolved: UnresolvedCard[] = [];
+  // Which caller input produced which card — see `ResolutionResult.matched`.
+  const matched = new Map<string, Card>();
 
   // Dedup input on the front-face form while preserving first-seen order, so the
   // front-only and full `//` spellings of one card collapse to a single lookup.
@@ -91,14 +144,18 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     }
   }
 
-  // Serve cache hits; queue the front face of the rest for fetching.
-  const toFetch: string[] = [];
+  // Serve cache hits; queue the front face of the rest for fetching. A queued
+  // item carries the caller's key alongside the identifier we send, so a returned
+  // card can be attributed back to the input that asked for it.
+  const toFetch: { key: string; identifier: string }[] = [];
   for (const [key, name] of uniqueByKey) {
     const cached = sessionCache.get(key);
     if (cached) {
       resolved.push(cached);
+      // A cache hit needs no pairing: the key that found it IS the caller's key.
+      matched.set(key, cached);
     } else {
-      toFetch.push(frontFace(name));
+      toFetch.push({ key, identifier: frontFace(name) });
     }
   }
 
@@ -112,10 +169,12 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     }
     requestsMade += 1;
 
-    const response = await fetchCardCollection(batch);
+    const response = await fetchCardCollection(batch.map((item) => item.identifier));
 
+    const cards: Card[] = [];
     for (const raw of response.data) {
       const card = normalizeCard(raw);
+      cards.push(card);
       resolved.push(card);
       // Key on the front face of the canonical name so a later lookup by either
       // the front-only or the full `//` form hits this entry.
@@ -127,6 +186,8 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     for (const miss of response.not_found) {
       missedNames.push(miss.name ?? "");
     }
+
+    pairBatch(batch, cards, response.not_found, matched);
   }
 
   // Enrich each unmatched name with a fuzzy suggestion and a refined reason.
@@ -144,7 +205,41 @@ export async function resolveCards(names: string[]): Promise<ResolutionResult> {
     unresolved.push(toUnresolvedCard(original, fuzzy));
   }
 
-  return { resolved, unresolved };
+  return { resolved, unresolved, matched };
+}
+
+/**
+ * Total each resolved card's copy count from the caller's per-input counts.
+ *
+ * `quantityByInputKey` is keyed by the caller's own `resolutionKey(inputName)`;
+ * the returned map is keyed by the *canonical* `resolutionKey` of each resolved
+ * card. {@link ResolutionResult.matched} bridges the two, so an input whose name
+ * the source canonicalized still contributes its count.
+ *
+ * The fallback chain is the load-bearing part, and both add flows share it here so
+ * they cannot drift: a card `matched` covers takes the summed count; a card it does
+ * not cover falls back to a direct lookup on the canonical key, then to 1. That
+ * last step is the pre-`matched` behavior, kept deliberately — when the resolver
+ * declines to guess an association, the caller degrades to the old rule rather
+ * than to a wrong number.
+ */
+export function quantifyResolved(
+  resolution: ResolutionResult,
+  quantityByInputKey: ReadonlyMap<string, number>,
+): Map<string, number> {
+  const viaMatched = new Map<string, number>();
+  for (const [inputKey, card] of resolution.matched) {
+    const canonical = resolutionKey(card.name);
+    viaMatched.set(canonical, (viaMatched.get(canonical) ?? 0) + (quantityByInputKey.get(inputKey) ?? 0));
+  }
+
+  const quantities = new Map<string, number>();
+  for (const card of resolution.resolved) {
+    const canonical = resolutionKey(card.name);
+    const total = viaMatched.get(canonical);
+    quantities.set(canonical, total !== undefined && total > 0 ? total : (quantityByInputKey.get(canonical) ?? 1));
+  }
+  return quantities;
 }
 
 /** Map a fuzzy lookup outcome to the unresolved-card reason taxonomy. */

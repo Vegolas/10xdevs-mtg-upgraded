@@ -5,4 +5,4 @@
 
 export type { Card, CardCategory, ResolutionResult, UnresolvedCard, UnresolvedReason } from "./types";
 export { classifyType } from "./classify";
-export { resolveCards, resolutionKey } from "./resolve";
+export { quantifyResolved, resolveCards, resolutionKey } from "./resolve";

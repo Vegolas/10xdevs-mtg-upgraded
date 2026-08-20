@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Card, CardCategory } from "@/lib/card-data";
 import { resolveCards } from "@/lib/card-data";
+import { canonicalizedTo, resolutionOf, unattributed } from "@/lib/card-data/__fixtures__/resolution";
 import { resolveDeck, generateUpgradePlan } from "./plan";
 
 // Mock only the resolver (the one network seam); keep `resolutionKey` real so
@@ -23,10 +24,7 @@ beforeEach(() => {
 
 describe("resolveDeck", () => {
   it("resolves entries and attaches the parsed quantities", async () => {
-    resolveCardsMock.mockResolvedValueOnce({
-      resolved: [card("Sol Ring", "artifact"), card("Forest", "land")],
-      unresolved: [],
-    });
+    resolveCardsMock.mockResolvedValueOnce(resolutionOf([card("Sol Ring", "artifact"), card("Forest", "land")]));
 
     const result = await resolveDeck("2 Sol Ring\nForest");
 
@@ -38,10 +36,9 @@ describe("resolveDeck", () => {
   });
 
   it("merges malformed lines (first) with resolver misses (second) into unresolved", async () => {
-    resolveCardsMock.mockResolvedValueOnce({
-      resolved: [card("Sol Ring", "artifact")],
-      unresolved: [{ name: "Notacard", reason: "not-found", suggestion: null }],
-    });
+    resolveCardsMock.mockResolvedValueOnce(
+      resolutionOf([card("Sol Ring", "artifact")], [{ name: "Notacard", reason: "not-found", suggestion: null }]),
+    );
 
     // "4x" is a count with no name → parser-level malformed; "Notacard" → resolver miss.
     const result = await resolveDeck("Sol Ring\nNotacard\n4x");
@@ -50,6 +47,33 @@ describe("resolveDeck", () => {
     expect(result.unresolved).toEqual([
       { name: "4x", reason: "malformed", suggestion: null },
       { name: "Notacard", reason: "not-found", suggestion: null },
+    ]);
+  });
+
+  it("keeps a listed count when the source canonicalizes the name", async () => {
+    // Flow-level guard for the silent-quantity bug: `resolutionKey` is front-face +
+    // lowercase, so a corrected name ("Jace the Mind Sculptor" -> "Jace, the Mind
+    // Sculptor") keys differently and the count used to fall back to 1.
+    const jace = card("Jace, the Mind Sculptor", "planeswalker");
+    resolveCardsMock.mockResolvedValueOnce(canonicalizedTo([["Jace the Mind Sculptor", jace]]));
+
+    const result = await resolveDeck("3 Jace the Mind Sculptor");
+
+    expect(result.deck).toEqual([{ card: jace, quantity: 3 }]);
+  });
+
+  it("degrades to one copy when the resolution attributes nothing", async () => {
+    // The resolver declines to guess an ambiguous pairing; full paste must then
+    // behave exactly as it did before `matched` existed.
+    const jace = card("Jace, the Mind Sculptor", "planeswalker");
+    const tezzeret = card("Tezzeret the Seeker, Agent of Bolas", "planeswalker");
+    resolveCardsMock.mockResolvedValueOnce(unattributed([jace, tezzeret]));
+
+    const result = await resolveDeck("3 Jace the Mind Sculptor\n2 Tezzeret the Seeker");
+
+    expect(result.deck).toEqual([
+      { card: jace, quantity: 1 },
+      { card: tezzeret, quantity: 1 },
     ]);
   });
 
@@ -70,14 +94,12 @@ describe("generateUpgradePlan", () => {
 
   it("resolves base then target, diffs, and tags unresolved with its deck side", async () => {
     resolveCardsMock
-      .mockResolvedValueOnce({
-        resolved: [card("Sol Ring", "artifact")],
-        unresolved: [{ name: "BadBase", reason: "not-found", suggestion: null }],
-      })
-      .mockResolvedValueOnce({
-        resolved: [card("Forest", "land")],
-        unresolved: [{ name: "BadTarget", reason: "ambiguous", suggestion: null }],
-      });
+      .mockResolvedValueOnce(
+        resolutionOf([card("Sol Ring", "artifact")], [{ name: "BadBase", reason: "not-found", suggestion: null }]),
+      )
+      .mockResolvedValueOnce(
+        resolutionOf([card("Forest", "land")], [{ name: "BadTarget", reason: "ambiguous", suggestion: null }]),
+      );
 
     const result = await generateUpgradePlan("Sol Ring\nBadBase", "Forest\nBadTarget");
 

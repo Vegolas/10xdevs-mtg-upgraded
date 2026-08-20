@@ -13,3 +13,5 @@ export { parseDeltaList, applyDeltaSuggestion, applyAllDeltaSuggestions } from "
 export type { DeltaEntry, ParsedDelta } from "./delta";
 export { deriveSnapshot } from "./derive";
 export type { DeriveResult, DeriveSummary, DeltaWarning } from "./derive";
+export { verifyDerived } from "./verify";
+export type { DerivedVerdict, DerivedViolation } from "./verify";
