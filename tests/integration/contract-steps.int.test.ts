@@ -24,6 +24,78 @@ function stepBody(name: string, overrides: Record<string, unknown> = {}): Record
   return { name, listText: "", snapshot: { cards: [], unresolved: [] }, ...overrides };
 }
 
+/**
+ * The diff-mode fixtures, hand-written as a matched set (testing-derive-to-persist
+ * §3 Phase 3).
+ *
+ * {@link diffPrior} is the base checkpoint, {@link DIFF_DELTA} the change text,
+ * and {@link diffDerived} the one snapshot the server will accept alongside it:
+ * `+1 Sol Ring` takes Sol Ring from 1 copy to 2, `-1 Forest` takes Forest from 4
+ * to 3. Both cards are already in the prior list, so every count here is exactly
+ * checkable without resolving anything — which is what lets this suite pin the
+ * statuses without a card-data mock. **Written out rather than derived**: calling
+ * `deriveSnapshot` to build the expectation would make the verifier's own logic the
+ * oracle for whether the verifier accepts.
+ *
+ * The wider derive→persist behaviour is Phase 4's suite. What belongs here is only
+ * the wire contract: which status and which body each shape answers with.
+ */
+const DIFF_DELTA = "+1 Sol Ring\n-1 Forest";
+
+function forest(quantity: number): Record<string, unknown> {
+  return {
+    quantity,
+    card: {
+      name: "Forest",
+      typeLine: "Basic Land - Forest",
+      category: "land",
+      imageUrl: null,
+      priceUsd: 0.25,
+      priceEur: 0.25,
+    },
+  };
+}
+
+function solRing(quantity: number): Record<string, unknown> {
+  return {
+    quantity,
+    card: {
+      name: "Sol Ring",
+      typeLine: "Artifact",
+      category: "artifact",
+      imageUrl: null,
+      priceUsd: 1.5,
+      priceEur: 1.25,
+    },
+  };
+}
+
+/** The base checkpoint a diff-mode append derives from. Fresh objects per call. */
+function diffPrior(): Record<string, unknown> {
+  return { cards: [forest(4), solRing(1)], unresolved: [] };
+}
+
+/** The only `diffPrior() ± DIFF_DELTA` result: Forest 4→3, Sol Ring 1→2. */
+function diffDerived(): Record<string, unknown> {
+  return { cards: [forest(3), solRing(2)], unresolved: [] };
+}
+
+/**
+ * Create a path, seed it with `DIFF_PRIOR` as a full-paste base, and hand back the
+ * path id plus the base step's id — the `priorStepId` a diff append must name.
+ */
+async function seedDiffPath(cookie: string, label: string): Promise<{ pathId: string; priorStepId: string }> {
+  const path = await createPath(BASE_URL, cookie, `${label}-${Date.now()}`);
+  const res = await postStep(
+    cookie,
+    path.id,
+    stepBody("base", { listText: "4 Forest\n1 Sol Ring", snapshot: diffPrior() }),
+  );
+  await assertStatus(res, 201, `${label}: seed the base checkpoint`);
+  const base = expectPathStep(await res.json(), `${label}: seed the base checkpoint`);
+  return { pathId: path.id, priorStepId: base.id };
+}
+
 /** `POST /api/paths/{pathId}/steps` as the given owner. Body is untyped so malformed cases are expressible. */
 async function postStep(cookie: string, pathId: string, body: unknown): Promise<Response> {
   return fetch(`${BASE_URL}/api/paths/${pathId}/steps`, {
@@ -105,23 +177,143 @@ describe("contract — POST /api/paths/[id]/steps", () => {
   // `undefined`, never absent — and a bad value collapses rather than 400-ing
   // (`request.ts` treats it as optional provenance, not validated input).
   const deltaCases = [
-    ["absent", {}, null],
-    ["blank", { deltaText: "   " }, null],
-    ["a non-string", { deltaText: 42 }, null],
-    ["a real delta string", { deltaText: "+1 Sol Ring\n-1 Forest" }, "+1 Sol Ring\n-1 Forest"],
+    ["absent", {}],
+    ["blank", { deltaText: "   " }],
+    ["a non-string", { deltaText: 42 }],
   ] as const;
 
-  for (const [label, override, expected] of deltaCases) {
-    it(`returns 201 with deltaText ${expected === null ? "null" : "verbatim"} when the request sends ${label}`, async () => {
+  for (const [label, override] of deltaCases) {
+    it(`returns 201 with deltaText null when the request sends ${label}`, async () => {
       const path = await createPath(BASE_URL, aCookie, `contract-step-delta-${Date.now()}`);
 
       const res = await postStep(aCookie, path.id, stepBody("base", override));
 
       await assertStatus(res, 201, `POST steps with ${label} deltaText`);
       const step = expectPathStep(await res.json(), `POST steps with ${label} deltaText`);
-      expect(step.deltaText).toBe(expected);
+      expect(step.deltaText).toBe(null);
     });
   }
+
+  // **decided (changed, testing-derive-to-persist)**: a real `deltaText` no longer
+  // rides through on its own. It is now a claim the server checks, so the 201 needs
+  // the whole diff shape — a prior step, the `priorStepId` naming it, and a snapshot
+  // that is `prior ± delta`. The pinning is unchanged in kind: the string comes back
+  // verbatim, and `priorStepId` is request-only and never echoed (the closed
+  // `PathStep` key set in `expectPathStep` is what proves the second half).
+  it("returns 201 with deltaText verbatim for a well-formed diff append", async () => {
+    const { pathId, priorStepId } = await seedDiffPath(aCookie, "contract-step-delta-diff");
+
+    const res = await postStep(
+      aCookie,
+      pathId,
+      stepBody("swap", {
+        listText: "3 Forest\n2 Sol Ring",
+        snapshot: diffDerived(),
+        deltaText: DIFF_DELTA,
+        priorStepId,
+      }),
+    );
+
+    await assertStatus(res, 201, "POST steps with a well-formed diff append");
+    const step = expectPathStep(await res.json(), "POST steps with a well-formed diff append");
+    expect(step.deltaText).toBe(DIFF_DELTA);
+    expect(step.position).toBe(1);
+  });
+
+  // **decided**: `priorStepId` collapses on the way in exactly as `deltaText` does
+  // (blank / non-string / absent → `null`), so a full-paste body carrying junk there
+  // is still a 201 — the field is ignored when there is no delta to anchor.
+  const priorIdNoise = [
+    ["blank", { priorStepId: "   " }],
+    ["a non-string", { priorStepId: 42 }],
+    ["a stale id", { priorStepId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d" }],
+  ] as const;
+
+  for (const [label, override] of priorIdNoise) {
+    it(`ignores ${label} priorStepId on a full-paste body and still returns 201`, async () => {
+      const path = await createPath(BASE_URL, aCookie, `contract-step-prior-noise-${Date.now()}`);
+
+      const res = await postStep(aCookie, path.id, stepBody("base", override));
+
+      await assertStatus(res, 201, `POST steps (full paste) with ${label} priorStepId`);
+      const step = expectPathStep(await res.json(), `POST steps (full paste) with ${label} priorStepId`);
+      expect(step.deltaText).toBe(null);
+      expect(step.position).toBe(0);
+    });
+  }
+
+  // **decided**: a diff checkpoint on a path with no steps at all. There is nothing
+  // to derive from, so this precedes the missing-`priorStepId` check — a caller in
+  // this state cannot supply a valid one.
+  it("answers 400 Diff-checkpoint-needs-a-previous-step for a delta on an empty path", async () => {
+    const path = await createPath(BASE_URL, aCookie, `contract-step-delta-empty-${Date.now()}`);
+
+    const res = await postStep(aCookie, path.id, stepBody("swap", { deltaText: DIFF_DELTA, priorStepId: null }));
+
+    await assertStatus(res, 400, "POST steps with a delta against an empty path");
+    expectApiError(
+      await res.json(),
+      "Diff checkpoint needs a previous step",
+      "POST steps with a delta against an empty path",
+    );
+  });
+
+  // **decided**: `priorStepId` is required once `deltaText` is set — but it gets its
+  // own 400, not `parseStepInput`'s generic one, because "name the step you derived
+  // from" is actionable and "Invalid step payload" is not.
+  it("answers 400 Diff-checkpoint-must-name-the-step when a delta arrives without priorStepId", async () => {
+    const { pathId } = await seedDiffPath(aCookie, "contract-step-delta-unnamed");
+
+    const res = await postStep(aCookie, pathId, stepBody("swap", { snapshot: diffDerived(), deltaText: DIFF_DELTA }));
+
+    await assertStatus(res, 400, "POST steps with a delta and no priorStepId");
+    expectApiError(
+      await res.json(),
+      "Diff checkpoint must name the step it derives from",
+      "POST steps with a delta and no priorStepId",
+    );
+  });
+
+  // **decided**: `409` is its own status, distinct from the verifier's 400s. The
+  // submitted snapshot here is perfectly consistent with the step the client *read*;
+  // what changed is which step is last, and the fix is a reload, not an edit.
+  it("answers 409 Path-changed-since-you-started when priorStepId is not the last step", async () => {
+    const { pathId, priorStepId } = await seedDiffPath(aCookie, "contract-step-delta-raced");
+    // A second append lands, so `priorStepId` now names the second-to-last step.
+    await addStep(BASE_URL, aCookie, pathId, "raced-in");
+
+    const res = await postStep(
+      aCookie,
+      pathId,
+      stepBody("swap", { snapshot: diffDerived(), deltaText: DIFF_DELTA, priorStepId }),
+    );
+
+    await assertStatus(res, 409, "POST steps with a stale priorStepId");
+    expectApiError(await res.json(), "Path changed since you started", "POST steps with a stale priorStepId");
+  });
+
+  // **decided**: the verifier's refusals are 400s whose body is the rule's sentence
+  // plus the offending line or card. This pins the *pairing* with one rule —
+  // `unapplicable-removal`, risk #5's silent no-op — and leaves the other four to
+  // Phase 4's suite, which owns rule-by-rule attribution. The delta must break only
+  // that rule: `- Black Lotus` names a card the prior list never held, and the
+  // submitted snapshot is the untouched prior, so nothing else is out of place.
+  it("answers 400 naming the unapplicable-removal rule and the line at fault", async () => {
+    const { pathId, priorStepId } = await seedDiffPath(aCookie, "contract-step-delta-unapplicable");
+
+    const res = await postStep(
+      aCookie,
+      pathId,
+      stepBody("swap", { snapshot: diffPrior(), deltaText: "- Black Lotus", priorStepId }),
+    );
+
+    await assertStatus(res, 400, "POST steps with an unapplicable removal");
+    expectApiError(
+      await res.json(),
+      "That change removes a card the previous checkpoint does not have: - Black Lotus",
+      "POST steps with an unapplicable removal",
+    );
+  });
 
   // documented (`PathStep`, incl. server-assigned `position` and `deltaText`): the
   // snapshot the client sent must survive POST -> jsonb -> GET unchanged. `jsonb`

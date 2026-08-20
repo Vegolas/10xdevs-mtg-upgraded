@@ -232,20 +232,25 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
     let postListText: string;
     // Diff-mode persists the raw delta as provenance; full paste sends none.
     let postDeltaText: string | null = null;
+    // …and names the step it derived from, so the server can refuse a raced append.
+    let postPriorStepId: string | null = null;
     try {
       if (activeMode === "diff") {
-        const prior = steps.at(-1)?.snapshot;
-        if (!prior) {
+        const priorStep = steps.at(-1);
+        if (!priorStep) {
           setAddState({ status: "error", message: "Diff mode needs a previous checkpoint to build on." });
           return;
         }
-        const result = await deriveSnapshot(prior, listText);
+        const result = await deriveSnapshot(priorStep.snapshot, listText);
         if (token !== addToken.current) {
           return;
         }
         snapshot = result.snapshot;
         postListText = deckCardsToText(result.snapshot.cards);
         postDeltaText = listText;
+        // The server re-checks `prior ± delta` against *this* step, and answers 409
+        // if another tab appended in the meantime — see the 409 branch below.
+        postPriorStepId = priorStep.id;
       } else {
         const resolved = await resolveDeck(listText);
         snapshot = {
@@ -276,6 +281,7 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       listText: postListText,
       snapshot,
       deltaText: postDeltaText,
+      priorStepId: postPriorStepId,
     };
     const result = await requestJson<PathStep>(`/api/paths/${path.id}/steps`, {
       method: "POST",
@@ -286,12 +292,18 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
     if (!result.ok) {
+      // A 409 is the only failure the server's own words don't help with: it means
+      // another tab appended after this one read `prior`, so the derive is stale and
+      // the fix is a reload, not an edit. Everything else — including the verifier's
+      // "prior ± delta" refusals — carries a message written for this form.
       const message =
         result.kind === "transport"
           ? "Couldn't save the checkpoint. Check your connection and retry."
-          : result.fromBody
-            ? result.error
-            : `Couldn't save the checkpoint (${result.status}).`;
+          : result.status === 409
+            ? "This path changed somewhere else. Reload the page, then re-enter your changes."
+            : result.fromBody
+              ? result.error
+              : `Couldn't save the checkpoint (${result.status}).`;
       setAddState({ status: "error", message });
       return;
     }

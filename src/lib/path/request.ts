@@ -18,6 +18,15 @@ export interface StepInput {
   snapshot: StepSnapshot;
   /** Raw `+`/`-` provenance for a diff-entered checkpoint; `null` for full paste. */
   deltaText: string | null;
+  /**
+   * The step the client says it derived from — the optimistic-concurrency token a
+   * diff-entered checkpoint must carry. `null` for full paste, and also `null` when
+   * a diff body simply omitted it: this guard is structural, and "a diff checkpoint
+   * with no prior named" is a *route* decision (it needs the stored chain to say
+   * anything useful), so it gets its own 400 there rather than collapsing into this
+   * module's generic rejection.
+   */
+  priorStepId: string | null;
 }
 
 /**
@@ -41,12 +50,15 @@ export function parseTitleInput(raw: unknown): string | null {
  * {@link parseSnapshot}. The returned snapshot is the parsed (re-normalized) form.
  * `deltaText` is optional provenance: a non-empty string is kept verbatim;
  * absent, blank, or non-string collapses to `null` (the full-paste shape).
+ * `priorStepId` collapses by the same rule, and for the same reason — a caller
+ * sending garbage there gets the route's specific "must name the step it derives
+ * from" 400, which is actionable, rather than a blanket "Invalid step payload".
  */
 export function parseStepInput(raw: unknown): StepInput | null {
   if (typeof raw !== "object" || raw === null) {
     return null;
   }
-  const { name, listText, snapshot, deltaText } = raw as Record<string, unknown>;
+  const { name, listText, snapshot, deltaText, priorStepId } = raw as Record<string, unknown>;
   if (typeof name !== "string" || name.trim() === "") {
     return null;
   }
@@ -58,5 +70,6 @@ export function parseStepInput(raw: unknown): StepInput | null {
     return null;
   }
   const delta = typeof deltaText === "string" && deltaText.trim() !== "" ? deltaText : null;
-  return { name: name.trim(), listText, snapshot: parsed, deltaText: delta };
+  const prior = typeof priorStepId === "string" && priorStepId.trim() !== "" ? priorStepId : null;
+  return { name: name.trim(), listText, snapshot: parsed, deltaText: delta, priorStepId: prior };
 }

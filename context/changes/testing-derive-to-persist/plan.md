@@ -700,31 +700,31 @@ persisted before this change are not re-validated.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Type checking passes: `npm run typecheck`
-- [x] 2.3 Linting passes: `npm run lint`
-- [x] 2.4 The verifier accepts real `deriveSnapshot` output for every `add-flow.golden` delta-table fixture
+- [x] 2.1 Unit tests pass: `npm test` — 6268efa
+- [x] 2.2 Type checking passes: `npm run typecheck` — 6268efa
+- [x] 2.3 Linting passes: `npm run lint` — 6268efa
+- [x] 2.4 The verifier accepts real `deriveSnapshot` output for every `add-flow.golden` delta-table fixture — 6268efa
 
 #### Manual
 
-- [x] 2.5 The reason set reads as closed and exhaustive against `deriveSnapshot`'s branches
-- [x] 2.6 No import in `verify.ts` reaches the network, Supabase, or Astro
+- [x] 2.5 The reason set reads as closed and exhaustive against `deriveSnapshot`'s branches — 6268efa
+- [x] 2.6 No import in `verify.ts` reaches the network, Supabase, or Astro — 6268efa
 
 ### Phase 3: Enforce at the boundary
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test`
-- [ ] 3.2 Type checking passes: `npm run typecheck`
-- [ ] 3.3 Linting passes: `npm run lint`
-- [ ] 3.4 Integration tests pass: `npm run test:integration`
-- [ ] 3.5 Pre-existing contract and ownership suites pass with no assertion changed beyond the deliberate additions
+- [x] 3.1 Unit tests pass: `npm test`
+- [x] 3.2 Type checking passes: `npm run typecheck`
+- [x] 3.3 Linting passes: `npm run lint`
+- [x] 3.4 Integration tests pass: `npm run test:integration`
+- [x] 3.5 Pre-existing contract and ownership suites pass with no assertion changed beyond the deliberate additions
 
 #### Manual
 
-- [ ] 3.6 A diff checkpoint with an unapplicable `−` line is refused in the app, with a readable message and no step added
-- [ ] 3.7 Two tabs on one path: the second append is refused with the reload message
-- [ ] 3.8 An ordinary full-paste checkpoint still saves with no extra latency
+- [x] 3.6 A diff checkpoint with an unapplicable `−` line is refused in the app, with a readable message and no step added
+- [x] 3.7 Two tabs on one path: the second append is refused with the reload message
+- [x] 3.8 An ordinary full-paste checkpoint still saves with no extra latency
 
 ### Phase 4: The derive-to-persist integration suite
 
