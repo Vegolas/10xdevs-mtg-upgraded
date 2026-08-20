@@ -230,7 +230,7 @@ export function quantifyResolved(
   const viaMatched = new Map<string, number>();
   for (const [inputKey, card] of resolution.matched) {
     const canonical = resolutionKey(card.name);
-    viaMatched.set(canonical, (viaMatched.get(canonical) ?? 0) + (quantityByInputKey.get(inputKey) ?? 0));
+    viaMatched.set(inputKey, (viaMatched.get(canonical) ?? 0) + (quantityByInputKey.get(inputKey) ?? 0));
   }
 
   const quantities = new Map<string, number>();
