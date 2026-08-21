@@ -640,6 +640,48 @@ and the rest follows from it.
 - **One gate, no jobs, no workflow change** — the `.int.` infix again (see §5). Worth
   noting that Phase 2's advice held on the third try, which is when it stops being luck.
 
+**Phase 3, the closing gate check (2026-08-20).** The deliberate-break PR (#11, closed
+unmerged) reverted the quantity join to its pre-fix form — one token in
+`quantifyResolved`, keying `viaMatched` by the caller's input key instead of the resolved
+card's canonical key, so a canonicalized name falls back to one copy exactly as it did
+before Phase 1. Forked from a `main` already carrying the suite, because the change PR
+(#10) was merged first.
+
+| Job           | Result         | Attribution                                                                                                   |
+| ------------- | -------------- | ------------------------------------------------------------------------------------------------------------- |
+| `ci`          | **fail 1m15s** | 3 files / 4 tests, every one a canonicalization case: `plan.test.ts`, `quantity.test.ts` ×2, `derive.test.ts` |
+| `integration` | **fail 3m35s** | 1 file of 10, 1 test of 73 — `derive-persist.int.test.ts` > "persists three copies of a +3 line…"             |
+
+Four things worth carrying:
+
+- **This break could not be narrowed to one layer, and that is the honest result.** Phase
+  2 ran its break twice to show each gate blocking alone; here the join is a _single
+  shared function_ both add flows call, so the unit cases and the integration case fail
+  together by construction. Neither is redundant — the unit cases pin the join's output,
+  the integration case pins that the join's output is what reaches the column — but no
+  edit disarms one without the other. Do not manufacture an artificial break to produce a
+  tidier table.
+- **A break must land _downstream_ of the mock seam or it measures nothing.** The obvious
+  candidate was `pairBatch`'s sole-residual pairing, which is where the association is
+  actually computed. It would have reddened `resolve.test.ts` **only**: the integration
+  suite mocks `resolveCards` and builds `matched` itself through the fixture builders, so
+  `pairBatch` never executes there. Generalization: when a suite mocks an edge, a
+  deliberate break upstream of that mock is invisible to it — pick the break by which
+  layer can observe it, not by which code reads as the root cause.
+- **Attribution was exact with no local reproduction.** The failure diff read
+  `- "Jace, the Mind Sculptor": 3` / `+ "Jace, the Mind Sculptor": 1` — the bug in one
+  line. That legibility is a direct payoff of comparing **holdings as a record** rather
+  than `cards` arrays (§6.4 rule 5): the array form would have printed two long
+  arrays and left the reader to spot the differing entry.
+- **`BLOCKED` next to `MERGEABLE` again.** `mergeStateStatus: BLOCKED` with
+  `mergeable: MERGEABLE` — refused by the required checks with `enforce_admins` on, not by
+  a conflict. Same reading rule as Phase 2's fourth note.
+
+**The rollout is complete.** §3 Phases 1–3 are all `complete`, which is the condition §7
+names for re-evaluating the E2E and component-render exclusions. That re-evaluation is a
+decision to take deliberately (via `/10x-test-plan --refresh`), not a fourth phase that
+follows automatically.
+
 ## 7. What We Deliberately Don't Test
 
 Exclusions agreed during the rollout (Phase 2 interview, Q5). Future

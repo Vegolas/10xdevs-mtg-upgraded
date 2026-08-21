@@ -1,9 +1,9 @@
 ---
 change_id: testing-derive-to-persist
 title: Derive-to-persist correctness (test-plan rollout Phase 3)
-status: implementing
+status: implemented
 created: 2026-08-19
-updated: 2026-08-20
+updated: 2026-08-21
 archived_at: null
 ---
 
