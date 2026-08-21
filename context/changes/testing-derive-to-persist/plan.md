@@ -745,13 +745,13 @@ persisted before this change are not re-validated.
 
 #### Automated
 
-- [x] 5.1 Full suite green on the change branch: lint, typecheck, unit, integration
-- [ ] 5.2 CI green on the change PR, with `integration` reporting `derive-persist`
-- [ ] 5.3 The break PR's `integration` job red, with the failure message naming the expected rule
+- [x] 5.1 Full suite green on the change branch: lint, typecheck, unit, integration — 42ccbb8
+- [x] 5.2 CI green on the change PR, with `integration` reporting `derive-persist` — 42ccbb8
+- [x] 5.3 The break PR's `integration` job red, with the failure message naming the expected rule — 42ccbb8
 
 #### Manual
 
-- [ ] 5.4 The break PR reports `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE`
-- [ ] 5.5 Failure attribution is diagnosable from the CI log alone
-- [ ] 5.6 §6.4 is a recipe a future contributor can follow without reading this plan
-- [ ] 5.7 Break PR closed unmerged; no staged break reaches `main`
+- [x] 5.4 The break PR reports `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE` — 42ccbb8
+- [x] 5.5 Failure attribution is diagnosable from the CI log alone — 42ccbb8
+- [x] 5.6 §6.4 is a recipe a future contributor can follow without reading this plan — 42ccbb8
+- [x] 5.7 Break PR closed unmerged; no staged break reaches `main` — 42ccbb8
