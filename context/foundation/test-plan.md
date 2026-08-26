@@ -57,6 +57,8 @@ research's job, see §1 principle #3).
 | 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                  | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                  |
 | 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                        | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                      |
 | 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                     | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                             |
+| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders      | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (1 commit/30d, 18 commits/90d); §4 records no browser or render layer, so this wiring is covered at no layer |
+| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                              | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (1 commit/30d, 18 commits/90d); §4 lists no browser or render layer; guard stable since first commit ⇒ Low   |
 
 **Impact × Likelihood rubric.** High = user loses access/data/money or failure
 is publicly visible / area changes weekly or already burned us. Medium =
@@ -65,12 +67,31 @@ source. Low = cosmetic / stable code. Risk #1 is the only High × High — the
 lived cross-tenant incident plus the most-churned untested boundary — so it
 is protected first.
 
+**Eight rows, against the schema's 5–7.** Rows #1–#6 are retained rather than
+merged or dropped, because §3 Phases 1–3 cite those numbers and the schema
+forbids renumbering — so the overflow is recorded here rather than avoided by
+rewriting settled history. #7 is High × Medium, which leaves #1 the only
+High × High. #8 is deliberately last and is the weakest row in the map: it is
+promoted because it rides Phase 4's harness at near-zero marginal cost and is
+deterministically reproducible in a browser, not because anything suggests a
+live defect. A future refresh may prefer to split §2 into protected and open
+sets rather than let the map keep growing.
+
 Not promoted to the map (recorded so the rollout doesn't silently widen):
 card misidentification from Scryfall resolution (already unit-tested plus a
 live test; external-source drift is better served by the existing live test
 and observability than a rollout phase) and secret/PII leakage (small scale,
 Supabase anon key is expected-public) — both are folded into Phase 1
 research as one-line checks rather than their own rows.
+
+Also considered and not promoted: an upgrade-plan **cost total that
+under-reports** because some cards carry no price. The computation is already
+covered at §4's `unit (logic)` layer across every case including the
+all-unpriced one, and pinned by that layer's engine goldens (recipes §6.1 and
+§6.3 rule 9); the surface already discloses the gap rather than showing a
+false zero. The only residual slice is the render of that disclosure, which
+§7 excludes as component rendering — so there is no layer this row could buy.
+Recorded so a future refresh does not re-propose it.
 
 ### Risk Response Guidance
 
@@ -82,6 +103,8 @@ research as one-line checks rather than their own rows.
 | #4   | The persisted list equals an **independently constructed** `prior ± delta`, verified through the POST→persist path, not just the pure function | "the derive logic is unit-tested, so the wired flow must be correct too"                                 | the derive→resolve→persist seam; the frozen prior-snapshot source the delta reads from                                                               | integration                                                                                                   | building the "expected" list by calling the same derive function under test (tautological oracle)                                       |
 | #5   | An unapplicable or unresolved line blocks-or-flags the save; the wrong snapshot is never persisted                                             | "no error returned ⇒ everything resolved/applied"                                                        | where the surfacing/rejection happens before persist; how `− not present` vs `+ unresolved` differ                                                   | integration                                                                                                   | happy-path-only; asserting the _absence_ of an error rather than the _presence_ of the flag/rejection                                   |
 | #6   | The engine's golden output is unchanged and a full-paste add still produces an identical snapshot after the diff-mode change                   | "an additive change cannot touch the preserved path"                                                     | the engine's stable output contract; the full-paste add-flow seam                                                                                    | golden output + integration                                                                                   | duplicating the existing strong unit suite instead of pinning the engine output and the add-flow seam                                   |
+| #7   | A partial resolution and a transport failure each surface their own notice in the rendered plan, instead of a plan that reads as complete      | "a plan rendered means a plan complete"; "the resolver returned the outcome ⇒ the user was told"         | the outcome-to-render seam: which rendered surface owns each resolver outcome, and what the retry affordance does on a transport failure             | browser E2E (§3 Phase 4) — the notice exists only once rendered; the outcomes are already unit-owned          | a happy-path browser test that never induces a partial resolution or a transport failure, so no notice is ever exercised                |
+| #8   | Two overlapping comparisons resolve out of order and the rendered plan matches the newest input, never the superseded one                      | "the token guard exists, so ordering is safe"; "the newer request always resolves last"                  | the ordering guarantee: what marks a resolution stale, and where an out-of-order arrival is dropped before it reaches the rendered plan              | browser E2E (§3 Phase 4) — rides Phase 4's harness; needs two real in-flight resolutions to overlap           | a test that passes because it never actually overlaps two runs — sequential awaits cannot reproduce an out-of-order arrival             |
 
 ## 3. Phased Rollout
 
@@ -712,6 +735,18 @@ contributors should respect these unless the underlying assumption changes.
   still a TBD stub
 - Rollout complete: §3 Phases 1–3 all `complete` as of 2026-08-20, which is the trigger
   §7 names for re-evaluating the E2E and component-render exclusions
+- **Refresh in flight:** `/10x-test-plan --refresh` ran 2026-08-25 and opened
+  `context/changes/test-plan-refresh-2026-08-25/`. Guide edits it carries: new §2 risks
+  #7 (comparer renders a silently-incomplete plan when card data fails or partially
+  resolves) and #8 (cost total under-reports without disclosing missing prices); a new §3
+  rollout Phase 4 (comparer failure-surfacing, browser-level); a §4 version + grounding
+  re-stamp (astro 6→7 drift; Playwright tooling now available in-session, so §4's "E2E is
+  out of scope" line is stale); the §6.5 stub fill; and a §7 rewrite scoping browser E2E
+  in for the comparer while keeping component-render and pixel tests out and adding the
+  path-builder/diff-mode UI as a new explicit exclusion. Evidence: Phase 2 interview
+  2026-08-25 (comparer is the live surface; path builder dormant) + 90d churn
+  (`src/components/deck` 55 commits). Until that change lands, §2 and §7 describe the
+  pre-refresh surface.
 - Stack versions last verified: 2026-06-29
 - AI-native tool references last verified: 2026-06-29
 
