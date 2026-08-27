@@ -6,11 +6,12 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-20 (§3 Phase 3 complete — the rollout is done. The
-> derive-to-persist verifier, its integration suite and the gate landed; §6.4
-> cookbook filled and §6.6 noted. §7's E2E / component-render exclusions are
-> now eligible for re-evaluation, which is the next decision, not the next
-> phase.)
+> Last updated: 2026-08-25 (refresh applied. §3 Phases 1–3 remain `complete`
+> and Phase 4 is open at `not started` — the comparer's failure-surfacing,
+> risks #7 and #8. Browser E2E is in scope for that phase only; component
+> render and pixel tests stay out (§7). §6.5 is filled, so no cookbook
+> sub-section is a stub, and §8 records the three grounding claims this
+> refresh corrected rather than implemented.)
 
 ## 1. Strategy
 
@@ -483,10 +484,54 @@ The recipe, and why each piece is load-bearing:
 
 ### 6.5 Adding a test for a new API endpoint
 
-- TBD — see §3 Phase 1/2. Test type: integration (preferred) plus a contract
-  pin. Assert request → response shape AND the ownership-scoped side effect.
-  Mock only the external HTTP edge (Scryfall); never mock internal modules or
-  the RLS query path.
+- **Test type**: integration (§6.2) plus a contract pin (§6.3). There is no new
+  recipe here — this sub-section is the order to run the existing ones in, plus the
+  two traps that belong to standing up a _new_ route rather than testing an
+  existing one.
+- **Location / naming / harness**: identical to §6.2 and §6.3 —
+  `tests/integration/<risk>.int.test.ts` and
+  `tests/integration/contract-<surface>.int.test.ts`. The `.int.` infix is what makes
+  both ride the already-required `integration` job (see §5).
+- **Prerequisite / run locally**: identical to §6.2 — local Supabase up
+  (`npx supabase start`), `.env.test` filled, then `npm run test:integration`.
+
+The sequence, and which recipe owns each step:
+
+1. **Extend the decided-contract table before writing an assertion** — §6.3 rule 1.
+   A new route has no archived design doc behind most of its rows, so most will be
+   `decided`; record the reason for each. Skip this and the contract test pins the
+   handler's current output instead of a decision.
+2. **Declare the wire shape in `src/lib/api/contract.ts`, with the explicit type
+   argument at every call site** — §6.3 rule 6. This is the half `tsc` gates, and it
+   is free at the keyboard.
+3. **If the route reads or writes a new table, assert the `grant` in the migration
+   that creates it.** Privileges are checked _before_ RLS, so a table with correct
+   policies and no grant answers `permission denied` to a valid JWT — and long-lived
+   local volumes carry the `public`-schema defaults that hide it, so no local run can
+   see the gap. This is the one trap a green local suite is structurally unable to
+   catch; only a fresh stack is an honest verifier (§6.6, Phase 1).
+4. **Write the ownership-scoped integration test** — §6.2. Cross-owner denial is 404
+   or a filtered 200, never 403 (rule 7), and every mutating route needs the
+   service-role read-back proving the row was not written (rule 8).
+5. **Send `Origin` on every mutating request** — §6.3 rule 5. `security.checkOrigin`
+   answers 403 plain text before the handler runs, including on the bodyless
+   `DELETE`s, so a hand-rolled `fetch` that omits it pins a CSRF rejection and looks
+   like a passing route test. The existing helpers already set it; a new one must too.
+6. **Pin the response with closed key sets and hand-written literal key arrays** —
+   §6.3 rule 3 — and round-trip anything the route persists through its own GET
+   (rule 7), since the seam is the column, not the handler.
+7. **Mock only the external HTTP edge (Scryfall), through the sanctioned builders** —
+   §6.4 rules 7–8. Never mock an internal module or the RLS query path: a mock cannot
+   reproduce the bypass the suite exists to catch.
+8. **Self-seed, self-clean, unique timestamp-suffixed names** — §6.2 rule 9. The
+   suite must pass twice in a row.
+9. **Prove the red is load-bearing with a PR, not a local revert** — §6.6, Phase 1's
+   closing note. A local revert shows the assertion fires; only the PR shows the gate
+   blocks.
+
+When the endpoint's failure mode is observable nowhere but the rendered page — a
+notice that exists only once it is on screen — this is the wrong layer. That is §3
+Phase 4's scope, and §7 holds the boundary.
 
 ### 6.6 Per-rollout-phase notes
 
@@ -712,17 +757,16 @@ follows automatically.
 
 ## 7. What We Deliberately Don't Test
 
-Exclusions agreed during the rollout (Phase 2 interview, Q5). Future
-contributors should respect these unless the underlying assumption changes.
+Exclusions agreed during the rollout (Phase 2 interview, Q5), re-scoped
+2026-08-25 once §3 Phases 1–3 completed — each bullet carries its own source.
+Future contributors should respect these unless the underlying assumption
+changes.
 
 - **Frontend / component rendering & layout** — the team will polish the UI
   once the logic is set in stone; spending budget on render/interaction tests
   now would churn against an unstable surface. Re-evaluate when the logic
   boundary (Phases 1–3) is locked and the UI is being finalized. (Source:
   Phase 2 interview Q5.)
-- **Browser-level E2E** — sequenced after unit + integration on the server
-  boundary; not worth building until that boundary is covered. Re-evaluate
-  after §3 Phases 1–3 complete. (Source: Phase 2 interview Q4 + Q5.)
 - **Re-testing the pure-logic engine** (`deck/diff`, `deck/plan`,
   `path/derive`, etc.) — already covered by the 20-file Vitest suite;
   duplicate coverage adds maintenance, not signal. Phase 2 pins the engine's
@@ -730,29 +774,66 @@ contributors should respect these unless the underlying assumption changes.
   principle 1 + interview Q5.)
 - **Pixel / snapshot tests of the deck card layout** — brittle against
   Tailwind tweaks, low signal. (Source: Phase 2 interview Q5.)
+- **The path-builder and diff-mode UI** — excluded on coverage, not on churn.
+  Its load-bearing behavior is already defended underneath the surface:
+  §3 Phase 3 pins the derive→persist seam and Phases 1–2 pin the routes it
+  drives, so what is left is the rendering of an already-verified
+  result — the thinnest remaining slice in the app. The churn is stated plainly
+  so the reasoning survives a busier month: `src/components/path` carries
+  2 commits/30d and 9/90d, _more_ recent activity than the comparer's
+  `src/components/deck` (1 and 18), so this is not a dormancy argument and does
+  not expire when the directory heats up. Re-read it instead if a path-builder
+  failure ever surfaces that the integration and contract layers could not have
+  caught. (Source: §3 Phases 1–3 `complete` + directory churn measured
+  2026-08-25; see §8 for the churn-citation convention.)
+- **Browser-level E2E is no longer excluded** — it is scoped in, narrowly, at
+  §3 Phase 4: the comparer's failure-surfacing (risks #7 and #8), where the
+  notice and the superseded plan exist only once rendered and no cheaper layer
+  can see them. That is the whole of the inclusion. It is not a licence to
+  browser-test a flow an integration or contract test already covers — §1
+  principle 1 still rules, and §4 still records no runner installed.
+  (Source: Phase 2 interview Q4 + Q5, whose sequencing condition — the logic
+  boundary locked — §3 Phases 1–3 satisfied.)
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-08-20 — §3 (status) and §5 (gates, plus the
-  branch-protection re-read) updated 2026-08-20 by rollout Phase 3; §4 (contract + unit
-  rows) updated 2026-08-18 by Phase 2; §1–§2 unreviewed since 2026-06-29
-- Cookbook (§6) last reviewed: 2026-08-20 — §6.4 filled by rollout Phase 3; §6.5 is
-  still a TBD stub
-- Rollout complete: §3 Phases 1–3 all `complete` as of 2026-08-20, which is the trigger
-  §7 names for re-evaluating the E2E and component-render exclusions
-- **Refresh in flight:** `/10x-test-plan --refresh` ran 2026-08-25 and opened
-  `context/changes/test-plan-refresh-2026-08-25/`. Guide edits it carries: new §2 risks
-  #7 (comparer renders a silently-incomplete plan when card data fails or partially
-  resolves) and #8 (cost total under-reports without disclosing missing prices); a new §3
-  rollout Phase 4 (comparer failure-surfacing, browser-level); a §4 version + grounding
-  re-stamp (its framework-drift premise dropped in Phase 2 as unfounded — see the §4 Docs
-  bullet; Playwright tooling now available in-session, so §4's "E2E is out of scope" line
-  is stale); the §6.5 stub fill; and a §7 rewrite scoping browser E2E
-  in for the comparer while keeping component-render and pixel tests out and adding the
-  path-builder/diff-mode UI as a new explicit exclusion. Evidence: Phase 2 interview
-  2026-08-25 (comparer is the live surface; path builder dormant) + 90d churn
-  (`src/components/deck` 55 commits). Until that change lands, §2 and §7 describe the
-  pre-refresh surface.
+- Strategy (§1–§5) last reviewed: 2026-08-25 — §2 (risks #7–#8 appended with their
+  response rows), §3 (Phase 4 opened), §4 (e2e row plus all four grounding bullets) and
+  §5 (the e2e gate row) updated 2026-08-25 by the refresh below; §1 unchanged since
+  2026-06-29 and re-read as still current
+- Cookbook (§6) last reviewed: 2026-08-25 — §6.4 filled by rollout Phase 3; §6.5 filled
+  2026-08-25 as a sequencing checklist over §6.2–§6.4, so no sub-section is a stub
+- Rollout: §3 Phases 1–3 all `complete` as of 2026-08-20 — the trigger §7 named for
+  re-evaluating the E2E and component-render exclusions. That re-evaluation was taken
+  deliberately on 2026-08-25 (below): browser E2E in for the comparer only, component
+  render and pixel tests still out
+- **Refresh completed 2026-08-25** through `context/changes/test-plan-refresh-2026-08-25/`
+  (`/10x-test-plan --refresh` ran 2026-08-25 and opened it). What it changed: §2 gained
+  risk #7 (a partial resolution or a card-data transport failure reaches the user as a
+  plan that looks complete) and risk #8 (a slow earlier comparison clobbers a newer one),
+  their Risk Response Guidance rows, and a recorded note on the resulting 8-row overflow
+  against the schema's 5–7; §3 gained Phase 4 (comparer failure-surfacing, browser E2E,
+  `not started`, no change folder); §4's e2e row names Playwright as planned-not-installed
+  and all four grounding bullets were re-stamped; §5's e2e gate stopped reading "deferred"
+  and now points at §3 Phase 4; §6.5 was filled; §7 scoped browser E2E in and added the
+  path-builder / diff-mode UI as an exclusion.
+- **Three claims the staged refresh note carried were corrected, not implemented.**
+  Recorded here so a future refresh does not re-propose them. (a) An "astro 6→7 drift":
+  `package.json` declares `astro ^6.3.1`, resolving to 6.4.8, so §4's "Astro 6" was
+  confirmed rather than re-stamped — there was no drift to record. (b)
+  "`src/components/deck` 55 commits/90d": the directory carries 18 commits/90d and 1/30d;
+  55 was the sum of per-file touch counts inside it, a different measurement from the
+  `N commits/30d` every §2 Source cell uses. (c) "Path builder dormant":
+  `src/components/path` carries 9 commits/90d and 2/30d — more recent activity than the
+  comparer's — so §7 excludes that surface on coverage, not on dormancy. A fourth staged
+  proposal, a risk for an upgrade-plan cost total that under-reports, was not promoted;
+  §2's not-promoted paragraph records the layers that already cover it.
+- **Churn-citation convention** (adopted 2026-08-25, so a future refresh measures the
+  same way): a churn figure in §2 or §7 is the count of commits touching a directory —
+  `git log --oneline --no-merges --since=<window> -- <dir>` — never a sum of per-file
+  touch counts, which counts one commit once per file it changed. Always state the window
+  next to the number, and state both the 30d and 90d windows when they tell different
+  stories about the same directory.
 - Stack versions last verified: 2026-08-25
 - AI-native tool references last verified: 2026-08-25
 

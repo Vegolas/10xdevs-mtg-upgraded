@@ -549,41 +549,41 @@ numbering stays contiguous and append-only, so neither consumer needs a change.
 
 #### Automated
 
-- [x] 2.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
-- [x] 2.2 §3 table has exactly 4 data rows; row 4 Status is exactly `not started`
-- [x] 2.3 The six status literals still appear verbatim in the Status vocabulary line
-- [x] 2.4 Every §3 "Risks covered" number resolves to an existing §2 row
-- [x] 2.5 No §5 Required? cell reads "deferred"; the e2e row names §3 Phase 4
-- [x] 2.6 §4's e2e row names Playwright and states it is not yet a dependency
-- [x] 2.7 No astro-7 or 6→7 claim remains in the file
-- [x] 2.8 All four §4 grounding bullets and both §8 version lines read 2026-08-25
-- [x] 2.9 `git status --porcelain` reports only `context/` paths modified
+- [x] 2.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md` — cb4e780
+- [x] 2.2 §3 table has exactly 4 data rows; row 4 Status is exactly `not started` — cb4e780
+- [x] 2.3 The six status literals still appear verbatim in the Status vocabulary line — cb4e780
+- [x] 2.4 Every §3 "Risks covered" number resolves to an existing §2 row — cb4e780
+- [x] 2.5 No §5 Required? cell reads "deferred"; the e2e row names §3 Phase 4 — cb4e780
+- [x] 2.6 §4's e2e row names Playwright and states it is not yet a dependency — cb4e780
+- [x] 2.7 No astro-7 or 6→7 claim remains in the file — cb4e780
+- [x] 2.8 All four §4 grounding bullets and both §8 version lines read 2026-08-25 — cb4e780
+- [x] 2.9 `git status --porcelain` reports only `context/` paths modified — cb4e780
 
 #### Manual
 
-- [x] 2.10 The order rationale reads as a coherent sequencing argument
-- [x] 2.11 §4's e2e row cannot be misread as "Playwright is installed"
-- [x] 2.12 The Runtime/browser bullet distinguishes skill tooling from an MCP server
-- [ ] 2.13 §3 and §7 no longer contradict each other on browser E2E scope
+- [x] 2.10 The order rationale reads as a coherent sequencing argument — cb4e780
+- [x] 2.11 §4's e2e row cannot be misread as "Playwright is installed" — cb4e780
+- [x] 2.12 The Runtime/browser bullet distinguishes skill tooling from an MCP server — cb4e780
+- [x] 2.13 §3 and §7 no longer contradict each other on browser E2E scope
 
 ### Phase 3: Guidance sections and the refresh record
 
 #### Automated
 
-- [ ] 3.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
-- [ ] 3.2 §6.5 contains no "TBD"; §6 still has exactly six `### 6.N` sub-headings
-- [ ] 3.3 §7 has at most 6 bullets, includes a path-builder bullet, and no longer excludes browser E2E
-- [ ] 3.4 §8 contains no "Refresh in flight"
-- [ ] 3.5 The header `> Last updated:` line reads 2026-08-25
-- [ ] 3.6 Section order §1 through §8 unchanged; all eight headings present
-- [ ] 3.7 No emoji, no fenced code block, and no CI YAML anywhere in the file
-- [ ] 3.8 Repo still green: `npm run lint`, `npm run typecheck`, `npm test`
-- [ ] 3.9 `git status --porcelain` reports only `context/` paths modified
+- [x] 3.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
+- [x] 3.2 §6.5 contains no "TBD"; §6 still has exactly six `### 6.N` sub-headings
+- [x] 3.3 §7 has at most 6 bullets, includes a path-builder bullet, and no longer excludes browser E2E
+- [x] 3.4 §8 contains no "Refresh in flight"
+- [x] 3.5 The header `> Last updated:` line reads 2026-08-25
+- [x] 3.6 Section order §1 through §8 unchanged; all eight headings present
+- [x] 3.7 No emoji, no fenced code block, and no CI YAML anywhere in the file
+- [x] 3.8 Repo still green: `npm run lint`, `npm run typecheck`, `npm test`
+- [x] 3.9 `git status --porcelain` reports only `context/` paths modified
 
 #### Manual
 
-- [ ] 3.10 §6.5 sequences the existing recipes and adds the two endpoint traps without duplication
-- [ ] 3.11 §7's path-builder exclusion survives that directory becoming hot
-- [ ] 3.12 The §8 record makes the three corrections findable from §8 alone
-- [ ] 3.13 §3, §4, §5 and §7 agree on the status of browser E2E
-- [ ] 3.14 The header parenthetical describes the file as it now reads
+- [x] 3.10 §6.5 sequences the existing recipes and adds the two endpoint traps without duplication
+- [x] 3.11 §7's path-builder exclusion survives that directory becoming hot
+- [x] 3.12 The §8 record makes the three corrections findable from §8 alone
+- [x] 3.13 §3, §4, §5 and §7 agree on the status of browser E2E
+- [x] 3.14 The header parenthetical describes the file as it now reads
