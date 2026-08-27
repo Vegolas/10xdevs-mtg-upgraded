@@ -530,40 +530,40 @@ numbering stays contiguous and append-only, so neither consumer needs a change.
 
 #### Automated
 
-- [x] 1.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
-- [x] 1.2 §2 table has exactly 8 data rows, numbered 1 through 8 with no gaps
-- [x] 1.3 Rows #1–#6 are byte-identical to HEAD
-- [x] 1.4 Risk Response Guidance has one row per risk number, #1 through #8
-- [x] 1.5 New Source cells and not-promoted paragraph carry no file or `file:line` citation
-- [x] 1.6 No emoji and no fenced code block introduced anywhere in §2
-- [x] 1.7 Section order §1 through §8 is unchanged
+- [x] 1.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md` — 5a0be20
+- [x] 1.2 §2 table has exactly 8 data rows, numbered 1 through 8 with no gaps — 5a0be20
+- [x] 1.3 Rows #1–#6 are byte-identical to HEAD — 5a0be20
+- [x] 1.4 Risk Response Guidance has one row per risk number, #1 through #8 — 5a0be20
+- [x] 1.5 New Source cells and not-promoted paragraph carry no file or `file:line` citation — 5a0be20
+- [x] 1.6 No emoji and no fenced code block introduced anywhere in §2 — 5a0be20
+- [x] 1.7 Section order §1 through §8 is unchanged — 5a0be20
 
 #### Manual
 
-- [x] 1.8 Risk #7 names only the wiring gap; unit-layer ownership stays legible
-- [x] 1.9 Risk #8's Low likelihood reads as honest, with its promotion reason stated
-- [x] 1.10 The 8-row overflow reads as a recorded decision with a reason
-- [x] 1.11 The not-promoted cost entry would stop a future re-proposal
+- [x] 1.8 Risk #7 names only the wiring gap; unit-layer ownership stays legible — 5a0be20
+- [x] 1.9 Risk #8's Low likelihood reads as honest, with its promotion reason stated — 5a0be20
+- [x] 1.10 The 8-row overflow reads as a recorded decision with a reason — 5a0be20
+- [x] 1.11 The not-promoted cost entry would stop a future re-proposal — 5a0be20
 
 ### Phase 2: Rollout row and stack re-stamp
 
 #### Automated
 
-- [ ] 2.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
-- [ ] 2.2 §3 table has exactly 4 data rows; row 4 Status is exactly `not started`
-- [ ] 2.3 The six status literals still appear verbatim in the Status vocabulary line
-- [ ] 2.4 Every §3 "Risks covered" number resolves to an existing §2 row
-- [ ] 2.5 No §5 Required? cell reads "deferred"; the e2e row names §3 Phase 4
-- [ ] 2.6 §4's e2e row names Playwright and states it is not yet a dependency
-- [ ] 2.7 No astro-7 or 6→7 claim remains in the file
-- [ ] 2.8 All four §4 grounding bullets and both §8 version lines read 2026-08-25
-- [ ] 2.9 `git status --porcelain` reports only `context/` paths modified
+- [x] 2.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
+- [x] 2.2 §3 table has exactly 4 data rows; row 4 Status is exactly `not started`
+- [x] 2.3 The six status literals still appear verbatim in the Status vocabulary line
+- [x] 2.4 Every §3 "Risks covered" number resolves to an existing §2 row
+- [x] 2.5 No §5 Required? cell reads "deferred"; the e2e row names §3 Phase 4
+- [x] 2.6 §4's e2e row names Playwright and states it is not yet a dependency
+- [x] 2.7 No astro-7 or 6→7 claim remains in the file
+- [x] 2.8 All four §4 grounding bullets and both §8 version lines read 2026-08-25
+- [x] 2.9 `git status --porcelain` reports only `context/` paths modified
 
 #### Manual
 
-- [ ] 2.10 The order rationale reads as a coherent sequencing argument
-- [ ] 2.11 §4's e2e row cannot be misread as "Playwright is installed"
-- [ ] 2.12 The Runtime/browser bullet distinguishes skill tooling from an MCP server
+- [x] 2.10 The order rationale reads as a coherent sequencing argument
+- [x] 2.11 §4's e2e row cannot be misread as "Playwright is installed"
+- [x] 2.12 The Runtime/browser bullet distinguishes skill tooling from an MCP server
 - [ ] 2.13 §3 and §7 no longer contradict each other on browser E2E scope
 
 ### Phase 3: Guidance sections and the refresh record

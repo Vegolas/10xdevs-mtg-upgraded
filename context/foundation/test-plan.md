@@ -112,11 +112,12 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                       | Goal (one line)                                                                                                                        | Risks covered | Test types                      | Status   | Change folder                                                                  |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                          | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
-| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19) |
-| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped           | #4, #5        | integration                     | complete | context/changes/testing-derive-to-persist/                                     |
+| #   | Phase name                       | Goal (one line)                                                                                                                                                                  | Risks covered | Test types                      | Status      | Change folder                                                                  |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- | ------------------------------------------------------------------------------ |
+| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                    | #1, #2        | integration + CI gate           | complete    | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
+| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                           | #3, #6        | contract + integration + golden | complete    | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19) |
+| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                     | #4, #5        | integration                     | complete    | context/changes/testing-derive-to-persist/                                     |
+| 4   | Comparer failure-surfacing       | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison | #7, #8        | browser E2E                     | not started | —                                                                              |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -127,8 +128,12 @@ after it by wiring `npm test` into CI (health-check Fix #1 — CI currently
 runs lint + build but not the tests). Phase 2 hardens the churny API
 contract surface the team changes without confidence (interview Q3). Phase 3
 closes the correctness guardrail on the newest feature (diff-mode derive).
-E2E and frontend/component testing are deliberately **out** of this rollout
-(see §7), gated behind the logic boundary per interview Q4's sequencing.
+Phase 4 is that sequencing paying out, not reversing it: interview Q4 gated
+browser work behind the logic boundary, Phases 1–3 locked that boundary, so
+browser E2E now enters scope — narrowly, for the comparer's failure-surfacing,
+where the notice exists only once rendered. Frontend/component render and pixel
+testing stay deliberately **out** (see §7): their deferral rested on the UI
+being unstable, and Phases 1–3 did not change that.
 
 ## 4. Stack
 
@@ -141,15 +146,15 @@ The classic test base for this project. AI-native tools (if any) carry a
 | integration (API + boundary) | Vitest + local Supabase       | ^4.1.9  | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2.                                       |
 | contract                     | Vitest                        | ^4.1.9  | `tests/integration/contract-*.int.test.ts` — rides the `integration` job via the `.int.` infix. Pins request/response shapes of `/api/paths/*` and `signin`'s 302 against the decided-contract table, with the declared types in `src/lib/api/contract.ts` gated by `npm run typecheck`. Recipe in §6.3. |
 | live (external)              | Vitest                        | ^4.1.9  | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal.                                                                                                                                                                                  |
-| e2e                          | none                          | —       | **deliberately deferred — see §7.** Re-evaluate only after Phases 1–3 land.                                                                                                                                                                                                                              |
+| e2e                          | Playwright (planned)          | —       | **Not a dependency yet** — absent from `package.json`, with no `playwright.config.*` and no `e2e/` directory. Planned for §3 Phase 4, whose `/10x-research` settles runner and harness shape; §7 holds the scope boundary (comparer failure-surfacing only, not component render).                       |
 | component render             | none (no jsdom/RTL by design) | —       | **deliberately deferred — see §7** (interview Q5: frontend later).                                                                                                                                                                                                                                       |
 
 **Stack grounding tools (current session):**
 
-- Docs: **Context7** available — can ground current Vitest 4 / Astro 6 / Supabase SSR / Cloudflare Workers test-setup APIs (e.g. `unstable_dev`, cookie-bound client testing) when planning Phase 1–2; checked: 2026-06-29
-- Search: **none** — no Exa.ai or web-search MCP exposed in this session; checked: 2026-06-29
-- Runtime/browser: **Claude Preview + Claude-in-Chrome** available as a possible verification/E2E layer; **not used** — E2E is out of scope for this rollout (no Playwright MCP present); checked: 2026-06-29
-- Provider/platform: **Supabase** via CLI/skill only (no DB MCP); `gh` CLI available for the CI test-step change in Phase 1; checked: 2026-06-29
+- Docs: **Context7** available — can ground current Vitest 4 / Astro 6 / Supabase SSR / Cloudflare Workers test-setup APIs (e.g. `unstable_dev`, cookie-bound client testing), and Playwright's when Phase 4 plans. Versions re-confirmed rather than changed: declared `astro ^6.3.1` resolves to 6.4.8 and `vitest ^4.1.9` resolves to 4.1.9, so "Vitest 4 / Astro 6" still reads correctly; checked: 2026-08-25
+- Search: **general web search available** — built-in web search/fetch, plus a `web_search` tool on two connected MCP servers; still **no Exa.ai or dedicated docs-search MCP**, so Context7 stays the grounding path for framework APIs; checked: 2026-08-25
+- Runtime/browser: browser-test tooling exists **as skills, not as an MCP server** — a dedicated E2E workflow skill in this repo (`/10x-e2e`, which reads §2's risk rows directly) plus a Playwright-driven web-app testing skill in the session; **no Playwright MCP server is exposed**, so nothing in-session drives a browser on its own. Both halves matter: the first is why §3 Phase 4 is openable at all, the second is why the runner and harness choice is still that phase's research to make; checked: 2026-08-25
+- Provider/platform: **Supabase** via CLI/skill only (no DB MCP); `gh` CLI available — it carried the CI test-step change in Phase 1 and the branch-protection re-reads recorded in §5; checked: 2026-08-25
 
 Use docs MCPs for current framework/library APIs and setup details. Do not
 use MCP docs/search to infer code failure anchors; those belong in per-phase
@@ -161,17 +166,17 @@ The full set of gates that must pass before a change reaches production.
 "Required for §3 Phase N" means the gate is enforced once that rollout phase
 lands; before that, the gate is `planned`.
 
-| Gate                          | Where      | Required?                                                                                                                        | Catches                                                                                                                                                      |
-| ----------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| lint                          | local + CI | required (already wired)                                                                                                         | `eslint .` with `strictTypeChecked` — type-aware rules, but **not** assignability errors; see the typecheck row                                              |
-| typecheck                     | local + CI | **required (wired §3 Phase 2)** — `npm run typecheck` (`astro check`) in the `ci` job between lint and unit                      | type drift, and the declared `/api/paths/*` wire contract (`src/lib/api/contract.ts` plus the explicitly parameterized `jsonResponse<T>` / `requestJson<T>`) |
-| build                         | local + CI | required (already wired)                                                                                                         | broken Astro build (`astro build` does **not** typecheck)                                                                                                    |
-| unit (logic)                  | local + CI | **required (wired §3 Phase 1)** — `npm test` in the `ci` job between typecheck and build                                         | logic regressions                                                                                                                                            |
-| golden (engine output)        | local + CI | **required (wired §3 Phase 2)** — the `*.golden.test.ts` files ride `npm test` in the `ci` job                                   | silent drift in the diff/cost engine's rendered output, or in the preserved full-paste add flow                                                              |
-| integration (API + ownership) | local + CI | **required (wired §3 Phase 1)** — `npm run test:integration` in the separate `integration` job, against an ephemeral local stack | cross-owner leak, signed-out gate failures                                                                                                                   |
-| contract (`/api/paths/*`)     | local + CI | **required (wired §3 Phase 2)** — the `contract-*.int.test.ts` files ride `npm run test:integration` in the `integration` job    | stale-caller / changed-shape breaks                                                                                                                          |
-| derive-to-persist integration | local + CI | **required (wired §3 Phase 3)** — `derive-persist.int.test.ts` rides `npm run test:integration` in the `integration` job         | corrupted or silently-wrong snapshots — a persisted checkpoint that is not `prior ± delta`, or a dropped unapplicable/unresolved line                        |
-| e2e on critical flows         | CI on PR   | deferred — see §7                                                                                                                | broken signed-in path flow (revisit post-rollout)                                                                                                            |
+| Gate                          | Where      | Required?                                                                                                                         | Catches                                                                                                                                                      |
+| ----------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| lint                          | local + CI | required (already wired)                                                                                                          | `eslint .` with `strictTypeChecked` — type-aware rules, but **not** assignability errors; see the typecheck row                                              |
+| typecheck                     | local + CI | **required (wired §3 Phase 2)** — `npm run typecheck` (`astro check`) in the `ci` job between lint and unit                       | type drift, and the declared `/api/paths/*` wire contract (`src/lib/api/contract.ts` plus the explicitly parameterized `jsonResponse<T>` / `requestJson<T>`) |
+| build                         | local + CI | required (already wired)                                                                                                          | broken Astro build (`astro build` does **not** typecheck)                                                                                                    |
+| unit (logic)                  | local + CI | **required (wired §3 Phase 1)** — `npm test` in the `ci` job between typecheck and build                                          | logic regressions                                                                                                                                            |
+| golden (engine output)        | local + CI | **required (wired §3 Phase 2)** — the `*.golden.test.ts` files ride `npm test` in the `ci` job                                    | silent drift in the diff/cost engine's rendered output, or in the preserved full-paste add flow                                                              |
+| integration (API + ownership) | local + CI | **required (wired §3 Phase 1)** — `npm run test:integration` in the separate `integration` job, against an ephemeral local stack  | cross-owner leak, signed-out gate failures                                                                                                                   |
+| contract (`/api/paths/*`)     | local + CI | **required (wired §3 Phase 2)** — the `contract-*.int.test.ts` files ride `npm run test:integration` in the `integration` job     | stale-caller / changed-shape breaks                                                                                                                          |
+| derive-to-persist integration | local + CI | **required (wired §3 Phase 3)** — `derive-persist.int.test.ts` rides `npm run test:integration` in the `integration` job          | corrupted or silently-wrong snapshots — a persisted checkpoint that is not `prior ± delta`, or a dropped unapplicable/unresolved line                        |
+| e2e on critical flows         | CI on PR   | planned (§3 Phase 4) — no job wired and no runner installed; aspirational until its job name sits in `main`'s required-check list | once Phase 4 lands: a comparer failure that still renders as a complete plan (risk #7), and a superseded comparison clobbering a newer one (risk #8)         |
 
 The load-bearing gate change **landed in Phase 1**: `.github/workflows/ci.yml`
 now runs `npm test` between lint and build, plus a separate `integration` job
@@ -740,15 +745,16 @@ contributors should respect these unless the underlying assumption changes.
   #7 (comparer renders a silently-incomplete plan when card data fails or partially
   resolves) and #8 (cost total under-reports without disclosing missing prices); a new §3
   rollout Phase 4 (comparer failure-surfacing, browser-level); a §4 version + grounding
-  re-stamp (astro 6→7 drift; Playwright tooling now available in-session, so §4's "E2E is
-  out of scope" line is stale); the §6.5 stub fill; and a §7 rewrite scoping browser E2E
+  re-stamp (its framework-drift premise dropped in Phase 2 as unfounded — see the §4 Docs
+  bullet; Playwright tooling now available in-session, so §4's "E2E is out of scope" line
+  is stale); the §6.5 stub fill; and a §7 rewrite scoping browser E2E
   in for the comparer while keeping component-render and pixel tests out and adding the
   path-builder/diff-mode UI as a new explicit exclusion. Evidence: Phase 2 interview
   2026-08-25 (comparer is the live surface; path builder dormant) + 90d churn
   (`src/components/deck` 55 commits). Until that change lands, §2 and §7 describe the
   pre-refresh surface.
-- Stack versions last verified: 2026-06-29
-- AI-native tool references last verified: 2026-06-29
+- Stack versions last verified: 2026-08-25
+- AI-native tool references last verified: 2026-08-25
 
 Refresh (`/10x-test-plan --refresh`) when:
 
