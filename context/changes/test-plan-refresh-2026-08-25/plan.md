@@ -564,26 +564,26 @@ numbering stays contiguous and append-only, so neither consumer needs a change.
 - [x] 2.10 The order rationale reads as a coherent sequencing argument — cb4e780
 - [x] 2.11 §4's e2e row cannot be misread as "Playwright is installed" — cb4e780
 - [x] 2.12 The Runtime/browser bullet distinguishes skill tooling from an MCP server — cb4e780
-- [x] 2.13 §3 and §7 no longer contradict each other on browser E2E scope
+- [x] 2.13 §3 and §7 no longer contradict each other on browser E2E scope — 3a44660
 
 ### Phase 3: Guidance sections and the refresh record
 
 #### Automated
 
-- [x] 3.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md`
-- [x] 3.2 §6.5 contains no "TBD"; §6 still has exactly six `### 6.N` sub-headings
-- [x] 3.3 §7 has at most 6 bullets, includes a path-builder bullet, and no longer excludes browser E2E
-- [x] 3.4 §8 contains no "Refresh in flight"
-- [x] 3.5 The header `> Last updated:` line reads 2026-08-25
-- [x] 3.6 Section order §1 through §8 unchanged; all eight headings present
-- [x] 3.7 No emoji, no fenced code block, and no CI YAML anywhere in the file
-- [x] 3.8 Repo still green: `npm run lint`, `npm run typecheck`, `npm test`
-- [x] 3.9 `git status --porcelain` reports only `context/` paths modified
+- [x] 3.1 Formatting gate passes: `npx prettier --check context/foundation/test-plan.md` — 3a44660
+- [x] 3.2 §6.5 contains no "TBD"; §6 still has exactly six `### 6.N` sub-headings — 3a44660
+- [x] 3.3 §7 has at most 6 bullets, includes a path-builder bullet, and no longer excludes browser E2E — 3a44660
+- [x] 3.4 §8 contains no "Refresh in flight" — 3a44660
+- [x] 3.5 The header `> Last updated:` line reads 2026-08-25 — 3a44660
+- [x] 3.6 Section order §1 through §8 unchanged; all eight headings present — 3a44660
+- [x] 3.7 No emoji, no fenced code block, and no CI YAML anywhere in the file — 3a44660
+- [x] 3.8 Repo still green: `npm run lint`, `npm run typecheck`, `npm test` — 3a44660
+- [x] 3.9 `git status --porcelain` reports only `context/` paths modified — 3a44660
 
 #### Manual
 
-- [x] 3.10 §6.5 sequences the existing recipes and adds the two endpoint traps without duplication
-- [x] 3.11 §7's path-builder exclusion survives that directory becoming hot
-- [x] 3.12 The §8 record makes the three corrections findable from §8 alone
-- [x] 3.13 §3, §4, §5 and §7 agree on the status of browser E2E
-- [x] 3.14 The header parenthetical describes the file as it now reads
+- [x] 3.10 §6.5 sequences the existing recipes and adds the two endpoint traps without duplication — 3a44660
+- [x] 3.11 §7's path-builder exclusion survives that directory becoming hot — 3a44660
+- [x] 3.12 The §8 record makes the three corrections findable from §8 alone — 3a44660
+- [x] 3.13 §3, §4, §5 and §7 agree on the status of browser E2E — 3a44660
+- [x] 3.14 The header parenthetical describes the file as it now reads — 3a44660
