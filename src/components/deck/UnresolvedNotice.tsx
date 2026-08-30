@@ -59,7 +59,14 @@ export function UnresolvedNotice({ entries, onAccept, onAcceptAll, deltaWarnings
   }
 
   return (
-    <div className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-4 text-sm text-[#b5847e]">
+    // Named region: DeckComparer's error banner renders a div with a byte-identical class
+    // string, so an accessible name is what makes "some cards didn't resolve" addressable
+    // and distinguishable from "the card database was unreachable".
+    <div
+      role="region"
+      aria-label="Unresolved cards"
+      className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-4 text-sm text-[#b5847e]"
+    >
       {hasEntries ? (
         <>
           <div className="flex items-center justify-between gap-3">
