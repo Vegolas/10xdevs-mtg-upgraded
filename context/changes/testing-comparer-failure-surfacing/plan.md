@@ -776,33 +776,33 @@ second PATCH removing `e2e` from `contexts`; there is no PR to revert.
 
 #### Automated
 
-- [x] 1.1 Lint passes over the new directory: `npm run lint`
-- [x] 1.2 Typecheck passes with the new devDependency resolved: `npm run typecheck`
-- [x] 1.3 Existing unit suite is unaffected: `npm test`
-- [x] 1.4 Existing integration suite is unaffected: `npm run test:integration`
-- [x] 1.5 The seed runs green with zero external network: `npm run test:e2e`
-- [x] 1.6 Playwright collects exactly the seed and no vitest files: `npx playwright test --list`
+- [x] 1.1 Lint passes over the new directory: `npm run lint` — af76b34
+- [x] 1.2 Typecheck passes with the new devDependency resolved: `npm run typecheck` — af76b34
+- [x] 1.3 Existing unit suite is unaffected: `npm test` — af76b34
+- [x] 1.4 Existing integration suite is unaffected: `npm run test:integration` — af76b34
+- [x] 1.5 The seed runs green with zero external network: `npm run test:e2e` — af76b34
+- [x] 1.6 Playwright collects exactly the seed and no vitest files: `npx playwright test --list` — af76b34
 
 #### Manual
 
-- [x] 1.7 Killing the run mid-flight leaves no orphaned dev server on port 4323
-- [x] 1.8 The error banner still looks unchanged in the browser after the `role="alert"` edit
-- [x] 1.9 `git status` is clean after a run — no `test-results/` or `playwright-report/` tracked
+- [x] 1.7 Killing the run mid-flight leaves no orphaned dev server on port 4323 — af76b34
+- [x] 1.8 The error banner still looks unchanged in the browser after the `role="alert"` edit — af76b34
+- [x] 1.9 `git status` is clean after a run — no `test-results/` or `playwright-report/` tracked — af76b34
 
 ### Phase 2: Risk #7 — a failure never reads as a complete plan
 
 #### Automated
 
-- [ ] 2.1 Both tests pass: `npx playwright test tests/e2e/comparer-failure-surfacing.spec.ts`
-- [ ] 2.2 The whole suite still passes: `npm run test:e2e`
-- [ ] 2.3 Lint and typecheck pass over the new spec: `npm run lint && npm run typecheck`
-- [ ] 2.4 No external network: the run succeeds with `api.scryfall.com` unreachable
+- [x] 2.1 Both tests pass: `npx playwright test tests/e2e/comparer-failure-surfacing.spec.ts`
+- [x] 2.2 The whole suite still passes: `npm run test:e2e`
+- [x] 2.3 Lint and typecheck pass over the new spec: `npm run lint && npm run typecheck`
+- [x] 2.4 No external network: the run succeeds with `api.scryfall.com` unreachable
 
 #### Manual
 
-- [ ] 2.5 Reviewed against all five agent E2E anti-patterns, with the control question asked of every assertion
-- [ ] 2.6 The tests read as independent — either can run alone, in any order
-- [ ] 2.7 The failure message on a deliberately malformed fixture is distinguishable from a real transport failure
+- [x] 2.5 Reviewed against all five agent E2E anti-patterns, with the control question asked of every assertion
+- [x] 2.6 The tests read as independent — either can run alone, in any order
+- [x] 2.7 The failure message on a deliberately malformed fixture is distinguishable from a real transport failure
 
 ### Phase 3: Risk #8 — a superseded comparison never renders
 

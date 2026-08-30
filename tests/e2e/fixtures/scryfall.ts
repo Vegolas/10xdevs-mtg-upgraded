@@ -12,12 +12,32 @@ import type { Page, Route, Request } from "@playwright/test";
  * Names arrive in their ORIGINAL spelling, not lowercased (`resolve.ts` keys the cache by
  * `resolutionKey` but sends the caller's text), so fixtures match on the name as written.
  *
- * `cards.scryfall.io` is a DIFFERENT host and is deliberately not routed. Mock cards omit
- * `image_uris`, which kills that traffic entirely — at the cost of the per-card
- * `<button aria-label={card.name}>` in CardRow, which no spec needs.
+ * `cards.scryfall.io` is a DIFFERENT host. Mock cards omit `image_uris`, which kills that
+ * traffic at the source — at the cost of the per-card `<button aria-label={card.name}>` in
+ * CardRow, which no spec needs — and `blockUnmockedScryfall` aborts it as a backstop if a
+ * future fixture reintroduces images.
  */
 
 const SCRYFALL_GLOB = "https://api.scryfall.com/**";
+
+/** Every Scryfall-owned host, including the `cards.scryfall.io` image CDN. */
+const ANY_SCRYFALL_GLOB = "https://*.scryfall.*/**";
+
+/**
+ * Abort any Scryfall request a mock did not explicitly handle.
+ *
+ * Registered FIRST by every helper below so it acts as the fallback — Playwright matches
+ * route handlers most-recently-registered first, so the specific handler still wins for the
+ * URLs it covers. Anything else (a `cards.scryfall.io` image, a new endpoint) fails loudly
+ * instead of quietly reaching the real API and making the suite network-dependent.
+ *
+ * This is what makes "no external network" an enforced property rather than an assumption.
+ */
+async function blockUnmockedScryfall(page: Page): Promise<void> {
+  await page.route(ANY_SCRYFALL_GLOB, async (route: Route) => {
+    await route.abort("blockedbyclient");
+  });
+}
 
 /**
  * Minimal card the client can consume without throwing.
@@ -63,11 +83,83 @@ function isCollectionPost(request: Request): boolean {
  * thrown transport failure.
  */
 export async function mockScryfallSuccess(page: Page): Promise<void> {
+  await blockUnmockedScryfall(page);
+
   await page.route(SCRYFALL_GLOB, async (route: Route) => {
     const request = route.request();
 
     if (isCollectionPost(request)) {
       await route.fulfill({ json: collectionResponse(requestedNames(request)) });
+      return;
+    }
+
+    await route.fulfill({
+      status: 404,
+      json: { object: "error", code: "not_found", status: 404, details: "No card found." },
+    });
+  });
+}
+
+/**
+ * Fail the FIRST `/cards/collection` POST with a 500, then succeed on everything after.
+ *
+ * Two deliberate choices:
+ *
+ * - 500, not `route.abort("failed")`. The 500 trips the explicit `!response.ok` guard in
+ *   `scryfall.ts` and produces a deterministic message naming the endpoint and status; an
+ *   abort rejects the raw `fetch` with a browser-dependent "Failed to fetch". A malformed
+ *   fixture lands in the SAME catch as a real transport failure, so the message is the only
+ *   thing that tells them apart — it has to be assertable.
+ * - The FIRST POST, not a later one. `fetchCardCollection` throws before the session cache
+ *   is written, so nothing is cached and Retry re-requests the full set. Failing the target
+ *   deck's POST instead would leave the base deck cached and make recovery fixture-dependent.
+ */
+export async function mockScryfallCollectionFailsOnce(page: Page): Promise<void> {
+  await blockUnmockedScryfall(page);
+
+  let failed = false;
+
+  await page.route(SCRYFALL_GLOB, async (route: Route) => {
+    const request = route.request();
+
+    if (isCollectionPost(request)) {
+      if (!failed) {
+        failed = true;
+        await route.fulfill({ status: 500, json: { object: "error", status: 500 } });
+        return;
+      }
+      await route.fulfill({ json: collectionResponse(requestedNames(request)) });
+      return;
+    }
+
+    await route.fulfill({
+      status: 404,
+      json: { object: "error", code: "not_found", status: 404, details: "No card found." },
+    });
+  });
+}
+
+/**
+ * Resolve every requested name EXCEPT `missing`, which come back in `not_found`.
+ *
+ * The fuzzy follow-up 404s with `code: "not_found"` — which `fetchFuzzyName` treats as the
+ * clean not-found branch, NOT an error — so each missing name becomes an `unresolved` entry
+ * with `reason: "not-found"` and no suggestion. That is the partial resolution risk #7
+ * names: a plan that renders successfully while some inputs never became cards.
+ */
+export async function mockScryfallPartial(page: Page, missing: string[]): Promise<void> {
+  await blockUnmockedScryfall(page);
+
+  const missingSet = new Set(missing);
+
+  await page.route(SCRYFALL_GLOB, async (route: Route) => {
+    const request = route.request();
+
+    if (isCollectionPost(request)) {
+      const names = requestedNames(request);
+      const found = names.filter((name) => !missingSet.has(name));
+      const notFound = names.filter((name) => missingSet.has(name));
+      await route.fulfill({ json: collectionResponse(found, notFound) });
       return;
     }
 
@@ -102,6 +194,8 @@ export async function mockScryfallWithParkedCollection(
   page: Page,
   parkWhen: (names: string[]) => boolean,
 ): Promise<ParkedRoute> {
+  await blockUnmockedScryfall(page);
+
   let parkedRoute: Route | null = null;
   let parkedNames: string[] = [];
   let signalArrived: (() => void) | undefined;
