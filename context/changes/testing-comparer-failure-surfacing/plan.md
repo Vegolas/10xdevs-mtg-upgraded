@@ -793,31 +793,31 @@ second PATCH removing `e2e` from `contexts`; there is no PR to revert.
 
 #### Automated
 
-- [x] 2.1 Both tests pass: `npx playwright test tests/e2e/comparer-failure-surfacing.spec.ts`
-- [x] 2.2 The whole suite still passes: `npm run test:e2e`
-- [x] 2.3 Lint and typecheck pass over the new spec: `npm run lint && npm run typecheck`
-- [x] 2.4 No external network: the run succeeds with `api.scryfall.com` unreachable
+- [x] 2.1 Both tests pass: `npx playwright test tests/e2e/comparer-failure-surfacing.spec.ts` — 30fe61d
+- [x] 2.2 The whole suite still passes: `npm run test:e2e` — 30fe61d
+- [x] 2.3 Lint and typecheck pass over the new spec: `npm run lint && npm run typecheck` — 30fe61d
+- [x] 2.4 No external network: the run succeeds with `api.scryfall.com` unreachable — 30fe61d
 
 #### Manual
 
-- [x] 2.5 Reviewed against all five agent E2E anti-patterns, with the control question asked of every assertion
-- [x] 2.6 The tests read as independent — either can run alone, in any order
-- [x] 2.7 The failure message on a deliberately malformed fixture is distinguishable from a real transport failure
+- [x] 2.5 Reviewed against all five agent E2E anti-patterns, with the control question asked of every assertion — 30fe61d
+- [x] 2.6 The tests read as independent — either can run alone, in any order — 30fe61d
+- [x] 2.7 The failure message on a deliberately malformed fixture is distinguishable from a real transport failure — 30fe61d
 
 ### Phase 3: Risk #8 — a superseded comparison never renders
 
 #### Automated
 
-- [ ] 3.1 The test passes: `npx playwright test tests/e2e/comparer-stale-response.spec.ts`
-- [ ] 3.2 The whole suite passes: `npm run test:e2e`
-- [ ] 3.3 Lint and typecheck pass: `npm run lint && npm run typecheck`
-- [ ] 3.4 The test fails when the guard is disarmed at `DeckComparer.tsx:73`, then reverted
+- [x] 3.1 The test passes: `npx playwright test tests/e2e/comparer-stale-response.spec.ts`
+- [x] 3.2 The whole suite passes: `npm run test:e2e`
+- [x] 3.3 Lint and typecheck pass: `npm run lint && npm run typecheck`
+- [x] 3.4 The test fails when the guard is disarmed at `DeckComparer.tsx:73`, then reverted
 
 #### Manual
 
-- [ ] 3.5 The `waitForRequest` genuinely fires — run A confirmed in flight before B starts
-- [ ] 3.6 Reviewed against the five anti-patterns, especially #8's own named one
-- [ ] 3.7 Run the spec 5× consecutively with no flake
+- [x] 3.5 The `waitForRequest` genuinely fires — run A confirmed in flight before B starts
+- [x] 3.6 Reviewed against the five anti-patterns, especially #8's own named one
+- [x] 3.7 Run the spec 5× consecutively with no flake
 
 ### Phase 4: The CI job, the gate, and the docs
 
