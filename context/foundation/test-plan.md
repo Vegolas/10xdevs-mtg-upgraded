@@ -833,10 +833,13 @@ cards"` on the notice (`UnresolvedNotice.tsx:66-67`) — both of which improve t
    than an assumption. Note that `cards.scryfall.io` is a **different host** from
    `api.scryfall.com`: mock cards omit `image_uris` to kill that traffic at the source, and the
    fallback glob covers both.
-6. **Build mock cards only through `mockCard()`.** `normalize.ts` reads `name`, `type_line` and
-   `prices` **unguarded**, so omitting any of them throws a `TypeError` — and that `TypeError`
-   lands in the _same_ catch as a real transport failure (`plan.ts:106-109`). An inline literal
-   that is one field short produces a passing-looking error banner for entirely the wrong reason.
+6. **Build mock cards only through `mockCard()`.** `normalize.ts:33,37-38` reads `raw.name` and
+   `raw.prices.usd` / `.eur` **unguarded**, so a card literal missing `prices` throws a
+   `TypeError` — and that `TypeError` lands in the _same_ catch as a real transport failure
+   (`plan.ts:106-109`), producing a passing-looking error banner for entirely the wrong reason.
+   `type_line` is the one field that _is_ guarded (`:29`, falling back to `""`), which is worse
+   in its own way: omit it and the card silently classifies as uncategorized instead of failing.
+   Either way the fixture, not the app, is what the test ends up measuring.
 7. **Therefore assert the message, not just the banner.** Because a broken fixture and a real
    failure render the same container, matching on `/cards\/collection failed: 500/` is what
    separates them. Leave `statusText` unasserted — `route.fulfill()` does not reliably populate

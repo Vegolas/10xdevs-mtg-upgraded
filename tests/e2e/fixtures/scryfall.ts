@@ -42,10 +42,12 @@ async function blockUnmockedScryfall(page: Page): Promise<void> {
 /**
  * Minimal card the client can consume without throwing.
  *
- * `normalize.ts` reads `name`, `type_line` and `prices` UNGUARDED, so omitting any of them
- * yields a TypeError rather than a partial result — and that TypeError lands in the same
- * catch as a real transport failure (`plan.ts`), making a broken fixture indistinguishable
- * from the failure under test. Build cards only through this helper.
+ * `normalize.ts` reads `raw.name` and `raw.prices.usd`/`.eur` UNGUARDED, so a literal missing
+ * `prices` yields a TypeError rather than a partial result — and that TypeError lands in the
+ * same catch as a real transport failure (`plan.ts`), making a broken fixture indistinguishable
+ * from the failure under test. `type_line` is the one field that IS guarded (it falls back to
+ * `""`), which fails quieter rather than safer: omit it and the card classifies as
+ * uncategorized instead of throwing. Build cards only through this helper.
  */
 export function mockCard(name: string, typeLine = "Artifact", usd: string | null = "1.50") {
   return {
