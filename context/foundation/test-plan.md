@@ -127,12 +127,12 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                       | Goal (one line)                                                                                                                                                                  | Risks covered | Test types                      | Status   | Change folder                                                                  |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                    | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
-| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                           | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19) |
-| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                     | #4, #5        | integration                     | complete | context/changes/testing-derive-to-persist/                                     |
-| 4   | Comparer failure-surfacing       | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison | #7, #8        | browser E2E                     | complete | context/changes/testing-comparer-failure-surfacing/                            |
+| #   | Phase name                       | Goal (one line)                                                                                                                                                                  | Risks covered | Test types                      | Status   | Change folder                                                                     |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                    | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11)    |
+| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                           | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)    |
+| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                     | #4, #5        | integration                     | complete | context/archive/2026-08-19-testing-derive-to-persist/ (archived 2026-08-21)       |
+| 4   | Comparer failure-surfacing       | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison | #7, #8        | browser E2E                     | complete | context/archive/2026-08-27-testing-comparer-failure-surfacing/ (arch. 2026-08-31) |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -356,7 +356,7 @@ The recipe, and why each piece is load-bearing:
 1. **Write the contract down before writing an assertion, and cite the writing —
    never the handler.** A contract test that expects what the code currently emits
    pins the bug (the oracle problem). The decided-contract table in
-   `context/changes/testing-api-contract-pinning/plan.md` is the oracle: one row per
+   `context/archive/2026-08-11-testing-api-contract-pinning/plan.md` is the oracle: one row per
    route giving status + success body, plus a second table for every error body. Each
    row is marked **`documented`** (an archived design doc specifies it, independently
    of today's code) or **`decided`** (the docs are silent and the plan made the call,
@@ -956,9 +956,9 @@ cards"` on the notice (`UnresolvedNotice.tsx:66-67`) — both of which improve t
     two kinds are identical to accessibility queries (`findings.md` F-3). Assert the columns view.
 15. **A phase like this is coverage, not repair.** Both specs pass green on the code as it
     stands. Three live defects surfaced along the way and were filed to
-    `context/changes/testing-comparer-failure-surfacing/findings.md` rather than fixed — a spec
-    for any of them would be red today, which would make it a different phase. Write the finding
-    down; do not smuggle the fix in.
+    `context/archive/2026-08-27-testing-comparer-failure-surfacing/findings.md`
+    rather than fixed — a spec for any of them would be red today, which would make it a
+    different phase. Write the finding down; do not smuggle the fix in.
 
 ## 7. What We Deliberately Don't Test
 
@@ -1013,7 +1013,7 @@ changes.
   re-evaluating the E2E and component-render exclusions. That re-evaluation was taken
   deliberately on 2026-08-25 (below): browser E2E in for the comparer only, component
   render and pixel tests still out
-- **Refresh completed 2026-08-25** through `context/changes/test-plan-refresh-2026-08-25/`
+- **Refresh completed 2026-08-25** through `context/archive/2026-08-25-test-plan-refresh-2026-08-25/`
   (`/10x-test-plan --refresh` ran 2026-08-25 and opened it). What it changed: §2 gained
   risk #7 (a partial resolution or a card-data transport failure reaches the user as a
   plan that looks complete) and risk #8 (a slow earlier comparison clobbers a newer one),
@@ -1041,9 +1041,9 @@ changes.
   next to the number, and state both the 30d and 90d windows when they tell different
   stories about the same directory.
 - **Rollout Phase 4 landed 2026-08-31** through
-  `context/changes/testing-comparer-failure-surfacing/`. What it changed: §2's
-  not-promoted set gained the silent quantity degradation (`resolve.ts:99-102`), recorded
-  rather than promoted because the map is already over budget and the failure is not
+  `context/archive/2026-08-27-testing-comparer-failure-surfacing/` (archived 2026-08-31).
+  What it changed: §2's not-promoted set gained the silent quantity degradation
+  (`resolve.ts:99-102`), recorded rather than promoted because the map is already over budget and the failure is not
   browser-only; §3's Phase 4 row moved to `complete` and names the change folder; §4's
   `e2e` row stopped reading "planned" and now carries Playwright `^1.62.1` with the real
   harness shape; §5's `e2e on critical flows` row moved from `planned` to required, but
