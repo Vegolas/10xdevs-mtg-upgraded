@@ -1,2 +1,9 @@
 #!/usr/bin/env sh
-npx lint-staged
+# Layer 2 of test-plan.md §5's local stack (commit gate). `astro check` is the
+# ONLY typechecker anywhere local: eslint is type-aware but does not report
+# assignability errors, and `astro build` does not typecheck at all. It costs
+# ~26s here, which is why it gates the commit instead of every edit.
+#
+# `&&`, not two lines: husky v9 does not `set -e`, so a bare second command
+# would mask a lint-staged failure behind its own exit code.
+npx lint-staged && npm run typecheck
