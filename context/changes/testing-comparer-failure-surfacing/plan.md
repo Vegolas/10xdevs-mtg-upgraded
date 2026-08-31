@@ -808,16 +808,16 @@ second PATCH removing `e2e` from `contexts`; there is no PR to revert.
 
 #### Automated
 
-- [x] 3.1 The test passes: `npx playwright test tests/e2e/comparer-stale-response.spec.ts`
-- [x] 3.2 The whole suite passes: `npm run test:e2e`
-- [x] 3.3 Lint and typecheck pass: `npm run lint && npm run typecheck`
-- [x] 3.4 The test fails when the guard is disarmed at `DeckComparer.tsx:73`, then reverted
+- [x] 3.1 The test passes: `npx playwright test tests/e2e/comparer-stale-response.spec.ts` — a846d2a
+- [x] 3.2 The whole suite passes: `npm run test:e2e` — a846d2a
+- [x] 3.3 Lint and typecheck pass: `npm run lint && npm run typecheck` — a846d2a
+- [x] 3.4 The test fails when the guard is disarmed at `DeckComparer.tsx:73`, then reverted — a846d2a
 
 #### Manual
 
-- [x] 3.5 The `waitForRequest` genuinely fires — run A confirmed in flight before B starts
-- [x] 3.6 Reviewed against the five anti-patterns, especially #8's own named one
-- [x] 3.7 Run the spec 5× consecutively with no flake
+- [x] 3.5 The `waitForRequest` genuinely fires — run A confirmed in flight before B starts — a846d2a
+- [x] 3.6 Reviewed against the five anti-patterns, especially #8's own named one — a846d2a
+- [x] 3.7 Run the spec 5× consecutively with no flake — a846d2a
 
 ### Phase 4: The CI job, the gate, and the docs
 

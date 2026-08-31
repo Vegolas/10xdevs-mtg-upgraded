@@ -3,7 +3,7 @@ change_id: testing-comparer-failure-surfacing
 title: Prove the comparer surfaces its own failures and never renders a superseded plan
 status: implementing
 created: 2026-08-27
-updated: 2026-08-28
+updated: 2026-08-31
 archived_at: null
 ---
 

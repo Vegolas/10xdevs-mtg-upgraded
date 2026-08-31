@@ -94,6 +94,20 @@ false zero. The only residual slice is the render of that disclosure, which
 §7 excludes as component rendering — so there is no layer this row could buy.
 Recorded so a future refresh does not re-propose it.
 
+Also considered and not promoted, surfaced by Phase 4 research: an upgrade plan that is
+**quantitatively wrong and says nothing about it**. When a `/cards/collection` batch
+leaves two or more residual cards, `resolve.ts:99-102` declines to guess the association
+and records nothing, so `quantifyResolved` falls back to one copy (`resolve.ts:240`,
+again at `quantity.ts:47`) — `3 Jace the Mind Sculptor` renders as a single copy with no
+`unresolved` entry and no notice. The degradation is **deliberate** (guessing a pairing
+would silently swap copy counts, which is worse) and is documented as such at
+`resolve.ts:70-75` and pinned as a case at `src/lib/deck/plan.test.ts:65-78`. It is not
+made risk #9 for two reasons: the map is already at eight rows against the schema's 5–7,
+and the failure is not browser-only — it needs a crafted collection response, so E2E is
+not obviously its cheapest layer. What it shares with #7 is the shape — a plan that reads
+as complete while being wrong — so a future refresh weighing #7's family should weigh
+this with it rather than rediscovering it.
+
 ### Risk Response Guidance
 
 | Risk | What would prove protection                                                                                                                    | Must challenge                                                                                           | Context `/10x-research` must ground                                                                                                                  | Likely cheapest layer                                                                                         | Anti-pattern to avoid                                                                                                                   |
@@ -113,12 +127,12 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                       | Goal (one line)                                                                                                                                                                  | Risks covered | Test types                      | Status      | Change folder                                                                  |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- | ------------------------------------------------------------------------------ |
-| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                    | #1, #2        | integration + CI gate           | complete    | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
-| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                           | #3, #6        | contract + integration + golden | complete    | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19) |
-| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                     | #4, #5        | integration                     | complete    | context/changes/testing-derive-to-persist/                                     |
-| 4   | Comparer failure-surfacing       | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison | #7, #8        | browser E2E                     | not started | —                                                                              |
+| #   | Phase name                       | Goal (one line)                                                                                                                                                                  | Risks covered | Test types                      | Status   | Change folder                                                                  |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                    | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11) |
+| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                           | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19) |
+| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                     | #4, #5        | integration                     | complete | context/changes/testing-derive-to-persist/                                     |
+| 4   | Comparer failure-surfacing       | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison | #7, #8        | browser E2E                     | complete | context/changes/testing-comparer-failure-surfacing/                            |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -141,14 +155,14 @@ being unstable, and Phases 1–3 did not change that.
 The classic test base for this project. AI-native tools (if any) carry a
 `checked:` date so future readers can see which lines need re-verification.
 
-| Layer                        | Tool                          | Version | Notes                                                                                                                                                                                                                                                                                                    |
-| ---------------------------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| unit (logic)                 | Vitest                        | ^4.1.9  | `node` env, `src/**/*.test.ts`, `@/*` alias. All pure-logic (`src/lib/{card-data,deck,path}` + deck helpers). `npm test` → `vitest run`. Includes the `*.golden.test.ts` engine goldens with committed `__snapshots__/*.snap` — see §6.3 rule 9.                                                         |
-| integration (API + boundary) | Vitest + local Supabase       | ^4.1.9  | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2.                                       |
-| contract                     | Vitest                        | ^4.1.9  | `tests/integration/contract-*.int.test.ts` — rides the `integration` job via the `.int.` infix. Pins request/response shapes of `/api/paths/*` and `signin`'s 302 against the decided-contract table, with the declared types in `src/lib/api/contract.ts` gated by `npm run typecheck`. Recipe in §6.3. |
-| live (external)              | Vitest                        | ^4.1.9  | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal.                                                                                                                                                                                  |
-| e2e                          | Playwright (planned)          | —       | **Not a dependency yet** — absent from `package.json`, with no `playwright.config.*` and no `e2e/` directory. Planned for §3 Phase 4, whose `/10x-research` settles runner and harness shape; §7 holds the scope boundary (comparer failure-surfacing only, not component render).                       |
-| component render             | none (no jsdom/RTL by design) | —       | **deliberately deferred — see §7** (interview Q5: frontend later).                                                                                                                                                                                                                                       |
+| Layer                        | Tool                          | Version | Notes                                                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unit (logic)                 | Vitest                        | ^4.1.9  | `node` env, `src/**/*.test.ts`, `@/*` alias. All pure-logic (`src/lib/{card-data,deck,path}` + deck helpers). `npm test` → `vitest run`. Includes the `*.golden.test.ts` engine goldens with committed `__snapshots__/*.snap` — see §6.3 rule 9.                                                                                                                        |
+| integration (API + boundary) | Vitest + local Supabase       | ^4.1.9  | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2.                                                                                                      |
+| contract                     | Vitest                        | ^4.1.9  | `tests/integration/contract-*.int.test.ts` — rides the `integration` job via the `.int.` infix. Pins request/response shapes of `/api/paths/*` and `signin`'s 302 against the decided-contract table, with the declared types in `src/lib/api/contract.ts` gated by `npm run typecheck`. Recipe in §6.3.                                                                |
+| live (external)              | Vitest                        | ^4.1.9  | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal.                                                                                                                                                                                                                                                 |
+| e2e (browser)                | Playwright                    | ^1.62.1 | `tests/e2e/**/*.spec.ts` via `playwright.config.ts`; `npm run test:e2e`. Chromium only, against a Playwright-managed `astro dev` on port 4323, with **all** Scryfall traffic intercepted — no Supabase, no auth, no external network. Rides its own `e2e` CI job (see §5). Scope is held by §7: the comparer's failure surfacing, not component render. Recipe in §6.7. |
+| component render             | none (no jsdom/RTL by design) | —       | **deliberately deferred — see §7** (interview Q5: frontend later).                                                                                                                                                                                                                                                                                                      |
 
 **Stack grounding tools (current session):**
 
@@ -750,10 +764,129 @@ Four things worth carrying:
   `mergeable: MERGEABLE` — refused by the required checks with `enforce_admins` on, not by
   a conflict. Same reading rule as Phase 2's fourth note.
 
-**The rollout is complete.** §3 Phases 1–3 are all `complete`, which is the condition §7
-names for re-evaluating the E2E and component-render exclusions. That re-evaluation is a
-decision to take deliberately (via `/10x-test-plan --refresh`), not a fourth phase that
-follows automatically.
+**Written at the close of Phase 3, and superseded:** _"The rollout is complete. §3 Phases
+1–3 are all `complete`, which is the condition §7 names for re-evaluating the E2E and
+component-render exclusions. That re-evaluation is a decision to take deliberately (via
+`/10x-test-plan --refresh`), not a fourth phase that follows automatically."_ That is
+exactly what happened — the 2026-08-25 refresh took the decision and opened Phase 4. The
+sentence is kept rather than deleted because it records the condition correctly; read it
+as of 2026-08-20, not as a standing claim about the rollout.
+
+### 6.7 Adding a browser E2E test
+
+- **Test type**: Playwright against a real browser. Reach for it **only** when the claim is
+  about something that exists once rendered and nowhere else — §1 principle 1 still rules,
+  and §7 scopes browser E2E to the comparer's failure surfacing, not to any flow an
+  integration or contract test already covers.
+- **Location**: `tests/e2e/<risk>.spec.ts`, fixtures in `tests/e2e/fixtures/`. `testDir` is
+  pinned to `./tests/e2e` in `playwright.config.ts` — that pin is what stops Playwright's
+  default `testMatch` from sweeping the 100+ vitest files under `src/` and
+  `tests/integration/`.
+- **Naming**: `comparer-<risk>.spec.ts`. No `.int.` infix here — unlike every other suite in
+  this project these do **not** ride an existing job; §5's `e2e` row is a separate CI job and
+  a separate required check.
+- **Reference tests**: `seed.spec.ts` (the exemplar — read it first; what you show is what you
+  get), `comparer-failure-surfacing.spec.ts` (risk #7, interception + recovery),
+  `comparer-stale-response.spec.ts` (risk #8, genuine concurrency).
+- **Prerequisite / run locally**: nothing. No Supabase, no `.env.test`, no auth — the comparer
+  mounts at `/` and `src/middleware.ts:7` protects only `/dashboard` and `/paths`. Playwright's
+  `webServer` boots `astro dev` on port 4323 itself. `npm run test:e2e`.
+
+The recipe, and why each piece is load-bearing:
+
+1. **Make the surface addressable in production code, not in the test.** Both surfaces risk #7
+   covers were unnamed `<div>`s carrying a **byte-identical** class string, so a locator for
+   one matched the other. The fix was two one-line production edits — `role="alert"` on the
+   error banner (`DeckComparer.tsx:220`) and `role="region"` plus `aria-label="Unresolved
+cards"` on the notice (`UnresolvedNotice.tsx:66-67`) — both of which improve the app. This
+   repo has **zero** `data-testid` and that is deliberate: the accessibility tree is the test
+   surface, so a surface that is hard to locate is usually telling you something. Never reach
+   for a CSS selector, an XPath, or DOM structure instead.
+2. **Cross the hydration barrier before the first `fill()`, and do it in a helper.**
+   `index.astro` mounts the comparer `client:load`. SSR renders both textareas, so `fill()`
+   succeeds immediately — but it writes the DOM value without React state, React then hydrates
+   with its own empty state, `bothFilled` stays false, and the CTA never enables. **Waiting for
+   the CTA to enable does not rescue this**: the fill is already orphaned, and the failure
+   surfaces as a timeout blaming the button. _The plan for this phase originally prescribed
+   exactly that check; Phase 1 disproved it._ The one trustworthy signal is Astro's island —
+   `astro-island` removes its `ssr` attribute only after `await this.hydrator(...)` resolves —
+   so `expect(page.locator("astro-island[ssr]")).toHaveCount(0)` means React has committed.
+   This is the sole framework-internal selector in the suite, it lives in `gotoComparer()`, and
+   it is a **wait**, never an assertion target.
+3. **Scope every locator to the `main` landmark.** `gotoComparer()` returns
+   `page.getByRole("main")`; chain off it. A contributor's gitignored `.dev.vars` sets the
+   Supabase keys locally while CI has none, and `Layout.astro:28-43` renders a config-error
+   banner above the `<slot/>` when they are unset — so an unscoped spec sees two different
+   DOMs. Do **not** "fix" this by giving CI dummy keys: a non-falsy key makes `supabase.ts:7-9`
+   return a real client, and `middleware.ts:12-15` then runs `auth.getUser()` on every
+   anonymous request to `/`. See `lessons.md`.
+4. **Never `waitForTimeout`, and never `networkidle` either.** The second is not a style
+   preference here, it is structural: `Layout.astro:19-24` preconnects and stylesheet-links
+   `fonts.googleapis.com` on every page and Vite's HMR websocket stays open, so the network
+   never settles. Wait on state — `toBeVisible()`, `waitForURL()`, `waitForRequest()`,
+   `waitForResponse()`.
+5. **Intercept all card-data traffic, and register a blocking fallback first.** Every helper in
+   `fixtures/scryfall.ts` calls `blockUnmockedScryfall()` before its specific handler.
+   Playwright matches route handlers **most-recently-registered first**, so the specific handler
+   still wins for the URLs it covers and everything else aborts loudly instead of quietly
+   reaching the real API. That is what makes "no external network" an enforced property rather
+   than an assumption. Note that `cards.scryfall.io` is a **different host** from
+   `api.scryfall.com`: mock cards omit `image_uris` to kill that traffic at the source, and the
+   fallback glob covers both.
+6. **Build mock cards only through `mockCard()`.** `normalize.ts` reads `name`, `type_line` and
+   `prices` **unguarded**, so omitting any of them throws a `TypeError` — and that `TypeError`
+   lands in the _same_ catch as a real transport failure (`plan.ts:106-109`). An inline literal
+   that is one field short produces a passing-looking error banner for entirely the wrong reason.
+7. **Therefore assert the message, not just the banner.** Because a broken fixture and a real
+   failure render the same container, matching on `/cards\/collection failed: 500/` is what
+   separates them. Leave `statusText` unasserted — `route.fulfill()` does not reliably populate
+   it.
+8. **Induce a transport failure with `fulfill({status: 500})`, never `route.abort()`.** The 500
+   trips the explicit `!response.ok` guard in `scryfall.ts:96-98` and yields a deterministic
+   message naming the endpoint and status; an abort rejects the raw `fetch` with a
+   browser-dependent `"Failed to fetch"` you cannot assert on.
+9. **The session cache has no test seam — plan around it.** `resolve.ts:15` is a module-level
+   `Map` and `clearSessionCache()` is not exported from the barrel, so the only reset is a fresh
+   page load. Two consequences, both of which have already bitten: fail the **first**
+   `/cards/collection` POST (nothing is cached yet, so Retry re-requests the full set), and give
+   any two decks in one spec **disjoint card names** — including a single run's own base and
+   target halves, or the target resolution is served from cache, the second POST never fires,
+   and the test loses the request it was anchored on.
+10. **Drive concurrency through the Calculate CTA, never by typing.** The 700 ms debounce's
+    effect cleanup cancels the pending timer on every keystroke, so typing deck A then deck B
+    starts **one** run. `compare()` in `fixtures/app.ts` goes through the CTA, which bypasses the
+    debounce. (Its accessible name needs a regex — a diamond glyph, an arrow and two `&nbsp;`
+    sit inside the button text and are not `aria-hidden`, so an exact-name match fails.) See
+    `lessons.md`.
+11. **Park selectively, and let the superseded run finish.** `mockScryfallWithParkedCollection`
+    holds _one_ matching request and resolves everything else, because `plan.ts:95-96` awaits
+    base **then** target: releasing run A's base immediately issues a second POST for A's target,
+    and the stale-response guard is only reached once `generateUpgradePlan` **returns**. A
+    handler that parked everything would leave that promise unsettled, and the spec would pass
+    having never exercised the guard — risk #8's own anti-pattern in a different costume. Await
+    `parked.arrived` before starting the second run (otherwise the overlap is asserted, not
+    established), and `waitForResponse` on the _target_ request before asserting the drop.
+12. **`retries: 0` on any ordering-sensitive spec.** The config retries once in CI to absorb
+    ordinary infrastructure flake; `comparer-stale-response.spec.ts` overrides it with
+    `test.describe.configure({ retries: 0 })`. A genuine out-of-order bug must never retry its
+    way to green when a single test is the only thing covering it.
+13. **A negative assertion needs an observation window, not a sample.** "Plan A never rendered"
+    cannot be shown by a `toBeHidden()` after the response arrives: that samples a single instant
+    and, verified with the guard disabled, stayed **green while plan A rendered a frame later**.
+    Start a `waitFor({ state: "visible" })` race that resolves to a boolean _before_ releasing
+    the superseded run, and assert the resolved value. Any "X never happens" claim in a browser
+    needs the same shape.
+14. **Pick the sharpest observable, and check it is reachable by role.** For risk #8 that is the
+    collapsed input strip, which counts the **live textarea state** and never the plan — so a
+    guard failure renders the exact contradiction the risk names: the strip reports deck B's
+    counts above columns showing deck A's cards. Conversely, merged view is **not** assertable:
+    `MergedRow.tsx` signals add-vs-remove with an `aria-hidden` glyph plus a CSS colour, so the
+    two kinds are identical to accessibility queries (`findings.md` F-3). Assert the columns view.
+15. **A phase like this is coverage, not repair.** Both specs pass green on the code as it
+    stands. Three live defects surfaced along the way and were filed to
+    `context/changes/testing-comparer-failure-surfacing/findings.md` rather than fixed — a spec
+    for any of them would be red today, which would make it a different phase. Write the finding
+    down; do not smuggle the fix in.
 
 ## 7. What We Deliberately Don't Test
 
@@ -801,8 +934,9 @@ changes.
   response rows), §3 (Phase 4 opened), §4 (e2e row plus all four grounding bullets) and
   §5 (the e2e gate row) updated 2026-08-25 by the refresh below; §1 unchanged since
   2026-06-29 and re-read as still current
-- Cookbook (§6) last reviewed: 2026-08-25 — §6.4 filled by rollout Phase 3; §6.5 filled
-  2026-08-25 as a sequencing checklist over §6.2–§6.4, so no sub-section is a stub
+- Cookbook (§6) last reviewed: 2026-08-31 — §6.7 filled by rollout Phase 4 (browser E2E);
+  §6.4 filled by rollout Phase 3; §6.5 filled 2026-08-25 as a sequencing checklist over
+  §6.2–§6.4, so no sub-section is a stub
 - Rollout: §3 Phases 1–3 all `complete` as of 2026-08-20 — the trigger §7 named for
   re-evaluating the E2E and component-render exclusions. That re-evaluation was taken
   deliberately on 2026-08-25 (below): browser E2E in for the comparer only, component
@@ -834,7 +968,28 @@ changes.
   touch counts, which counts one commit once per file it changed. Always state the window
   next to the number, and state both the 30d and 90d windows when they tell different
   stories about the same directory.
-- Stack versions last verified: 2026-08-25
+- **Rollout Phase 4 landed 2026-08-31** through
+  `context/changes/testing-comparer-failure-surfacing/`. What it changed: §2's
+  not-promoted set gained the silent quantity degradation (`resolve.ts:99-102`), recorded
+  rather than promoted because the map is already over budget and the failure is not
+  browser-only; §3's Phase 4 row moved to `complete` and names the change folder; §4's
+  `e2e` row stopped reading "planned" and now carries Playwright `^1.62.1` with the real
+  harness shape; §5's `e2e on critical flows` row moved from `planned` to required, but
+  **only after** the required-check list on `main` was re-read (see that row); §6.7 was
+  filled from what the specs actually taught, which in two places contradicted the plan
+  that predicted them (the hydration barrier and the one-shot negative assertion).
+  `context/foundation/lessons.md` was also created — it had never existed, so every prior
+  run of `/10x-implement`, `/10x-e2e` and the review skills silently skipped it.
+- **A correction Phase 4 owes two earlier artifacts.** `tests/integration/global-setup.ts:47-48`
+  and §6.2 rule 4 both attribute `.dev.vars`' precedence over the spawn env to
+  `getPlatformProxy`. The precedence claim is right and the harness that depends on it is
+  correct; the mechanism is not — the Cloudflare adapter parses the file and calls
+  `Object.assign(process.env, parsed)` (`@astrojs/cloudflare/dist/index.js:292-303`). Left
+  in place rather than rewritten, because it is recorded in `lessons.md` and the fix is a
+  comment edit no one should make blind; it matters because it says where to look when the
+  override stops working.
+- Stack versions last verified: 2026-08-31 — Playwright `^1.62.1` added and verified by
+  Phase 4; every other row re-read as still current and unchanged since 2026-08-25
 - AI-native tool references last verified: 2026-08-25
 
 Refresh (`/10x-test-plan --refresh`) when:
