@@ -66,13 +66,10 @@ export default function DeckComparer() {
   const inputsCollapsed = view.status === "ready" && !editing;
 
   const runPlan = useCallback(async (base: string, target: string) => {
-    const token = ++requestToken.current;
+    requestToken.current++;
     setView({ status: "loading" });
 
     const outcome = await generateUpgradePlan(base, target);
-    if (token !== requestToken.current) {
-      return; // a newer run started while this one was in flight — drop it.
-    }
 
     if (outcome.status === "ok") {
       setView({ status: "ready", plan: outcome.plan, unresolved: outcome.unresolved });
