@@ -783,6 +783,64 @@ exactly what happened — the 2026-08-25 refresh took the decision and opened Ph
 sentence is kept rather than deleted because it records the condition correctly; read it
 as of 2026-08-20, not as a standing claim about the rollout.
 
+**Phase 4, the closing gate check (2026-08-31).** The deliberate-break PR (#15, closed
+unmerged) broke the comparer's two seams **separately** on one branch, one commit per run,
+forked from a `main` that already carried the suite and the required check.
+
+| Run                                                                     | `ci`       | `integration` | `e2e`          | Attribution                                                                                              |
+| ----------------------------------------------------------------------- | ---------- | ------------- | -------------- | -------------------------------------------------------------------------------------------------------- |
+| 1 (`cdb9c66`) — token comparison deleted from `runPlan`                 | pass 1m13s | pass 3m33s    | **fail 1m6s**  | `comparer-stale-response.spec.ts`, 1 test of 4 — `expect(planAEverRendered).toBe(false)` received `true` |
+| 2 (`22fefbf`) — guard restored, `view.status === "error"` block removed | pass 1m15s | pass 4m13s    | **fail 1m28s** | `comparer-failure-surfacing.spec.ts`, 1 test of its 2 — `getByRole('main').getByRole('alert')` not found |
+
+Five things worth carrying:
+
+- **Delete the guard; do not invert it.** The plan offered "invert or delete" the token
+  comparison at `DeckComparer.tsx:73`. Inverting it (`token === requestToken.current` →
+  `return`) drops the **newest** run as well, so no plan ever renders and all four tests go
+  red — a break that reddens the whole suite says nothing about which spec owns which seam.
+  Deleting the comparison leaves the happy path intact and reddens exactly one spec.
+  Generalization: **a break staged to test attribution has to be the narrowest edit that
+  reproduces the risk**, not the edit that most visibly damages the code. The same edit also
+  had to stay lint-clean — dropping the comparison orphaned the `token` binding, so the
+  increment survives as a bare `requestToken.current++`. That is Phase 2's
+  keep-gates-1..N-1-green rule applying for the third time, and the second run hit it again:
+  removing the banner orphaned `RotateCw` and `Button`, both of which had no other reader.
+- **Two runs was the honest shape here, and Phase 3's note is not contradicted.** Phase 3
+  recorded that its break could not be narrowed to one layer and warned against manufacturing
+  a tidier table. Here the split is real — the request token and the error-banner render share
+  no function, so each spec goes red alone with the other green. The rule the two notes agree
+  on is **let the code decide how many runs there are**; neither "always run twice" nor "never".
+- **`retries: 0` is real, and the job duration is the only place it shows.** Run 1's failure
+  did not retry (`comparer-stale-response.spec.ts` sets
+  `test.describe.configure({ retries: 0 })`); run 2's did, because `playwright.config.ts:28`
+  sets `retries: process.env.CI ? 1 : 0` and the failure-surfacing spec does not override it.
+  The retry printed the identical failure twice and accounts for most of the 22 s difference
+  between the two jobs. Nothing in the check summary names the retried spec — the only evidence
+  the override took effect is a `(retry #1)` line in the run's test list. Read it before
+  trusting a green ordering spec.
+- **The `e2e` log carries a pre-existing SSR error that is never the failure.** Every run of
+  the job — including the all-green one on the change PR (#13, four occurrences) — logs
+  `[WebServer] Invalid hook call` followed by
+  `TypeError: Cannot read properties of null (reading 'useState')` naming
+  `DeckComparer.tsx`, during Vite's cold-start dependency re-optimization and its
+  `[vite] program reload`. It is SSR-only noise on the first request; all four tests pass
+  through it. Recorded because it sits immediately above the test results and points at
+  exactly the file a deliberate break edits, so a future reader debugging a red `e2e` will
+  otherwise chase it first.
+- **`BLOCKED` next to `MERGEABLE`, third time.** Both runs returned
+  `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE` — refused by the required checks
+  with `enforce_admins: true`, not by a conflict. Same reading rule as Phase 2's and Phase 3's
+  fourth note. §5's `e2e on critical flows` row is now backed by an observation and not by the
+  branch-protection PATCH alone.
+
+Attribution was diagnosable from the CI log with no local reproduction: run 1 printed the
+failing expectation with its code frame (`Expected: false` / `Received: true` at
+`comparer-stale-response.spec.ts:100`), run 2 printed the locator and
+`element(s) not found`. Both breaks were nonetheless run locally first — not as a substitute
+for the PR (§6.6, Phase 1: only the PR proves the red blocks) but to avoid spending a CI
+round discovering that a break was mis-shaped, which is exactly what the invert-vs-delete
+choice above would have cost.
+
 ### 6.7 Adding a browser E2E test
 
 - **Test type**: Playwright against a real browser. Reach for it **only** when the claim is
@@ -994,6 +1052,8 @@ changes.
   that predicted them (the hydration barrier and the one-shot negative assertion).
   `context/foundation/lessons.md` was also created — it had never existed, so every prior
   run of `/10x-implement`, `/10x-e2e` and the review skills silently skipped it.
+  The closing gate check ran the same day — break PR #15, closed unmerged, two runs
+  reddening one spec each while `ci` and `integration` stayed green (§6.6).
 - **A correction Phase 4 owes two earlier artifacts.** `tests/integration/global-setup.ts:47-48`
   and §6.2 rule 4 both attribute `.dev.vars`' precedence over the spawn env to
   `getPlatformProxy`. The precedence claim is right and the harness that depends on it is
