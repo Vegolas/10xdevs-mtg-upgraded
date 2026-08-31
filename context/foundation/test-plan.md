@@ -6,12 +6,14 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-25 (refresh applied. §3 Phases 1–3 remain `complete`
-> and Phase 4 is open at `not started` — the comparer's failure-surfacing,
-> risks #7 and #8. Browser E2E is in scope for that phase only; component
-> render and pixel tests stay out (§7). §6.5 is filled, so no cookbook
-> sub-section is a stub, and §8 records the three grounding claims this
-> refresh corrected rather than implemented.)
+> Last updated: 2026-08-31 (§3 Phase 4 landed, so all four rollout phases are
+> `complete` and §5's `e2e on critical flows` row is required on `main`. Browser
+> E2E stays scoped to that phase alone — the comparer's failure-surfacing, risks
+> #7 and #8; component render and pixel tests stay out (§7). §6.7 is filled, so
+> no cookbook sub-section is a stub. Separately, and outside the rollout, two
+> local quality layers were wired the same day: a per-edit `PostToolUse` hook
+> running `vitest related` over the risk-#4–#6 logic, and a pre-commit
+> typecheck (§5, §8) — neither is a CI or branch gate.)
 
 ## 1. Strategy
 
