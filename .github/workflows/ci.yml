@@ -61,3 +61,41 @@ jobs:
       - name: Stop local Supabase
         if: always()
         run: npx supabase stop
+
+  # Browser-E2E suite: the comparer's failure surfacing (test-plan §3 Phase 4,
+  # risks #7 and #8). Third sibling job so a red spec is attributable on sight.
+  #
+  # NO Supabase, deliberately. The comparer mounts at `/`, middleware protects only
+  # `/dashboard` and `/paths`, and every spec intercepts Scryfall — so copying the
+  # `integration` job's stack would add ~90s and a service-role key to a job that
+  # touches neither. The page renders its config-error banner here (no keys) and not
+  # on a contributor's machine (`.dev.vars`); specs scope to the `<main>` landmark,
+  # which is what keeps both DOMs the same.
+  #
+  # The job id is `e2e` with no `name:`, matching `ci` and `integration`, so the
+  # reported check context is literally `e2e` — the string that goes in main's
+  # required-check list.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx astro sync
+      # Chromium only — these are failure-surfacing tests, not cross-browser
+      # rendering tests. `--with-deps` installs the OS libraries, which live outside
+      # ~/.cache/ms-playwright and are why caching the browser is not worth it here.
+      - run: npx playwright install --with-deps chromium
+      # `playwright.config.ts` owns the dev server (webServer), the port, and
+      # testDir — nothing to wire here.
+      - run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

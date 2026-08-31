@@ -214,7 +214,10 @@ export default function DeckComparer() {
         ) : null}
 
         {bothFilled && view.status === "error" ? (
-          <div className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-4 text-sm text-[#b5847e]">
+          // `role="alert"` announces the retryable failure to assistive technology, and
+          // gives the container an addressable role — UnresolvedNotice renders a div with
+          // a byte-identical class string, so without this the two are indistinguishable.
+          <div role="alert" className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-4 text-sm text-[#b5847e]">
             <p className="text-destructive font-semibold">Couldn&apos;t reach the card database.</p>
             <p className="mt-1 text-[#b5847e]">{view.message}</p>
             <Button
