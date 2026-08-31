@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RotateCw } from "lucide-react";
 import { generateUpgradePlan, applySuggestion, acceptAllSuggestions } from "@/lib/deck";
 import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
-import { Button } from "@/components/ui/button";
 import { NotchButton } from "@/components/ui/NotchButton";
 import { CardGroupColumn } from "./CardGroupColumn";
 import { CostSummary } from "./CostSummary";
@@ -66,10 +64,13 @@ export default function DeckComparer() {
   const inputsCollapsed = view.status === "ready" && !editing;
 
   const runPlan = useCallback(async (base: string, target: string) => {
-    requestToken.current++;
+    const token = ++requestToken.current;
     setView({ status: "loading" });
 
     const outcome = await generateUpgradePlan(base, target);
+    if (token !== requestToken.current) {
+      return; // a newer run started while this one was in flight — drop it.
+    }
 
     if (outcome.status === "ok") {
       setView({ status: "ready", plan: outcome.plan, unresolved: outcome.unresolved });
@@ -208,28 +209,6 @@ export default function DeckComparer() {
             <span className="border-muted-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
             Building plan…
           </p>
-        ) : null}
-
-        {bothFilled && view.status === "error" ? (
-          // `role="alert"` announces the retryable failure to assistive technology, and
-          // gives the container an addressable role — UnresolvedNotice renders a div with
-          // a byte-identical class string, so without this the two are indistinguishable.
-          <div role="alert" className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-4 text-sm text-[#b5847e]">
-            <p className="text-destructive font-semibold">Couldn&apos;t reach the card database.</p>
-            <p className="mt-1 text-[#b5847e]">{view.message}</p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-3 border-[#6e3a33] bg-transparent text-[#e0867d] hover:bg-[#3a201b] hover:text-[#f0a89f]"
-              onClick={() => {
-                void runPlan(baseText, targetText);
-              }}
-            >
-              <RotateCw className="size-4" />
-              Retry
-            </Button>
-          </div>
         ) : null}
 
         {bothFilled && view.status === "ready" ? (
