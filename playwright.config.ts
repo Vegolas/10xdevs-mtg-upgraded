@@ -20,7 +20,7 @@ const PORT = 4323;
 
 export default defineConfig({
   // Pinning testDir is what stops Playwright's default testMatch from sweeping the
-  // 100+ vitest files under src/ and tests/integration/.
+  // 33 vitest files under src/ and tests/integration/ (23 unit + 10 integration).
   testDir: "./tests/e2e",
 
   // Absorb ordinary infrastructure flake in CI. `comparer-stale-response.spec.ts`

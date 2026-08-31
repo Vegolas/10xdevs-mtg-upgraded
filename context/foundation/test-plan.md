@@ -780,7 +780,7 @@ as of 2026-08-20, not as a standing claim about the rollout.
   integration or contract test already covers.
 - **Location**: `tests/e2e/<risk>.spec.ts`, fixtures in `tests/e2e/fixtures/`. `testDir` is
   pinned to `./tests/e2e` in `playwright.config.ts` — that pin is what stops Playwright's
-  default `testMatch` from sweeping the 100+ vitest files under `src/` and
+  default `testMatch` from sweeping the 33 vitest files under `src/` and
   `tests/integration/`.
 - **Naming**: `comparer-<risk>.spec.ts`. No `.int.` infix here — unlike every other suite in
   this project these do **not** ride an existing job; §5's `e2e` row is a separate CI job and
