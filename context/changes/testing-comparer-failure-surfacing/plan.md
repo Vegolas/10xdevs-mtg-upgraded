@@ -823,16 +823,16 @@ second PATCH removing `e2e` from `contexts`; there is no PR to revert.
 
 #### Automated
 
-- [x] 4.1 The workflow parses and the job runs on the PR: `gh pr checks` shows an `e2e` context
-- [x] 4.2 All three jobs green on the PR: `ci`, `integration`, `e2e`
-- [x] 4.3 After merge and PATCH, the required-check list contains `e2e`
+- [x] 4.1 The workflow parses and the job runs on the PR: `gh pr checks` shows an `e2e` context — 7ef1e73
+- [x] 4.2 All three jobs green on the PR: `ci`, `integration`, `e2e` — 7ef1e73
+- [x] 4.3 After merge and PATCH, the required-check list contains `e2e` — 7ef1e73
 
 #### Manual
 
-- [x] 4.4 The PATCH ran after the merge, confirmed by the order of events
-- [x] 4.5 §5's e2e row was flipped only after re-reading the contexts list
-- [x] 4.6 `findings.md` entries each name a file:line that still resolves
-- [x] 4.7 §6.7 records what the specs taught, not what this plan predicted
+- [x] 4.4 The PATCH ran after the merge, confirmed by the order of events — 7ef1e73
+- [x] 4.5 §5's e2e row was flipped only after re-reading the contexts list — 7ef1e73
+- [x] 4.6 `findings.md` entries each name a file:line that still resolves — 7ef1e73
+- [x] 4.7 §6.7 records what the specs taught, not what this plan predicted — 7ef1e73
 
 ### Phase 5: Deliberate-break PR — two runs
 
