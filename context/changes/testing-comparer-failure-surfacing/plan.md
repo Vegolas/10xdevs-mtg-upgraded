@@ -838,13 +838,13 @@ second PATCH removing `e2e` from `contexts`; there is no PR to revert.
 
 #### Automated
 
-- [x] 5.1 Run 1: `e2e` red, attributed to `comparer-stale-response.spec.ts` only
-- [x] 5.2 Run 2: `e2e` red, attributed to `comparer-failure-surfacing.spec.ts` only
-- [x] 5.3 Both runs: `ci` and `integration` green
-- [x] 5.4 Both runs: `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE`
+- [x] 5.1 Run 1: `e2e` red, attributed to `comparer-stale-response.spec.ts` only — f61bb9f
+- [x] 5.2 Run 2: `e2e` red, attributed to `comparer-failure-surfacing.spec.ts` only — f61bb9f
+- [x] 5.3 Both runs: `ci` and `integration` green — f61bb9f
+- [x] 5.4 Both runs: `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE` — f61bb9f
 
 #### Manual
 
-- [x] 5.5 Each failure is diagnosable from the CI log alone, without local reproduction
-- [x] 5.6 The break PR is closed unmerged and `main` is clean
-- [x] 5.7 §6.6's note records what actually happened, including anything that contradicted this plan
+- [x] 5.5 Each failure is diagnosable from the CI log alone, without local reproduction — f61bb9f
+- [x] 5.6 The break PR is closed unmerged and `main` is clean — f61bb9f
+- [x] 5.7 §6.6's note records what actually happened, including anything that contradicted this plan — f61bb9f
