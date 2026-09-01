@@ -6,12 +6,14 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-25 (refresh applied. §3 Phases 1–3 remain `complete`
-> and Phase 4 is open at `not started` — the comparer's failure-surfacing,
-> risks #7 and #8. Browser E2E is in scope for that phase only; component
-> render and pixel tests stay out (§7). §6.5 is filled, so no cookbook
-> sub-section is a stub, and §8 records the three grounding claims this
-> refresh corrected rather than implemented.)
+> Last updated: 2026-08-31 (§3 Phase 4 landed, so all four rollout phases are
+> `complete` and §5's `e2e on critical flows` row is required on `main`. Browser
+> E2E stays scoped to that phase alone — the comparer's failure-surfacing, risks
+> #7 and #8; component render and pixel tests stay out (§7). §6.7 is filled, so
+> no cookbook sub-section is a stub. Separately, and outside the rollout, two
+> local quality layers were wired the same day: a per-edit `PostToolUse` hook
+> running `vitest related` over the risk-#4–#6 logic, and a pre-commit
+> typecheck (§5, §8) — neither is a CI or branch gate.)
 
 ## 1. Strategy
 
@@ -181,17 +183,18 @@ The full set of gates that must pass before a change reaches production.
 "Required for §3 Phase N" means the gate is enforced once that rollout phase
 lands; before that, the gate is `planned`.
 
-| Gate                          | Where      | Required?                                                                                                                                                                     | Catches                                                                                                                                                      |
-| ----------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| lint                          | local + CI | required (already wired)                                                                                                                                                      | `eslint .` with `strictTypeChecked` — type-aware rules, but **not** assignability errors; see the typecheck row                                              |
-| typecheck                     | local + CI | **required (wired §3 Phase 2)** — `npm run typecheck` (`astro check`) in the `ci` job between lint and unit                                                                   | type drift, and the declared `/api/paths/*` wire contract (`src/lib/api/contract.ts` plus the explicitly parameterized `jsonResponse<T>` / `requestJson<T>`) |
-| build                         | local + CI | required (already wired)                                                                                                                                                      | broken Astro build (`astro build` does **not** typecheck)                                                                                                    |
-| unit (logic)                  | local + CI | **required (wired §3 Phase 1)** — `npm test` in the `ci` job between typecheck and build                                                                                      | logic regressions                                                                                                                                            |
-| golden (engine output)        | local + CI | **required (wired §3 Phase 2)** — the `*.golden.test.ts` files ride `npm test` in the `ci` job                                                                                | silent drift in the diff/cost engine's rendered output, or in the preserved full-paste add flow                                                              |
-| integration (API + ownership) | local + CI | **required (wired §3 Phase 1)** — `npm run test:integration` in the separate `integration` job, against an ephemeral local stack                                              | cross-owner leak, signed-out gate failures                                                                                                                   |
-| contract (`/api/paths/*`)     | local + CI | **required (wired §3 Phase 2)** — the `contract-*.int.test.ts` files ride `npm run test:integration` in the `integration` job                                                 | stale-caller / changed-shape breaks                                                                                                                          |
-| derive-to-persist integration | local + CI | **required (wired §3 Phase 3)** — `derive-persist.int.test.ts` rides `npm run test:integration` in the `integration` job                                                      | corrupted or silently-wrong snapshots — a persisted checkpoint that is not `prior ± delta`, or a dropped unapplicable/unresolved line                        |
-| e2e on critical flows         | CI on PR   | **required (wired §3 Phase 4)** — `npm run test:e2e` in the separate `e2e` job; `e2e` confirmed present in `main`'s required-check list 2026-08-31, after the workflow merged | a comparer failure that still renders as a complete plan (risk #7), and a superseded comparison clobbering a newer one (risk #8)                             |
+| Gate                          | Where      | Required?                                                                                                                                                                                                                                               | Catches                                                                                                                                                      |
+| ----------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| lint                          | local + CI | required (already wired)                                                                                                                                                                                                                                | `eslint .` with `strictTypeChecked` — type-aware rules, but **not** assignability errors; see the typecheck row                                              |
+| typecheck                     | local + CI | **required (wired §3 Phase 2)** — `npm run typecheck` (`astro check`) in the `ci` job between lint and unit                                                                                                                                             | type drift, and the declared `/api/paths/*` wire contract (`src/lib/api/contract.ts` plus the explicitly parameterized `jsonResponse<T>` / `requestJson<T>`) |
+| build                         | local + CI | required (already wired)                                                                                                                                                                                                                                | broken Astro build (`astro build` does **not** typecheck)                                                                                                    |
+| unit (logic)                  | local + CI | **required (wired §3 Phase 1)** — `npm test` in the `ci` job between typecheck and build                                                                                                                                                                | logic regressions                                                                                                                                            |
+| golden (engine output)        | local + CI | **required (wired §3 Phase 2)** — the `*.golden.test.ts` files ride `npm test` in the `ci` job                                                                                                                                                          | silent drift in the diff/cost engine's rendered output, or in the preserved full-paste add flow                                                              |
+| integration (API + ownership) | local + CI | **required (wired §3 Phase 1)** — `npm run test:integration` in the separate `integration` job, against an ephemeral local stack                                                                                                                        | cross-owner leak, signed-out gate failures                                                                                                                   |
+| contract (`/api/paths/*`)     | local + CI | **required (wired §3 Phase 2)** — the `contract-*.int.test.ts` files ride `npm run test:integration` in the `integration` job                                                                                                                           | stale-caller / changed-shape breaks                                                                                                                          |
+| derive-to-persist integration | local + CI | **required (wired §3 Phase 3)** — `derive-persist.int.test.ts` rides `npm run test:integration` in the `integration` job                                                                                                                                | corrupted or silently-wrong snapshots — a persisted checkpoint that is not `prior ± delta`, or a dropped unapplicable/unresolved line                        |
+| e2e on critical flows         | CI on PR   | **required (wired §3 Phase 4)** — `npm run test:e2e` in the separate `e2e` job; `e2e` confirmed present in `main`'s required-check list 2026-08-31, after the workflow merged                                                                           | a comparer failure that still renders as a complete plan (risk #7), and a superseded comparison clobbering a newer one (risk #8)                             |
+| related unit tests (per-edit) | local only | **wired 2026-08-31** — `.claude/settings.json` `PostToolUse` on `Write` and `Edit` runs `.claude/hooks/vitest-related.mjs`, scoped to `src/lib/{path,card-data,deck}` + `src/components/deck`; **not** a CI gate and **not** on the required-check list | a logic or golden regression in the churny engine inside the agent's own loop, before the change reaches lint, commit or CI                                  |
 
 The load-bearing gate change **landed in Phase 1**: `.github/workflows/ci.yml`
 now runs `npm test` between lint and build, plus a separate `integration` job
@@ -237,6 +240,34 @@ not available. The order was load-bearing and is worth copying: the workflow edi
 PR would block forever on a context that never reports. No PR carries the PATCH and nothing in
 CI verifies it, which is exactly why the row above was flipped only after re-reading the list —
 not in the same edit as the workflow change.
+
+**The local stack gained two layers on 2026-08-31, and measurement chose them.**
+Warm, on the maintainer's Windows machine: `vitest related <file> --run` **1.9s**
+through the local bin (3.2s through `npx`), the full 223-test `npm test` **7.5s**,
+`eslint` on **one** file **11.9s** warm and 38s cold, `astro check` **25.7s**. That
+inverts the usual advice that lint is the cheap per-edit check and tests are the
+expensive one: `eslint.config.js` runs `strictTypeChecked`, so every invocation
+builds a TS program, and one file costs more than the entire unit suite. So the
+per-edit layer runs the scoped tests **only**; lint stays where it already was
+(`lint-staged`), and `npm run typecheck` was added to `.husky/pre-commit` — which is
+what makes the typecheck row's "local + CI" true locally for the first time, since
+before this the only typechecker anywhere was the CI step Phase 2 added. Both layers
+are local: `main`'s required-check list is unchanged at `["ci","integration","e2e"]`,
+and per the rule below neither row above should be read as a new branch requirement.
+
+**The per-edit hook was proved by deliberate break the same day**, the same way the
+CI gates were. `total += after` → `total += after + 1` in `src/lib/path/derive.ts`:
+the hook exited **2** with 193 lines of Vitest report on **stderr** — `derive.test.ts`
+5 red plus `add-flow.golden.test.ts` 2 red, the golden catching the drift it exists
+for (risk #6) — and the file was restored immediately. Three details are load-bearing
+and are recorded because each one silently breaks the obvious config: a `PostToolUse`
+hook's **stdout reaches the debug log only**, so the script re-routes the runner's
+report to stderr or the agent is blocked with no diagnostics; `jq` is **not installed**
+on this machine, so the customary `jq -r .tool_input.file_path` would hand the runner
+an empty path (the script parses stdin in Node instead, which also survives PowerShell);
+and a hook `timeout` is in **seconds**, not milliseconds. `AI_AGENT=1` is a no-op at
+Vitest 4.1.9 — the string appears nowhere in its dist tree — so the script caps its own
+stderr at 16k characters rather than relying on a compact reporter that is not there.
 
 **"Required" means required on the branch, not just in the workflow file.**
 `main` carries classic branch protection with `ci` + `integration` as required
@@ -1062,6 +1093,16 @@ changes.
   in place rather than rewritten, because it is recorded in `lessons.md` and the fix is a
   comment edit no one should make blind; it matters because it says where to look when the
   override stops working.
+- **Local quality layers wired 2026-08-31** — a tooling change, so it opened no
+  rollout phase and no change folder: a per-edit `PostToolUse` hook
+  (`.claude/settings.json` + `.claude/hooks/vitest-related.mjs`) running
+  `vitest related` over `src/lib/{path,card-data,deck}` and `src/components/deck`,
+  and `npm run typecheck` appended to `.husky/pre-commit`. §5 gained the
+  `related unit tests (per-edit)` row plus the two paragraphs recording the timings
+  that chose those layers and the deliberate break that proved the hook. Nothing in
+  CI or branch protection changed — stated because §5's rule is that a gate row is
+  aspirational until its job name is in the required-check list, and these two rows
+  deliberately never enter it.
 - Stack versions last verified: 2026-08-31 — Playwright `^1.62.1` added and verified by
   Phase 4; every other row re-read as still current and unchanged since 2026-08-25
 - AI-native tool references last verified: 2026-08-25
