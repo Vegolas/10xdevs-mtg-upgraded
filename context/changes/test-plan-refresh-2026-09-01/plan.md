@@ -699,32 +699,32 @@ None. `context/foundation/test-plan.md` has no consumers that parse it beyond
 
 #### Automated
 
-- [x] 3.1 Prettier passes on test-plan.md
-- [x] 3.2 `grep -c 'no runner installed'` returns 0
-- [x] 3.3 §7 still has 5 bullets
-- [x] 3.4 `lessons.md` referenced from §1 and §6's preamble
-- [x] 3.5 Section order §1 → §8 unchanged; no §6 sub-section number moved
-- [x] 3.6 Every internal `§N.N` reference resolves to an existing heading
+- [x] 3.1 Prettier passes on test-plan.md — 4ff20bd
+- [x] 3.2 `grep -c 'no runner installed'` returns 0 — 4ff20bd
+- [x] 3.3 §7 still has 5 bullets — 4ff20bd
+- [x] 3.4 `lessons.md` referenced from §1 and §6's preamble — 4ff20bd
+- [x] 3.5 Section order §1 → §8 unchanged; no §6 sub-section number moved — 4ff20bd
+- [x] 3.6 Every internal `§N.N` reference resolves to an existing heading — 4ff20bd
 
 #### Manual
 
-- [x] 3.7 The §7 boundary statement is applicable to a new proposal without asking
-- [x] 3.8 The path-builder bullet neither over-claims nor under-claims
-- [x] 3.9 §8 alone reconstructs this refresh, including the two non-actions
-- [x] 3.10 The header parenthetical names what a returning reader most needs
+- [x] 3.7 The §7 boundary statement is applicable to a new proposal without asking — 4ff20bd
+- [x] 3.8 The path-builder bullet neither over-claims nor under-claims — 4ff20bd
+- [x] 3.9 §8 alone reconstructs this refresh, including the two non-actions — 4ff20bd
+- [x] 3.10 The header parenthetical names what a returning reader most needs — 4ff20bd
 
 ### Phase 4: the `.dev.vars` mechanism correction
 
 #### Automated
 
-- [ ] 4.1 Prettier passes on test-plan.md
-- [ ] 4.2 `npx eslint tests/integration/global-setup.ts` passes
-- [ ] 4.3 `npm run typecheck` passes
-- [ ] 4.4 `getPlatformProxy` appears in neither file
-- [ ] 4.5 `npm run test:integration` passes with local Supabase up
+- [x] 4.1 Prettier passes on test-plan.md
+- [x] 4.2 `npx eslint tests/integration/global-setup.ts` passes
+- [x] 4.3 `npm run typecheck` passes
+- [x] 4.4 `getPlatformProxy` appears in neither file
+- [x] 4.5 `npm run test:integration` passes with local Supabase up
 
 #### Manual
 
-- [ ] 4.6 The corrected sentence reads as an explanation, not a hedge
-- [ ] 4.7 Both places agree with each other and with `lessons.md`
-- [ ] 4.8 Override behavior unchanged — only its stated cause
+- [x] 4.6 The corrected sentence reads as an explanation, not a hedge
+- [x] 4.7 Both places agree with each other and with `lessons.md`
+- [x] 4.8 Override behavior unchanged — only its stated cause

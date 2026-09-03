@@ -418,10 +418,13 @@ The recipe, and why each piece is load-bearing:
    process (admin seeding, teardown, DB read-back) and is never handed to the
    server.
 4. **`.dev.vars` is overridden, not just the spawn env.** The Cloudflare
-   adapter resolves `astro:env/server` from `.dev.vars` via `getPlatformProxy`,
-   which _wins_ over injected env. Setup snapshots the contributor's real file
-   to a `.intbak` sidecar and restores it on teardown; a leftover sidecar from
-   a killed run is recovered before the next snapshot.
+   adapter parses `.dev.vars` and assigns the parsed values over `process.env`,
+   which is _why_ the file _wins_ over the env injected at spawn — overriding
+   the file is the only override that holds. Setup snapshots the contributor's
+   real file to a `.intbak` sidecar and restores it on teardown; a leftover
+   sidecar from a killed run is recovered before the next snapshot. When the
+   override stops working, that assignment is where to look; `lessons.md`
+   carries the verified adapter reference.
 5. **Seed owners via the admin API, then sign in through the app's own
    `/api/auth/signin`** (`helpers/owners.ts`) with `redirect: "manual"` so the
    302 doesn't swallow `Set-Cookie`. Reassemble every `sb-*` cookie (including
@@ -688,9 +691,11 @@ here capturing anything surprising the rollout phase taught.)
 before Phase 2:
 
 - Injecting `SUPABASE_*` into the spawned `astro dev` env is **not enough** —
-  the Cloudflare adapter resolves `astro:env/server` from `.dev.vars` via
-  `getPlatformProxy`, which silently wins. The harness has to override that
-  file (and restore it) or the suite quietly runs against the cloud project.
+  the Cloudflare adapter parses `.dev.vars` and assigns the parsed values over
+  `process.env`, which silently wins. The harness has to override that file
+  (and restore it) or the suite quietly runs against the cloud project. (This
+  note originally named the wrong mechanism for that precedence; corrected
+  2026-09-02 — see §6.2 rule 4 and §8.)
 - Cross-owner denial surfaces as **404 / filtered 200, never 403**, so a
   status-only assertion is nearly worthless on mutating routes. The
   service-role read-back is what actually proves nothing leaked.
@@ -1217,14 +1222,18 @@ against.
   run of `/10x-implement`, `/10x-e2e` and the review skills silently skipped it.
   The closing gate check ran the same day — break PR #15, closed unmerged, two runs
   reddening one spec each while `ci` and `integration` stayed green (§6.6).
-- **A correction Phase 4 owes two earlier artifacts.** `tests/integration/global-setup.ts:47-48`
-  and §6.2 rule 4 both attribute `.dev.vars`' precedence over the spawn env to
-  `getPlatformProxy`. The precedence claim is right and the harness that depends on it is
-  correct; the mechanism is not — the Cloudflare adapter parses the file and calls
-  `Object.assign(process.env, parsed)` (`@astrojs/cloudflare/dist/index.js:292-303`). Left
-  in place rather than rewritten, because it is recorded in `lessons.md` and the fix is a
-  comment edit no one should make blind; it matters because it says where to look when the
-  override stops working.
+- **A correction two earlier artifacts owed — landed 2026-09-02.**
+  `tests/integration/global-setup.ts`'s `overrideDevVars` doc comment and §6.2 rule 4
+  both attributed `.dev.vars`' precedence over the spawn env to the adapter's
+  platform-proxy helper, and §6.6's Phase 1 note said the same. The
+  precedence claim was right and the harness that depends on it was correct; the
+  mechanism was not — the Cloudflare adapter parses the file and calls
+  `Object.assign(process.env, parsed)` (`@astrojs/cloudflare/dist/index.js:292-303`).
+  Both now state that, corrected 2026-09-02 through
+  `context/changes/test-plan-refresh-2026-09-01/`; the override's behavior did not
+  change, only its stated cause. It was worth fixing rather than carrying because it
+  says where to look when the override stops working, and `lessons.md` — which
+  recorded the divergence in the first place — now agrees with both.
 - **Local quality layers wired 2026-08-31** — a tooling change, so it opened no
   rollout phase and no change folder: a per-edit `PostToolUse` hook
   (`.claude/settings.json` + `.claude/hooks/vitest-related.mjs`) running
@@ -1266,8 +1275,10 @@ against.
   than from §8 prose alone, and **§6**'s preamble now records its two schema
   deviations (seven sub-sections against three-to-six, and §6.6 preceding §6.7) as
   deliberate with the reason. The refresh's last item corrects §6.2 rule 4 and the
-  integration harness comment to name the Cloudflare adapter's actual mechanism instead
-  of `getPlatformProxy`; the debt entry above records whether it has landed.
+  integration harness comment — and §6.6's Phase 1 note, a third site the plan's own
+  change list had missed — to name the Cloudflare adapter's actual mechanism instead of
+  the platform-proxy helper they had all three named; the debt entry above records it as
+  landed.
 - **Two questions this refresh answered by declining to act.** (a) **§5 is unchanged.**
   Every gate row is accurate, and appending `#9` to the `e2e` row's "Catches" cell would
   claim coverage that does not exist: that row describes what is _wired_, and Phase 5 is

@@ -44,8 +44,8 @@ async function assertPrerequisites(): Promise<void> {
 
 /**
  * Point the dev server at LOCAL Supabase by overriding `.dev.vars`, which the
- * @astrojs/cloudflare adapter resolves `astro:env/server` from (via
- * getPlatformProxy) — it wins over the env we inject when spawning. We snapshot
+ * @astrojs/cloudflare adapter parses and assigns over `process.env` — that
+ * assignment is why it wins over the env we inject when spawning. We snapshot
  * the contributor's real `.dev.vars` to a sidecar and restore it on teardown.
  *
  * Crash-safe: a leftover `.dev.vars.intbak` from a previously killed run means
