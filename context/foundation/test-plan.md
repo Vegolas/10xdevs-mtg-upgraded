@@ -6,14 +6,16 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-08-31 (§3 Phase 4 landed, so all four rollout phases are
-> `complete` and §5's `e2e on critical flows` row is required on `main`. Browser
-> E2E stays scoped to that phase alone — the comparer's failure-surfacing, risks
-> #7 and #8; component render and pixel tests stay out (§7). §6.7 is filled, so
-> no cookbook sub-section is a stub. Separately, and outside the rollout, two
-> local quality layers were wired the same day: a per-edit `PostToolUse` hook
-> running `vitest related` over the risk-#4–#6 logic, and a pre-commit
-> typecheck (§5, §8) — neither is a CI or branch gate.)
+> Last updated: 2026-09-02 (the rollout has one open front again. §2 now reads
+> as two tables — eight risks each naming the `complete` phase that answers
+> them, and an open set of one: **risk #9**, the path builder reporting on deck
+> text the user has already changed or cleared. §3 **Phase 5** is open at
+> `not started` to answer it, riding the `e2e` job Phase 4 already made
+> required. §7's path-builder exclusion is narrowed to that surface's
+> **render** — its client-side ordering is explicitly not excluded — and §7
+> now states outright the boundary that makes a browser phase admissible;
+> component render and pixel tests stay out. Phases 1–4 remain `complete`. See
+> §8 for what else this refresh re-stamped.)
 
 ## 1. Strategy
 
@@ -43,6 +45,17 @@ Tests follow three non-negotiable principles for this project:
 Hot-spot scope used for likelihood weighting: `src/components`, `src/lib`,
 `src/pages`, `src/middleware.ts` — excluding tests, build output, and the
 retired `src/lib/history`.
+
+**Required companion read: `context/foundation/lessons.md`.** It is the
+append-only register of verified, recurring traps this project has already paid
+for — several of them the named anti-patterns §2's response rows point at,
+including the debounce that coalesces two intended runs into one (#8) and the
+stale-response guard that exists as five hand copies rather than one pattern
+(#9). §2 cites its findings as evidence without restating them, so the two
+documents are read together. The skills read it automatically at start
+(`/10x-frame`, `/10x-research`, `/10x-plan`, `/10x-plan-review`,
+`/10x-implement`, `/10x-impl-review`, and `/10x-e2e`); a human reading §1–§7
+has to open it deliberately, and must not skip it.
 
 ## 2. Risk Map
 
@@ -343,6 +356,28 @@ aspirational.
 How to add new tests in this project. Each sub-section is filled in once the
 relevant rollout phase ships; before that, the sub-section reads "TBD — see
 §3 Phase N."
+
+**Read `context/foundation/lessons.md` before writing any test.** It records the
+traps that have already cost this project a debugging session — the debounce
+that coalesces two intended runs into one, the config banner that makes a single
+spec see two different DOMs in CI and locally, the stale-response guard
+duplicated by hand across five flows — and none of the recipes below restate
+them. §1 names it as a required companion read for the same reason.
+
+**Two deliberate deviations from the schema, recorded so the next refresh does
+not re-open a settled trade.** §6 runs to seven sub-sections against the
+schema's three-to-six, and §6.6 (the per-rollout-phase notes log) precedes
+§6.7 rather than trailing the recipes where the schema places it. Both stand.
+§6.6 is cited **by number** from four shipped source files
+(`src/lib/path/verify.ts`, `src/lib/path/verify.test.ts`,
+`tests/integration/helpers/derive.ts`,
+`tests/integration/derive-persist.int.test.ts`) plus
+`docs/reference/contract-surfaces.md`, on top of its in-document references, so
+renumbering would mean editing shipped comments for a cosmetic gain. And the
+seventh sub-section is not padding: §6.5 carries the two traps that belong to
+standing up a _new_ route — the `grant` checked before RLS, which no green
+local run can see, and the `Origin` header on mutating requests — which
+neither §6.2 nor §6.3 owns.
 
 ### 6.1 Adding a unit test (logic)
 
@@ -1049,15 +1084,31 @@ cards"` on the notice (`UnresolvedNotice.tsx:66-67`) — both of which improve t
 ## 7. What We Deliberately Don't Test
 
 Exclusions agreed during the rollout (Phase 2 interview, Q5), re-scoped
-2026-08-25 once §3 Phases 1–3 completed — each bullet carries its own source.
-Future contributors should respect these unless the underlying assumption
-changes.
+2026-08-25 once §3 Phases 1–3 completed and again 2026-09-02 once risk #9
+narrowed the path-builder bullet to that surface's render — each bullet carries
+its own source. Future contributors should respect these unless the underlying
+assumption changes. The first bullet states the boundary the others are read
+against.
 
 - **Frontend / component rendering & layout** — the team will polish the UI
   once the logic is set in stone; spending budget on render/interaction tests
-  now would churn against an unstable surface. Re-evaluate when the logic
-  boundary (Phases 1–3) is locked and the UI is being finalized. (Source:
-  Phase 2 interview Q5.)
+  now would churn against an unstable surface. The trigger this bullet named is
+  now **half-met**, so state which half: the logic boundary _is_ locked (§3
+  Phases 1–3 `complete`), but the UI is _not_ being finalized — the roadmap
+  carries no open UI slice, every shipped one reads `done` and S-07 is parked
+  (re-read 2026-09-02). The exclusion therefore stands on the unmet condition,
+  not on inertia; unpark a UI slice and this bullet is due for re-evaluation in
+  the same breath.
+  **Where the line falls.** A browser phase is admissible only for a failure
+  that exists _nowhere but the rendered result_ and that no cheaper layer can
+  see — a notice that only exists once rendered (#7), an ordering that only
+  manifests across two real in-flight requests (#8, #9). Rendering itself —
+  layout, styling, the markup a component produces from given props — stays
+  out, and so does any behavior an integration, contract or unit test can
+  reach. Two phases on the browser side is **not** a general licence: §1
+  principle 1 still rules, and each of the two names the specific unrenderable
+  failure it buys. Apply this test to a new proposal before proposing it.
+  (Source: Phase 2 interview Q5 + roadmap slice status re-read 2026-09-02.)
 - **Re-testing the pure-logic engine** (`deck/diff`, `deck/plan`,
   `path/derive`, etc.) — already covered by the existing Vitest logic suite
   (§4 carries the dated count); duplicate coverage adds maintenance, not signal. Phase 2 pins the engine's
@@ -1065,41 +1116,66 @@ changes.
   principle 1 + interview Q5.)
 - **Pixel / snapshot tests of the deck card layout** — brittle against
   Tailwind tweaks, low signal. (Source: Phase 2 interview Q5.)
-- **The path-builder and diff-mode UI** — excluded on coverage, not on churn.
-  Its load-bearing behavior is already defended underneath the surface:
-  §3 Phase 3 pins the derive→persist seam and Phases 1–2 pin the routes it
-  drives, so what is left is the rendering of an already-verified
-  result — the thinnest remaining slice in the app. The churn is stated plainly
-  so the reasoning survives a busier month: `src/components/path` carries
-  2 commits/30d and 9/90d — occasional rather than dormant, and the comparer's
+- **The path-builder and diff-mode UI — its _render_, not its ordering** —
+  excluded on coverage, not on churn, and narrowed here from the whole surface
+  to the render half. What stays out is the layout and the display of an
+  already-verified result: §3 Phase 3 pins the derive→persist seam and Phases
+  1–2 pin the routes the builder drives, so a render test would re-assert a
+  result a cheaper layer already proved.
+  What is **not** excluded is the builder's **client-side ordering** — whether
+  a resolve that lands after the deck text changed or was cleared is dropped
+  rather than rendered. That is risk **#9**, answered by §3 Phase 5, and it
+  fails the cheaper-layer test in the first bullet above: the drop is a silent
+  return that never reaches the DOM. This bullet previously read that "what is
+  left is the rendering of an already-verified result" for the surface as a
+  whole — true of the render, false of the ordering. Phase 4's lessons
+  register produced the evidence that separated the two.
+  The churn is stated plainly so the reasoning survives a busier month:
+  `src/components/path` carries 2 commits/30d and 9/90d — re-verified
+  unchanged 2026-09-02, occasional rather than dormant — and the comparer's
   `src/components/deck` now sits at 2 and 19 on the same windows, so the two
   surfaces are no longer separable by churn at all. This is not a dormancy
-  argument and does not expire when the directory heats up. Re-read it instead
-  if a path-builder failure ever surfaces that the integration and contract
-  layers could not have caught. (Source: §3 Phases 1–3 `complete` + directory
-  churn re-derived 2026-09-02; see §8 for the churn-citation convention.)
+  argument and does not expire when the directory heats up; that reasoning
+  still holds for the render half now that the ordering half has moved out.
+  Re-read it instead if a path-builder **render** failure ever surfaces that
+  the integration and contract layers could not have caught. (Source: §3
+  Phases 1–3 `complete` + directory churn re-derived 2026-09-02 + the archived
+  Phase 4 slice's lessons register, which is what narrowed this bullet; see §8
+  for the churn-citation convention.)
 - **Browser-level E2E is no longer excluded** — it is scoped in, narrowly, at
-  §3 Phase 4: the comparer's failure-surfacing (risks #7 and #8), where the
-  notice and the superseded plan exist only once rendered and no cheaper layer
-  can see them. That is the whole of the inclusion. It is not a licence to
-  browser-test a flow an integration or contract test already covers — §1
-  principle 1 still rules, and §4 still records no runner installed.
+  two phases and no further. §3 Phase 4: the comparer's failure-surfacing
+  (risks #7 and #8), where the notice and the superseded plan exist only once
+  rendered. §3 Phase 5: the path builder's stale-response ordering (risk #9),
+  where the superseded resolve is dropped by a silent return that never reaches
+  the DOM. That is the whole of the inclusion, and §4 carries the runner both
+  phases ride (Playwright `^1.62.1`, Chromium only, all Scryfall traffic
+  intercepted). It is still not a licence to browser-test a flow an integration
+  or contract test already covers — the test for admissibility is the boundary
+  stated in the first bullet above, not the existence of these two phases.
   (Source: Phase 2 interview Q4 + Q5, whose sequencing condition — the logic
-  boundary locked — §3 Phases 1–3 satisfied.)
+  boundary locked — §3 Phases 1–3 satisfied; extended to Phase 5 by risk #9.)
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-08-25 — §2 (risks #7–#8 appended with their
-  response rows), §3 (Phase 4 opened), §4 (e2e row plus all four grounding bullets) and
-  §5 (the e2e gate row) updated 2026-08-25 by the refresh below; §1 unchanged since
-  2026-06-29 and re-read as still current
-- Cookbook (§6) last reviewed: 2026-08-31 — §6.7 filled by rollout Phase 4 (browser E2E);
-  §6.4 filled by rollout Phase 3; §6.5 filled 2026-08-25 as a sequencing checklist over
-  §6.2–§6.4, so no sub-section is a stub
-- Rollout: §3 Phases 1–3 all `complete` as of 2026-08-20 — the trigger §7 named for
-  re-evaluating the E2E and component-render exclusions. That re-evaluation was taken
-  deliberately on 2026-08-25 (below): browser E2E in for the comparer only, component
-  render and pixel tests still out
+- Strategy (§1–§5) last reviewed: 2026-09-02 — §1 (the `lessons.md` companion-read
+  pointer; the three principles themselves unchanged since 2026-06-29 and re-read as
+  still current, with principle 1's rhetorical suite figure dropped), §2 (split into
+  protected and open tables, risk #9 and its response row appended, `src/components/deck`
+  churn re-stamped, the quantity-degradation deferral closed), §3 (Phase 5 opened, with
+  the branch-protection read behind its order rationale) and §4 (all four grounding
+  bullets re-stamped, the `unit (logic)` count re-derived) updated 2026-09-02 by the
+  refresh below; §5 deliberately unchanged — see the non-actions entry
+- Cookbook (§6) last reviewed: 2026-09-02 — the preamble gained the `lessons.md` pointer
+  and the record of §6's two schema deviations (seven sub-sections; §6.6 preceding
+  §6.7); §6.7 filled by rollout Phase 4 (browser E2E); §6.4 filled by rollout Phase 3;
+  §6.5 filled 2026-08-25 as a sequencing checklist over §6.2–§6.4, so no sub-section is
+  a stub
+- Rollout: §3 Phases 1–4 all `complete` — Phases 1–3 by 2026-08-20, Phase 4 on
+  2026-08-31 — and **Phase 5 open at `not started`** (path-builder stale-response
+  ordering, risk #9), opened 2026-09-02 by the refresh below. Phases 1–3 completing was
+  the trigger §7 named for re-evaluating the E2E and component-render exclusions; that
+  re-evaluation was taken deliberately on 2026-08-25 and re-taken 2026-09-02: browser
+  E2E in at two phases and no further, component render and pixel tests still out
 - **Refresh completed 2026-08-25** through `context/archive/2026-08-25-test-plan-refresh-2026-08-25/`
   (`/10x-test-plan --refresh` ran 2026-08-25 and opened it). What it changed: §2 gained
   risk #7 (a partial resolution or a card-data transport failure reaches the user as a
@@ -1159,9 +1235,61 @@ changes.
   CI or branch protection changed — stated because §5's rule is that a gate row is
   aspirational until its job name is in the required-check list, and these two rows
   deliberately never enter it.
-- Stack versions last verified: 2026-08-31 — Playwright `^1.62.1` added and verified by
-  Phase 4; every other row re-read as still current and unchanged since 2026-08-25
-- AI-native tool references last verified: 2026-08-25
+- **Refresh completed 2026-09-02** through
+  `context/changes/test-plan-refresh-2026-09-01/` (opened 2026-09-02). Its trigger was
+  the rollout closing with nothing left pointing forward, while Phase 4's own lessons
+  register had meanwhile produced evidence that §7 contradicted. What it changed:
+  **§2** split into a protected table (#1–#8, each naming the `complete` phase that
+  answers it) and an open table, which retires the 8-row overflow note by structure
+  rather than excusing it a third time — the 2026-08-25 refresh proposed exactly this
+  split and did not take it; **§2** also gained **risk #9** (a path-builder pre-save
+  Check verdict, diff preview or error banner describing deck text the user has already
+  edited or cleared), Medium × Medium with its Risk Response Guidance row, and
+  re-stamped `src/components/deck` churn from 1/30d and 18/90d to 2 and 19 — both 30d
+  commits shipped-code changes made in service of testability, so the figure is product
+  churn rather than test-only noise. **§3** gained **Phase 5** (path-builder
+  stale-response ordering, risk #9, browser E2E, `not started`, no change folder) plus
+  the order rationale recording that it is the first phase whose whole cost is the test
+  itself — evidenced by a dated required-check read rather than asserted. **§4**'s
+  four grounding bullets were re-stamped 2026-09-02 and moved to the past tense where
+  they still described Phase 4's runner choice as pending. **§1** and **§7** stopped
+  carrying the "20-file" Vitest figure, which had gone stale twice in two sections,
+  while the one derivable count stays in §4's `unit (logic)` Notes cell. **§7**'s
+  three load-bearing bullets were rewritten: the component-render exclusion now names
+  which half of its own trigger is unmet (logic boundary locked, UI not being
+  finalized) and states the admissibility boundary for a browser phase outright; the
+  path-builder bullet narrowed from the whole surface to its **render**, with that
+  surface's client-side ordering explicitly **not** excluded; and the browser-E2E
+  bullet dropped its false assertion that §4 recorded no installed runner, and widened
+  to both browser phases. **§1** and **§6**'s preamble gained the `lessons.md` companion-read
+  pointer, so the file is discoverable from the strategy and at the point of use rather
+  than from §8 prose alone, and **§6**'s preamble now records its two schema
+  deviations (seven sub-sections against three-to-six, and §6.6 preceding §6.7) as
+  deliberate with the reason. The refresh's last item corrects §6.2 rule 4 and the
+  integration harness comment to name the Cloudflare adapter's actual mechanism instead
+  of `getPlatformProxy`; the debt entry above records whether it has landed.
+- **Two questions this refresh answered by declining to act.** (a) **§5 is unchanged.**
+  Every gate row is accurate, and appending `#9` to the `e2e` row's "Catches" cell would
+  claim coverage that does not exist: that row describes what is _wired_, and Phase 5 is
+  `not started`. §5's standing rule is that a gate row is aspirational until its job
+  name is in the required-check list; the mirror of it is that a row already in that
+  list must not advertise a risk no spec covers yet. (b) **The silent quantity
+  degradation stays unpromoted**, and the deferral is closed rather than passed on a
+  third time. The row-budget half of the original reasoning was retired by the
+  protected/open split, so the layer argument is the one that decides it: the failure
+  needs a crafted `/cards/collection` response, which the integration and unit layers
+  that already own the resolver can construct and a browser phase cannot cheaply — so
+  §3 Phase 5 is the wrong home for it, and if it is ever promoted it belongs with #7's
+  family at that layer. §2's not-promoted paragraph carries the decision; a future
+  refresh should cite it rather than re-open it.
+- Stack versions last verified: 2026-09-02 — every declared-versus-installed pair
+  re-read and unchanged: `astro ^6.3.1` resolves to 6.4.8, `vitest ^4.1.9` to 4.1.9 and
+  `@playwright/test ^1.62.1` to 1.62.1, so §4's rows and its "Vitest 4 / Astro 6"
+  grounding bullet all still read correctly
+- AI-native tool references last verified: 2026-09-02 — all four §4 grounding bullets
+  re-stamped: Context7 still the only docs-grounding path (no Exa.ai or dedicated
+  docs-search MCP), browser tooling still skills-only with no Playwright MCP exposed,
+  `gh` CLI present and used for this refresh's branch-protection read
 
 Refresh (`/10x-test-plan --refresh`) when:
 

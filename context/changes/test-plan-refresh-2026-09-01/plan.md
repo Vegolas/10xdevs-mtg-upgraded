@@ -682,36 +682,36 @@ None. `context/foundation/test-plan.md` has no consumers that parse it beyond
 
 #### Automated
 
-- [x] 2.1 Prettier passes on test-plan.md
-- [x] 2.2 §3 parses and every Status cell is within the fixed vocabulary
-- [x] 2.3 `grep -c '20-file'` returns 0
-- [x] 2.4 Every §2/§7 churn figure re-derives from the convention's command
-- [x] 2.5 Declared-versus-installed versions match §4 for Astro, Vitest, Playwright
+- [x] 2.1 Prettier passes on test-plan.md — d128f9e
+- [x] 2.2 §3 parses and every Status cell is within the fixed vocabulary — d128f9e
+- [x] 2.3 `grep -c '20-file'` returns 0 — d128f9e
+- [x] 2.4 Every §2/§7 churn figure re-derives from the convention's command — d128f9e
+- [x] 2.5 Declared-versus-installed versions match §4 for Astro, Vitest, Playwright — d128f9e
 
 #### Manual
 
-- [x] 2.6 §3 reads as a rollout with one open front
-- [x] 2.7 The Phase 5 cheapness claim reads as evidenced, not asserted
-- [x] 2.8 No §4 bullet implies a browser runner still needs choosing
-- [x] 2.9 Re-stamped churn changes neither risk's rating nor reasoning
+- [x] 2.6 §3 reads as a rollout with one open front — d128f9e
+- [x] 2.7 The Phase 5 cheapness claim reads as evidenced, not asserted — d128f9e
+- [x] 2.8 No §4 bullet implies a browser runner still needs choosing — d128f9e
+- [x] 2.9 Re-stamped churn changes neither risk's rating nor reasoning — d128f9e
 
 ### Phase 3: §7 rewrite, lessons.md pointers, and the §8 record
 
 #### Automated
 
-- [ ] 3.1 Prettier passes on test-plan.md
-- [ ] 3.2 `grep -c 'no runner installed'` returns 0
-- [ ] 3.3 §7 still has 5 bullets
-- [ ] 3.4 `lessons.md` referenced from §1 and §6's preamble
-- [ ] 3.5 Section order §1 → §8 unchanged; no §6 sub-section number moved
-- [ ] 3.6 Every internal `§N.N` reference resolves to an existing heading
+- [x] 3.1 Prettier passes on test-plan.md
+- [x] 3.2 `grep -c 'no runner installed'` returns 0
+- [x] 3.3 §7 still has 5 bullets
+- [x] 3.4 `lessons.md` referenced from §1 and §6's preamble
+- [x] 3.5 Section order §1 → §8 unchanged; no §6 sub-section number moved
+- [x] 3.6 Every internal `§N.N` reference resolves to an existing heading
 
 #### Manual
 
-- [ ] 3.7 The §7 boundary statement is applicable to a new proposal without asking
-- [ ] 3.8 The path-builder bullet neither over-claims nor under-claims
-- [ ] 3.9 §8 alone reconstructs this refresh, including the two non-actions
-- [ ] 3.10 The header parenthetical names what a returning reader most needs
+- [x] 3.7 The §7 boundary statement is applicable to a new proposal without asking
+- [x] 3.8 The path-builder bullet neither over-claims nor under-claims
+- [x] 3.9 §8 alone reconstructs this refresh, including the two non-actions
+- [x] 3.10 The header parenthetical names what a returning reader most needs
 
 ### Phase 4: the `.dev.vars` mechanism correction
 
