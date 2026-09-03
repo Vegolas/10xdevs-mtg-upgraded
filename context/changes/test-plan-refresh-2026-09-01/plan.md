@@ -666,34 +666,34 @@ None. `context/foundation/test-plan.md` has no consumers that parse it beyond
 
 #### Automated
 
-- [x] 1.1 Prettier passes on test-plan.md
-- [x] 1.2 Both §2 tables parse as well-formed GFM with a consistent column count
-- [x] 1.3 No file anchor entered a Source cell
-- [x] 1.4 Risk numbers 1–9 each appear exactly once and #1–#8 are unchanged
+- [x] 1.1 Prettier passes on test-plan.md — 4da1098
+- [x] 1.2 Both §2 tables parse as well-formed GFM with a consistent column count — 4da1098
+- [x] 1.3 No file anchor entered a Source cell — 4da1098
+- [x] 1.4 Risk numbers 1–9 each appear exactly once and #1–#8 are unchanged — 4da1098
 
 #### Manual
 
-- [x] 1.5 A reader can tell in one pass which risks are answered and which is not
-- [x] 1.6 Risk #9 describes a user-visible failure, not the token guards
-- [x] 1.7 Medium × Medium reads as justified; #1 still the only High × High
-- [x] 1.8 The not-promoted quantity paragraph closes with a citable decision
+- [x] 1.5 A reader can tell in one pass which risks are answered and which is not — 4da1098
+- [x] 1.6 Risk #9 describes a user-visible failure, not the token guards — 4da1098
+- [x] 1.7 Medium × Medium reads as justified; #1 still the only High × High — 4da1098
+- [x] 1.8 The not-promoted quantity paragraph closes with a citable decision — 4da1098
 
 ### Phase 2: §3 Phase 5, §4 re-stamp, and the stale figures
 
 #### Automated
 
-- [ ] 2.1 Prettier passes on test-plan.md
-- [ ] 2.2 §3 parses and every Status cell is within the fixed vocabulary
-- [ ] 2.3 `grep -c '20-file'` returns 0
-- [ ] 2.4 Every §2/§7 churn figure re-derives from the convention's command
-- [ ] 2.5 Declared-versus-installed versions match §4 for Astro, Vitest, Playwright
+- [x] 2.1 Prettier passes on test-plan.md
+- [x] 2.2 §3 parses and every Status cell is within the fixed vocabulary
+- [x] 2.3 `grep -c '20-file'` returns 0
+- [x] 2.4 Every §2/§7 churn figure re-derives from the convention's command
+- [x] 2.5 Declared-versus-installed versions match §4 for Astro, Vitest, Playwright
 
 #### Manual
 
-- [ ] 2.6 §3 reads as a rollout with one open front
-- [ ] 2.7 The Phase 5 cheapness claim reads as evidenced, not asserted
-- [ ] 2.8 No §4 bullet implies a browser runner still needs choosing
-- [ ] 2.9 Re-stamped churn changes neither risk's rating nor reasoning
+- [x] 2.6 §3 reads as a rollout with one open front
+- [x] 2.7 The Phase 5 cheapness claim reads as evidenced, not asserted
+- [x] 2.8 No §4 bullet implies a browser runner still needs choosing
+- [x] 2.9 Re-stamped churn changes neither risk's rating nor reasoning
 
 ### Phase 3: §7 rewrite, lessons.md pointers, and the §8 record
 

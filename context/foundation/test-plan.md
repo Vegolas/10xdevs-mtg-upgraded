@@ -24,9 +24,9 @@ Tests follow three non-negotiable principles for this project:
    vision model on top of a deterministic visual diff that already catches
    the regression. For DeckDelta this means: defend the server boundary
    (`/api/paths/*`, middleware) and the derive→persist correctness at the
-   integration layer; do not re-test the pure-logic engine that the 20-file
-   Vitest suite already covers, and do not reach for browser/E2E until the
-   logic boundary is locked.
+   integration layer; do not re-test the pure-logic engine that the existing
+   Vitest logic suite already covers, and do not reach for browser/E2E until
+   the logic boundary is locked.
 2. **User concerns are first-class evidence.** Risks anchored in "the team
    is worried about X, and the failure would surface somewhere in <area>"
    carry the same weight as PRD lines or hot-spot data. The top risk here —
@@ -56,16 +56,16 @@ an **open** set, which is the list a reader still has to act on.
 
 **Protected — every row below is answered by a `complete` §3 rollout phase.**
 
-| #   | Risk (failure scenario)                                                                                                                                                                  | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                       | Protected by (§3 phase) |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 1   | A signed-in user reads or mutates **another owner's** upgrade path because a query path bypasses RLS or skips an ownership check on `/api/paths/*`                                       | High   | High       | interview Q1 (top fear) + Q2 (lived incident: RLS looked right, a query path bypassed it, rows leaked cross-tenant); hot-spot dir `src/pages/api` (8 commits/30d); abuse lens (authorization / IDOR) | Phase 1 `complete`      |
-| 2   | An **unauthenticated or expired-session** request reaches `/api/paths/*`, or a gated route (`/paths`, `/dashboard`) is served while signed-out — or a signed-in owner is wrongly bounced | High   | Medium     | roadmap baseline (middleware gates `/paths`/`/dashboard`); interview Q4 (server boundary untested); hot-spot dir `src/components/auth` (12 commits/30d); abuse lens (access)                         | Phase 1 `complete`      |
-| 3   | A handler's **request/response contract changes** and a stale caller still references the old shape — a path-builder flow breaks silently                                                | Medium | Medium     | interview Q3 (changing API handlers, fear of a forgotten reference to the old one); hot-spot dir `src/pages/api` (8 commits/30d)                                                                     | Phase 2 `complete`      |
-| 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                  | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                  | Phase 3 `complete`      |
-| 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                        | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                      | Phase 3 `complete`      |
-| 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                     | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                             | Phase 2 `complete`      |
-| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders      | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (1 commit/30d, 18 commits/90d); §4 records no browser or render layer, so this wiring is covered at no layer | Phase 4 `complete`      |
-| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                              | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (1 commit/30d, 18 commits/90d); §4 lists no browser or render layer; guard stable since first commit ⇒ Low   | Phase 4 `complete`      |
+| #   | Risk (failure scenario)                                                                                                                                                                  | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                        | Protected by (§3 phase) |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | A signed-in user reads or mutates **another owner's** upgrade path because a query path bypasses RLS or skips an ownership check on `/api/paths/*`                                       | High   | High       | interview Q1 (top fear) + Q2 (lived incident: RLS looked right, a query path bypassed it, rows leaked cross-tenant); hot-spot dir `src/pages/api` (8 commits/30d); abuse lens (authorization / IDOR)  | Phase 1 `complete`      |
+| 2   | An **unauthenticated or expired-session** request reaches `/api/paths/*`, or a gated route (`/paths`, `/dashboard`) is served while signed-out — or a signed-in owner is wrongly bounced | High   | Medium     | roadmap baseline (middleware gates `/paths`/`/dashboard`); interview Q4 (server boundary untested); hot-spot dir `src/components/auth` (12 commits/30d); abuse lens (access)                          | Phase 1 `complete`      |
+| 3   | A handler's **request/response contract changes** and a stale caller still references the old shape — a path-builder flow breaks silently                                                | Medium | Medium     | interview Q3 (changing API handlers, fear of a forgotten reference to the old one); hot-spot dir `src/pages/api` (8 commits/30d)                                                                      | Phase 2 `complete`      |
+| 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                  | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                   | Phase 3 `complete`      |
+| 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                        | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                       | Phase 3 `complete`      |
+| 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                     | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                              | Phase 2 `complete`      |
+| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders      | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 records no browser or render layer, so this wiring is covered at no layer | Phase 4 `complete`      |
+| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                              | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 lists no browser or render layer; guard stable since first commit ⇒ Low   | Phase 4 `complete`      |
 
 **Open — no phase has answered this one yet.**
 
@@ -99,8 +99,22 @@ risk numbers are append-only because §3 Phases 1–4 cite them, so the rows mov
 verbatim and gained one column. #8 is still the weakest row in the protected set: it
 was promoted because it rode Phase 4's harness at near-zero marginal cost and is
 deterministically reproducible in a browser, not because anything suggested a live
-defect. This note supersedes the overflow note it replaces; the protected table can
-now grow without the actionable list growing with it.
+defect. Both rows' `src/components/deck` churn was re-derived 2026-09-02 and moved
+from 1/30d and 18/90d to 2 and 19 — both 30d commits touched _shipped_ code in
+service of testability (an `alert` role on the error banner, a named region on the
+unresolved notice, explicit `"en"` collation), so this is genuine product churn the
+rollout happened to drive rather than test-only noise; neither rating moves, and the
+churn-citation convention in §8 needs no amendment. Rows #1–#6 keep their figures
+**as measured when each risk was surfaced** — they entered with this document on
+2026-06-30 and are the evidence behind a rating a `complete` phase has already
+answered, not a live signal to re-measure. Today's 30d windows return far less for
+all five directories they cite (`src/pages/api` 2, `src/components/auth` 0,
+`src/lib/path` 5, `src/lib/card-data` 1, `src/lib/deck` 3, re-derived 2026-09-02),
+which is what a closed rollout looks like from the churn side; re-stamping them would
+replace the evidence with numbers that contradict the rating it justified. Only a row
+in the **open** table, or one this refresh cites as current, is re-derived. This note
+supersedes the overflow note it replaces; the protected table can now grow without the
+actionable list growing with it.
 
 Not promoted to the map (recorded so the rollout doesn't silently widen):
 card misidentification from Scryfall resolution (already unit-tested plus a
@@ -158,12 +172,13 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                       | Goal (one line)                                                                                                                                                                  | Risks covered | Test types                      | Status   | Change folder                                                                     |
-| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | --------------------------------------------------------------------------------- |
-| 1   | Server-boundary auth & ownership | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                    | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11)    |
-| 2   | API contract pinning             | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                           | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)    |
-| 3   | Derive-to-persist correctness    | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                     | #4, #5        | integration                     | complete | context/archive/2026-08-19-testing-derive-to-persist/ (archived 2026-08-21)       |
-| 4   | Comparer failure-surfacing       | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison | #7, #8        | browser E2E                     | complete | context/archive/2026-08-27-testing-comparer-failure-surfacing/ (arch. 2026-08-31) |
+| #   | Phase name                           | Goal (one line)                                                                                                                                                                                           | Risks covered | Test types                      | Status      | Change folder                                                                     |
+| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | ----------- | --------------------------------------------------------------------------------- |
+| 1   | Server-boundary auth & ownership     | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                                             | #1, #2        | integration + CI gate           | complete    | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11)    |
+| 2   | API contract pinning                 | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                                                    | #3, #6        | contract + integration + golden | complete    | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)    |
+| 3   | Derive-to-persist correctness        | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                                              | #4, #5        | integration                     | complete    | context/archive/2026-08-19-testing-derive-to-persist/ (archived 2026-08-21)       |
+| 4   | Comparer failure-surfacing           | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison                          | #7, #8        | browser E2E                     | complete    | context/archive/2026-08-27-testing-comparer-failure-surfacing/ (arch. 2026-08-31) |
+| 5   | Path-builder stale-response ordering | Prove a resolve that lands after the deck text changed or was cleared is dropped rather than rendered — no pre-save Check verdict, diff preview or error banner describes text the user has moved on from | #9            | browser E2E                     | not started | —                                                                                 |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -177,30 +192,41 @@ closes the correctness guardrail on the newest feature (diff-mode derive).
 Phase 4 is that sequencing paying out, not reversing it: interview Q4 gated
 browser work behind the logic boundary, Phases 1–3 locked that boundary, so
 browser E2E now enters scope — narrowly, for the comparer's failure-surfacing,
-where the notice exists only once rendered. Frontend/component render and pixel
+where the notice exists only once rendered. Phase 5 is last because it is the
+only phase whose risk was found rather than forecast — #9 came out of Phase 4's
+own lessons register, so no earlier ordering could have reached it — and it is
+also the first phase whose whole cost is the test itself: a new spec under
+`tests/e2e/` rides the `e2e` job Phase 4 already made required, so there is no
+runner to add, no CI job to write and no branch-protection change to make. That
+is the cheap shape Phases 2 and 3 had at the integration layer, now available on
+the browser side because Phase 4 paid the setup cost. The cheapness was checked,
+not assumed, per §5's standing rule that a claim about a CI gate is aspirational
+until the required-check list has been read: `main` returns
+`contexts: ["ci","integration","e2e"]` with `enforce_admins: true` and
+`strict: false`, read 2026-09-02. Frontend/component render and pixel
 testing stay deliberately **out** (see §7): their deferral rested on the UI
-being unstable, and Phases 1–3 did not change that.
+being unstable, and Phases 1–4 did not change that.
 
 ## 4. Stack
 
 The classic test base for this project. AI-native tools (if any) carry a
 `checked:` date so future readers can see which lines need re-verification.
 
-| Layer                        | Tool                          | Version | Notes                                                                                                                                                                                                                                                                                                                                                                   |
-| ---------------------------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| unit (logic)                 | Vitest                        | ^4.1.9  | `node` env, `src/**/*.test.ts`, `@/*` alias. All pure-logic (`src/lib/{card-data,deck,path}` + deck helpers). `npm test` → `vitest run`. Includes the `*.golden.test.ts` engine goldens with committed `__snapshots__/*.snap` — see §6.3 rule 9.                                                                                                                        |
-| integration (API + boundary) | Vitest + local Supabase       | ^4.1.9  | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2.                                                                                                      |
-| contract                     | Vitest                        | ^4.1.9  | `tests/integration/contract-*.int.test.ts` — rides the `integration` job via the `.int.` infix. Pins request/response shapes of `/api/paths/*` and `signin`'s 302 against the decided-contract table, with the declared types in `src/lib/api/contract.ts` gated by `npm run typecheck`. Recipe in §6.3.                                                                |
-| live (external)              | Vitest                        | ^4.1.9  | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal.                                                                                                                                                                                                                                                 |
-| e2e (browser)                | Playwright                    | ^1.62.1 | `tests/e2e/**/*.spec.ts` via `playwright.config.ts`; `npm run test:e2e`. Chromium only, against a Playwright-managed `astro dev` on port 4323, with **all** Scryfall traffic intercepted — no Supabase, no auth, no external network. Rides its own `e2e` CI job (see §5). Scope is held by §7: the comparer's failure surfacing, not component render. Recipe in §6.7. |
-| component render             | none (no jsdom/RTL by design) | —       | **deliberately deferred — see §7** (interview Q5: frontend later).                                                                                                                                                                                                                                                                                                      |
+| Layer                        | Tool                          | Version | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unit (logic)                 | Vitest                        | ^4.1.9  | `node` env, `src/**/*.test.ts`, `@/*` alias. All pure-logic (`src/lib/{card-data,deck,path}` + deck helpers). `npm test` → `vitest run`. Includes the `*.golden.test.ts` engine goldens with committed `__snapshots__/*.snap` — see §6.3 rule 9. Size, the one dated count in this document: 23 files, of which `npm test` runs 22 — 222 tests passed, 1 skipped of 223 collected; the skip is `scryfall.live.test.ts`, gated by `describe.skipIf(!RUN_LIVE)` and carried as the `live (external)` row below; measured 2026-09-02. |
+| integration (API + boundary) | Vitest + local Supabase       | ^4.1.9  | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2.                                                                                                                                                                                                                                                                 |
+| contract                     | Vitest                        | ^4.1.9  | `tests/integration/contract-*.int.test.ts` — rides the `integration` job via the `.int.` infix. Pins request/response shapes of `/api/paths/*` and `signin`'s 302 against the decided-contract table, with the declared types in `src/lib/api/contract.ts` gated by `npm run typecheck`. Recipe in §6.3.                                                                                                                                                                                                                           |
+| live (external)              | Vitest                        | ^4.1.9  | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| e2e (browser)                | Playwright                    | ^1.62.1 | `tests/e2e/**/*.spec.ts` via `playwright.config.ts`; `npm run test:e2e`. Chromium only, against a Playwright-managed `astro dev` on port 4323, with **all** Scryfall traffic intercepted — no Supabase, no auth, no external network. Rides its own `e2e` CI job (see §5). Scope is held by §7: the comparer's failure surfacing, not component render. Recipe in §6.7.                                                                                                                                                            |
+| component render             | none (no jsdom/RTL by design) | —       | **deliberately deferred — see §7** (interview Q5: frontend later).                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **Stack grounding tools (current session):**
 
-- Docs: **Context7** available — can ground current Vitest 4 / Astro 6 / Supabase SSR / Cloudflare Workers test-setup APIs (e.g. `unstable_dev`, cookie-bound client testing), and Playwright's when Phase 4 plans. Versions re-confirmed rather than changed: declared `astro ^6.3.1` resolves to 6.4.8 and `vitest ^4.1.9` resolves to 4.1.9, so "Vitest 4 / Astro 6" still reads correctly; checked: 2026-08-25
-- Search: **general web search available** — built-in web search/fetch, plus a `web_search` tool on two connected MCP servers; still **no Exa.ai or dedicated docs-search MCP**, so Context7 stays the grounding path for framework APIs; checked: 2026-08-25
-- Runtime/browser: browser-test tooling exists **as skills, not as an MCP server** — a dedicated E2E workflow skill in this repo (`/10x-e2e`, which reads §2's risk rows directly) plus a Playwright-driven web-app testing skill in the session; **no Playwright MCP server is exposed**, so nothing in-session drives a browser on its own. Both halves matter: the first is why §3 Phase 4 is openable at all, the second is why the runner and harness choice is still that phase's research to make; checked: 2026-08-25
-- Provider/platform: **Supabase** via CLI/skill only (no DB MCP); `gh` CLI available — it carried the CI test-step change in Phase 1 and the branch-protection re-reads recorded in §5; checked: 2026-08-25
+- Docs: **Context7** available — can ground current Vitest 4 / Astro 6 / Supabase SSR / Cloudflare Workers test-setup APIs (e.g. `unstable_dev`, cookie-bound client testing), and Playwright's, which Phase 4 drew on when it stood up the harness. Versions re-confirmed unchanged rather than re-stamped: declared `astro ^6.3.1` resolves to 6.4.8, `vitest ^4.1.9` to 4.1.9 and `@playwright/test ^1.62.1` to 1.62.1, so "Vitest 4 / Astro 6" and the `e2e` row above all still read correctly; checked: 2026-09-02
+- Search: **general web search available** — built-in web search/fetch, plus a `web_search` tool on two connected MCP servers; still **no Exa.ai or dedicated docs-search MCP**, so Context7 stays the grounding path for framework APIs; checked: 2026-09-02
+- Runtime/browser: browser-test tooling exists **as skills, not as an MCP server** — a dedicated E2E workflow skill in this repo (`/10x-e2e`, which reads §2's risk rows directly) plus a Playwright-driven web-app testing skill in the session; **no Playwright MCP server is exposed**, so nothing in-session drives a browser on its own. Phase 4 made the runner and harness choice off the first half and it is settled, not pending: Playwright, Chromium only, all Scryfall traffic intercepted (see the `e2e` row above). The second half is the part that still bites — Phase 5's harness work belongs to `/10x-e2e` and the fixtures under `tests/e2e/`, because no MCP can drive the browser in its place; checked: 2026-09-02
+- Provider/platform: **Supabase** via CLI/skill only (no DB MCP); `gh` CLI available — it carried the CI test-step change in Phase 1, the branch-protection re-reads recorded in §5, and this refresh's read behind §3's Phase 5 order rationale; checked: 2026-09-02
 
 Use docs MCPs for current framework/library APIs and setup details. Do not
 use MCP docs/search to infer code failure anchors; those belong in per-phase
@@ -1033,8 +1059,8 @@ changes.
   boundary (Phases 1–3) is locked and the UI is being finalized. (Source:
   Phase 2 interview Q5.)
 - **Re-testing the pure-logic engine** (`deck/diff`, `deck/plan`,
-  `path/derive`, etc.) — already covered by the 20-file Vitest suite;
-  duplicate coverage adds maintenance, not signal. Phase 2 pins the engine's
+  `path/derive`, etc.) — already covered by the existing Vitest logic suite
+  (§4 carries the dated count); duplicate coverage adds maintenance, not signal. Phase 2 pins the engine's
   _golden output_ once rather than re-deriving its internals. (Source: §1
   principle 1 + interview Q5.)
 - **Pixel / snapshot tests of the deck card layout** — brittle against
@@ -1045,12 +1071,13 @@ changes.
   drives, so what is left is the rendering of an already-verified
   result — the thinnest remaining slice in the app. The churn is stated plainly
   so the reasoning survives a busier month: `src/components/path` carries
-  2 commits/30d and 9/90d, _more_ recent activity than the comparer's
-  `src/components/deck` (1 and 18), so this is not a dormancy argument and does
-  not expire when the directory heats up. Re-read it instead if a path-builder
-  failure ever surfaces that the integration and contract layers could not have
-  caught. (Source: §3 Phases 1–3 `complete` + directory churn measured
-  2026-08-25; see §8 for the churn-citation convention.)
+  2 commits/30d and 9/90d — occasional rather than dormant, and the comparer's
+  `src/components/deck` now sits at 2 and 19 on the same windows, so the two
+  surfaces are no longer separable by churn at all. This is not a dormancy
+  argument and does not expire when the directory heats up. Re-read it instead
+  if a path-builder failure ever surfaces that the integration and contract
+  layers could not have caught. (Source: §3 Phases 1–3 `complete` + directory
+  churn re-derived 2026-09-02; see §8 for the churn-citation convention.)
 - **Browser-level E2E is no longer excluded** — it is scoped in, narrowly, at
   §3 Phase 4: the comparer's failure-surfacing (risks #7 and #8), where the
   notice and the superseded plan exist only once rendered and no cheaper layer
