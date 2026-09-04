@@ -717,14 +717,14 @@ None. `context/foundation/test-plan.md` has no consumers that parse it beyond
 
 #### Automated
 
-- [x] 4.1 Prettier passes on test-plan.md
-- [x] 4.2 `npx eslint tests/integration/global-setup.ts` passes
-- [x] 4.3 `npm run typecheck` passes
-- [x] 4.4 `getPlatformProxy` appears in neither file
-- [x] 4.5 `npm run test:integration` passes with local Supabase up
+- [x] 4.1 Prettier passes on test-plan.md — 3c4fa5e
+- [x] 4.2 `npx eslint tests/integration/global-setup.ts` passes — 3c4fa5e
+- [x] 4.3 `npm run typecheck` passes — 3c4fa5e
+- [x] 4.4 `getPlatformProxy` appears in neither file — 3c4fa5e
+- [x] 4.5 `npm run test:integration` passes with local Supabase up — 3c4fa5e
 
 #### Manual
 
-- [x] 4.6 The corrected sentence reads as an explanation, not a hedge
-- [x] 4.7 Both places agree with each other and with `lessons.md`
-- [x] 4.8 Override behavior unchanged — only its stated cause
+- [x] 4.6 The corrected sentence reads as an explanation, not a hedge — 3c4fa5e
+- [x] 4.7 Both places agree with each other and with `lessons.md` — 3c4fa5e
+- [x] 4.8 Override behavior unchanged — only its stated cause — 3c4fa5e
