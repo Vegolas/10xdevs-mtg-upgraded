@@ -69,16 +69,16 @@ an **open** set, which is the list a reader still has to act on.
 
 **Protected — every row below is answered by a `complete` §3 rollout phase.**
 
-| #   | Risk (failure scenario)                                                                                                                                                                  | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                        | Protected by (§3 phase) |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 1   | A signed-in user reads or mutates **another owner's** upgrade path because a query path bypasses RLS or skips an ownership check on `/api/paths/*`                                       | High   | High       | interview Q1 (top fear) + Q2 (lived incident: RLS looked right, a query path bypassed it, rows leaked cross-tenant); hot-spot dir `src/pages/api` (8 commits/30d); abuse lens (authorization / IDOR)  | Phase 1 `complete`      |
-| 2   | An **unauthenticated or expired-session** request reaches `/api/paths/*`, or a gated route (`/paths`, `/dashboard`) is served while signed-out — or a signed-in owner is wrongly bounced | High   | Medium     | roadmap baseline (middleware gates `/paths`/`/dashboard`); interview Q4 (server boundary untested); hot-spot dir `src/components/auth` (12 commits/30d); abuse lens (access)                          | Phase 1 `complete`      |
-| 3   | A handler's **request/response contract changes** and a stale caller still references the old shape — a path-builder flow breaks silently                                                | Medium | Medium     | interview Q3 (changing API handlers, fear of a forgotten reference to the old one); hot-spot dir `src/pages/api` (8 commits/30d)                                                                      | Phase 2 `complete`      |
-| 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                  | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                   | Phase 3 `complete`      |
-| 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                        | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                       | Phase 3 `complete`      |
-| 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                     | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                              | Phase 2 `complete`      |
-| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders      | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 records no browser or render layer, so this wiring is covered at no layer | Phase 4 `complete`      |
-| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                              | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 lists no browser or render layer; guard stable since first commit ⇒ Low   | Phase 4 `complete`      |
+| #   | Risk (failure scenario)                                                                                                                                                                  | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                | Protected by (§3 phase) |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | A signed-in user reads or mutates **another owner's** upgrade path because a query path bypasses RLS or skips an ownership check on `/api/paths/*`                                       | High   | High       | interview Q1 (top fear) + Q2 (lived incident: RLS looked right, a query path bypassed it, rows leaked cross-tenant); hot-spot dir `src/pages/api` (8 commits/30d); abuse lens (authorization / IDOR)                                                                          | Phase 1 `complete`      |
+| 2   | An **unauthenticated or expired-session** request reaches `/api/paths/*`, or a gated route (`/paths`, `/dashboard`) is served while signed-out — or a signed-in owner is wrongly bounced | High   | Medium     | roadmap baseline (middleware gates `/paths`/`/dashboard`); interview Q4 (server boundary untested); hot-spot dir `src/components/auth` (12 commits/30d); abuse lens (access)                                                                                                  | Phase 1 `complete`      |
+| 3   | A handler's **request/response contract changes** and a stale caller still references the old shape — a path-builder flow breaks silently                                                | Medium | Medium     | interview Q3 (changing API handlers, fear of a forgotten reference to the old one); hot-spot dir `src/pages/api` (8 commits/30d)                                                                                                                                              | Phase 2 `complete`      |
+| 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                  | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                                                                                           | Phase 3 `complete`      |
+| 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                        | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                                                                                               | Phase 3 `complete`      |
+| 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                     | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                                                                                                      | Phase 2 `complete`      |
+| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders      | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 recorded no browser or render layer when this risk was surfaced, so the wiring was covered at no layer — Phase 4 closed that (see §4's `e2e` row) | Phase 4 `complete`      |
+| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                              | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 listed no browser or render layer when this risk was surfaced; guard stable since first commit ⇒ Low                                              | Phase 4 `complete`      |
 
 **Open — no phase has answered this one yet.**
 
@@ -117,7 +117,12 @@ from 1/30d and 18/90d to 2 and 19 — both 30d commits touched _shipped_ code in
 service of testability (an `alert` role on the error banner, a named region on the
 unresolved notice, explicit `"en"` collation), so this is genuine product churn the
 rollout happened to drive rather than test-only noise; neither rating moves, and the
-churn-citation convention in §8 needs no amendment. Rows #1–#6 keep their figures
+churn-citation convention in §8 needs no amendment. Both cells also had one clause
+corrected on 2026-09-04 — each asserted, in the present tense, that §4 carried no browser
+or render layer, which Phase 4 falsified when it installed Playwright. That is the second
+and only other authorized edit to a frozen cell: the clause now reads as the state when the
+risk was surfaced, because a Source cell records the evidence as of surfacing and must not
+read as a live claim the document elsewhere contradicts. Rows #1–#6 keep their figures
 **as measured when each risk was surfaced** — they entered with this document on
 2026-06-30 and are the evidence behind a rating a `complete` phase has already
 answered, not a live signal to re-measure. Today's 30d windows return far less for
@@ -231,7 +236,7 @@ The classic test base for this project. AI-native tools (if any) carry a
 | integration (API + boundary) | Vitest + local Supabase       | ^4.1.9  | `tests/integration/**/*.int.test.ts` via `vitest.integration.config.ts`; `npm run test:integration`. Real HTTP through a `globalSetup`-spawned `astro dev` against local Supabase with RLS live — never a mock that can't reproduce an RLS bypass. Recipe in §6.2.                                                                                                                                                                                                                                                                 |
 | contract                     | Vitest                        | ^4.1.9  | `tests/integration/contract-*.int.test.ts` — rides the `integration` job via the `.int.` infix. Pins request/response shapes of `/api/paths/*` and `signin`'s 302 against the decided-contract table, with the declared types in `src/lib/api/contract.ts` gated by `npm run typecheck`. Recipe in §6.3.                                                                                                                                                                                                                           |
 | live (external)              | Vitest                        | ^4.1.9  | `src/lib/card-data/scryfall.live.test.ts` — network-dependent Scryfall check; keep for card-data-accuracy drift signal.                                                                                                                                                                                                                                                                                                                                                                                                            |
-| e2e (browser)                | Playwright                    | ^1.62.1 | `tests/e2e/**/*.spec.ts` via `playwright.config.ts`; `npm run test:e2e`. Chromium only, against a Playwright-managed `astro dev` on port 4323, with **all** Scryfall traffic intercepted — no Supabase, no auth, no external network. Rides its own `e2e` CI job (see §5). Scope is held by §7: the comparer's failure surfacing, not component render. Recipe in §6.7.                                                                                                                                                            |
+| e2e (browser)                | Playwright                    | ^1.62.1 | `tests/e2e/**/*.spec.ts` via `playwright.config.ts`; `npm run test:e2e`. Chromium only, against a Playwright-managed `astro dev` on port 4323, with **all** Scryfall traffic intercepted — no Supabase, no auth, no external network. Rides its own `e2e` CI job (see §5). Scope is held by §7, which admits two phases: the comparer's failure surfacing (§3 Phase 4) and the path builder's stale-response ordering (§3 Phase 5). Component render stays out. Recipe in §6.7.                                                    |
 | component render             | none (no jsdom/RTL by design) | —       | **deliberately deferred — see §7** (interview Q5: frontend later).                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **Stack grounding tools (current session):**
@@ -971,7 +976,8 @@ choice above would have cost.
 
 - **Test type**: Playwright against a real browser. Reach for it **only** when the claim is
   about something that exists once rendered and nowhere else — §1 principle 1 still rules,
-  and §7 scopes browser E2E to the comparer's failure surfacing, not to any flow an
+  and §7 scopes browser E2E to two phases — the comparer's failure surfacing (§3 Phase 4)
+  and the path builder's stale-response ordering (§3 Phase 5) — not to any flow an
   integration or contract test already covers.
 - **Location**: `tests/e2e/<risk>.spec.ts`, fixtures in `tests/e2e/fixtures/`. `testDir` is
   pinned to `./tests/e2e` in `playwright.config.ts` — that pin is what stops Playwright's
@@ -1222,18 +1228,20 @@ against.
   run of `/10x-implement`, `/10x-e2e` and the review skills silently skipped it.
   The closing gate check ran the same day — break PR #15, closed unmerged, two runs
   reddening one spec each while `ci` and `integration` stayed green (§6.6).
-- **A correction two earlier artifacts owed — landed 2026-09-02.**
-  `tests/integration/global-setup.ts`'s `overrideDevVars` doc comment and §6.2 rule 4
-  both attributed `.dev.vars`' precedence over the spawn env to the adapter's
-  platform-proxy helper, and §6.6's Phase 1 note said the same. The
+- **A correction three earlier artifacts owed — landed 2026-09-02.**
+  `tests/integration/global-setup.ts`'s `overrideDevVars` doc comment, §6.2 rule 4 and
+  §6.6's Phase 1 note all three attributed `.dev.vars`' precedence over the spawn env to
+  the adapter's platform-proxy helper. The
   precedence claim was right and the harness that depends on it was correct; the
   mechanism was not — the Cloudflare adapter parses the file and calls
   `Object.assign(process.env, parsed)` (`@astrojs/cloudflare/dist/index.js:292-303`).
-  Both now state that, corrected 2026-09-02 through
+  All three now state that, corrected 2026-09-02 through
   `context/changes/test-plan-refresh-2026-09-01/`; the override's behavior did not
   change, only its stated cause. It was worth fixing rather than carrying because it
-  says where to look when the override stops working, and `lessons.md` — which
-  recorded the divergence in the first place — now agrees with both.
+  says where to look when the override stops working. `lessons.md` recorded the
+  divergence in the first place and, being append-only, still carries its original
+  present-tense wording plus a dated note that the correction landed — read the note,
+  not the bullet above it, for the current state.
 - **Local quality layers wired 2026-08-31** — a tooling change, so it opened no
   rollout phase and no change folder: a per-edit `PostToolUse` hook
   (`.claude/settings.json` + `.claude/hooks/vitest-related.mjs`) running
@@ -1262,7 +1270,8 @@ against.
   itself — evidenced by a dated required-check read rather than asserted. **§4**'s
   four grounding bullets were re-stamped 2026-09-02 and moved to the past tense where
   they still described Phase 4's runner choice as pending. **§1** and **§7** stopped
-  carrying the "20-file" Vitest figure, which had gone stale twice in two sections,
+  carrying the hard-coded Vitest suite-file count, which had gone stale twice in two
+  sections,
   while the one derivable count stays in §4's `unit (logic)` Notes cell. **§7**'s
   three load-bearing bullets were rewritten: the component-render exclusion now names
   which half of its own trigger is unmet (logic boundary locked, UI not being

@@ -46,6 +46,12 @@ lever — `/10x-e2e:109` and `/10x-implement` both read it "if present".
   `Object.assign(process.env, parsed)` at `@astrojs/cloudflare/dist/index.js:292-303` — the
   file wins because it overwrites `process.env`, not because a proxy resolves it. Load-bearing
   because it says _where to look_ when the override stops working.
+- **Correction landed — the bullet above is now history, not a live defect.** All three
+  sites it names (test-plan §6.2 rule 4, test-plan §6.6's Phase 1 note, and
+  `global-setup.ts`'s `overrideDevVars` comment) now state the adapter's actual mechanism,
+  corrected through `context/changes/test-plan-refresh-2026-09-01/` — see test-plan §8 for
+  the dated entry. Note that the `global-setup.ts:47-48` reference above now lands on the
+  **corrected** text; this register is append-only, so the original wording stays put.
 - **Applies to**: research, plan, implement, impl-review
 
 ## Treat the stale-response guard as five hand copies, not one pattern
