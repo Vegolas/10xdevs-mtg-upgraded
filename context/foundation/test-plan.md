@@ -1316,11 +1316,13 @@ against.
   the branch-protection read behind its order rationale) and §4 (all four grounding
   bullets re-stamped, the `unit (logic)` count re-derived) updated 2026-09-02 by the
   refresh below; §5 deliberately unchanged — see the non-actions entry
-- Cookbook (§6) last reviewed: 2026-09-02 — the preamble gained the `lessons.md` pointer
-  and the record of §6's two schema deviations (seven sub-sections; §6.6 preceding
-  §6.7); §6.7 filled by rollout Phase 4 (browser E2E); §6.4 filled by rollout Phase 3;
-  §6.5 filled 2026-08-25 as a sequencing checklist over §6.2–§6.4, so no sub-section is
-  a stub
+- Cookbook (§6) last reviewed: 2026-09-06 — §6.7's authenticated-spec subsection gained
+  items 25–27 and had item 22's findings reference corrected (see the dated entry below);
+  everything else re-read as still current and unchanged from the 2026-09-02 review, which
+  gave the preamble the `lessons.md` pointer and the record of §6's two schema deviations
+  (seven sub-sections; §6.6 preceding §6.7). §6.7 filled by rollout Phase 4 (browser E2E);
+  §6.4 filled by rollout Phase 3; §6.5 filled 2026-08-25 as a sequencing checklist over
+  §6.2–§6.4, so no sub-section is a stub
 - Rollout: §3 Phases 1–5 all `complete` — Phases 1–3 by 2026-08-20, Phase 4 on
   2026-08-31, Phase 5 on 2026-09-06 — so the rollout table has no open phase. Note that
   Phase 5 completing did **not** move risk #9 out of §2's open table; see the entry below
@@ -1462,6 +1464,46 @@ against.
   (`findings.md` F-1 through F-6), two of them pinned by `test.fail()` specs; the
   remaining §2/§3 corrections are listed in that change's `backport.md` for the next
   `/10x-test-plan --refresh`.
+- **Risk #9's remaining two defects were pinned 2026-09-06** through
+  `context/archive/2026-09-06-testing-path-builder-error-and-mode/`. It opened no rollout
+  phase — §3 has had none since Phase 5 closed the same day — because it added no new risk
+  and no new job: two more specs joined the file Phase 5 created, in the job Phase 5's CI
+  work already built. What it changed: **§6.7** gained items **25–27** on the
+  authenticated-spec subsection — a parked route needs a *failing* release
+  (`ParkedRoute.releaseWithFailure`, and why a 500 rather than `route.abort()`,
+  cross-referencing item 8); an observation window must be pointed at a surface that can
+  actually render in the state the spec leaves the app in, or the negative assertion passes
+  vacuously; and the two-identical-banners case as a second instance of item 1, with the
+  rule that you name **both** twins rather than relying on one being incidentally unique.
+  **Item 22**'s findings reference was corrected: it named F-1 and F-2 and an unqualified
+  "that change's `findings.md`", and now names F-1 through F-4, the archived path that holds
+  them, and the fact that the file carries **four** inverted specs — so a run reporting fewer
+  than four expected failures has had an annotation removed. One **production** edit shipped
+  (`role="alert"` plus a distinguishing `aria-label` on both of `PathEditor`'s
+  byte-identical error banners), which is the second time a browser phase has had to make a
+  surface addressable in shipped code rather than in the test; item 1 predicted that and
+  item 27 now records the twin case. Two claims in the archived Phase 5 `findings.md` were
+  **superseded, not implemented** — F-3's "superseded or not" mechanism and F-4's predicted
+  "full-list verdict under the diff-mode textarea", both of which the render tree forbids;
+  the correction and its generalizable rule live in `context/foundation/lessons.md`, since
+  the archived source is immutable. F-5 (three unguarded mutation flows) and F-6 (zero-entry
+  text rendering the success verdict) are carried forward with re-verified line numbers in
+  that change's own `findings.md`, which also names the F-5 shared-guard refactor as the
+  designated successor and argues the ordering: the refactor now runs over four `test.fail()`
+  pins rather than two.
+- **Two §2 corrections this change owes and did not take.** Recorded here rather than in a
+  `backport.md`, because the change folder is archived and immutable. Both are in risk #9's
+  row, whose cells §2's own prose puts under edit restriction, so they want a refresh's
+  authority rather than an implementation phase's: (a) the "Answered by" cell points at
+  `context/changes/testing-path-builder-ordering/findings.md`, a path that no longer exists —
+  it archived to `context/archive/2026-09-05-testing-path-builder-ordering/` on 2026-09-06;
+  (b) that same cell says F-1 and F-2 "are live, pinned by `test.fail()` specs", which was
+  true for one day. Four are now pinned, and the row's own explanatory paragraph below the
+  table already says "the four defects behind it are F-1 through F-4" — so the table cell and
+  the prose under it disagree. Neither correction changes the row's rating or its
+  **documented, not protected** disposition: the specs are still inverted, the guards are
+  still unrepaired, and #9 still belongs in the open table. A future refresh should fix the
+  path, restate the count, and leave everything else in the row alone.
 - Stack versions last verified: 2026-09-02 — every declared-versus-installed pair
   re-read and unchanged: `astro ^6.3.1` resolves to 6.4.8, `vitest ^4.1.9` to 4.1.9 and
   `@playwright/test ^1.62.1` to 1.62.1, so §4's rows and its "Vitest 4 / Astro 6"
