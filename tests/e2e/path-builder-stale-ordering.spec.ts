@@ -21,8 +21,9 @@ import { createSignedInOwner, deleteOwner, seedPathWithStep, type Owner } from "
  * This is the coverage-not-repair convention from test-plan §6.7 item 15 — a spec for a
  * live defect would otherwise be red today, which would make this a bug-fix change. The
  * defects are filed as F-1 through F-6 in
- * `context/changes/testing-path-builder-ordering/findings.md`; each test names the one it
- * pins.
+ * `context/archive/2026-09-05-testing-path-builder-ordering/findings.md`; each test names
+ * the one it pins. Two of those entries are superseded by what S3 and S4 had to establish
+ * to be writable at all — see each spec's header, and `lessons.md`.
  *
  * WHY SETUP LIVES IN `beforeEach` AND NOT IN THE TEST BODY. `test.fail()` inverts
  * everything the body does, harness failures included — a broken sign-in or a rejected
@@ -61,9 +62,25 @@ const S2_DECK_B = "1 Lightning Bolt\n1 Counterspell";
  *  seeds its OWN path holding one step named "base", so nothing can collide with it. */
 const S2_STEP_NAME = "added mid-check";
 
+/** S3's two decks. Disjoint from each other AND from S1's and S2's, for the same cache
+ *  reason: the fixture parks on a name from A, and B's POST has to actually reach the
+ *  network so the add it drives can run to completion while A is still held. */
+const S3_DECK_A = "1 Smothering Tithe\n1 Dockside Extortionist";
+const S3_PARK_ON = "Smothering Tithe";
+const S3_DECK_B = "1 Swords to Plowshares\n1 Path to Exile";
+
+/** The checkpoint S3 saves while A's Check is parked. Fixed string, same reasoning as S2's. */
+const S3_STEP_NAME = "saved before the failure";
+
 /** The pre-save Check verdict rendered when every card resolves (`PathEditor.tsx:724`).
  *  Substring, so the non-aria-hidden `✓` glyph in that element's text is not in the way. */
 const ALL_RESOLVED = "All cards resolved";
+
+/** The accessible name the add flow's error banner carries (`PathEditor.tsx:759-770`).
+ *  It exists BECAUSE of this file: the banner's class string is byte-identical to the
+ *  path-level `mutationError` banner at `:596`, so before both were named a locator for one
+ *  matched the other and F-3 was not spec-able at all. Test-plan §6.7 item 1. */
+const CHECKPOINT_ERROR = "Checkpoint error";
 
 /** Owner-email label. Uniqueness comes from `createOwner`'s timestamp + random suffix; this
  *  only has to stay email-safe, so it is a constant rather than the test title. */
@@ -266,4 +283,89 @@ test("a pre-save verdict never survives the checkpoint that replaced it", async 
   expect(await verdictEverRendered).toBe(false);
   await expect(main.getByRole("heading", { name: S2_STEP_NAME })).toBeVisible();
   await expect(deckBox).toHaveValue("");
+});
+
+/**
+ * S3 — finding F-3: a Check's transport failure writes the ADD flow's error banner.
+ *
+ * `runCheck`'s catch (`PathEditor.tsx:334-341`) and `runDiffCheck`'s (`:362-369`) both call
+ * `setAddState({status: "error", …})`. `addState` is the add flow's atom, guarded by
+ * `addToken` (`:189`), and neither Check ever advances that counter — so a Check that throws
+ * writes the checkpoint-error banner regardless of what the add flow has since done.
+ *
+ * NOT the mechanism `findings.md` F-3 records, and the difference decides the test. That
+ * entry says the banner is written "by whichever Check throws, SUPERSEDED OR NOT". Both
+ * catches DO re-check `checkToken` (`:335`, `:363`) before writing, so a Check superseded by
+ * another Check is correctly dropped — and the Check button is disabled while
+ * `checkState.status === "checking"` (`:771-776`), so that overlap cannot be driven through
+ * the UI in the first place. The defect is not an unguarded write; it is a write GUARDED BY
+ * THE WRONG COUNTER. The reachable overlap is therefore Check-versus-ADD, which is what this
+ * drives. A spec written to the filed mechanism would have chased an overlap the UI forbids.
+ *
+ * WHY THE ASSERTION NAMES THE BANNER AND NOT ITS MESSAGE. F-3's recommended fix routes each
+ * Check's catch to a Check-owned error atom, so the same "could not reach the card database"
+ * text would still be on screen afterwards — on a different banner. A text-matched assertion
+ * would keep failing after the fix, and the inversion would never lift. Matching on the
+ * banner's accessible name is what makes this spec retire when the guard is repaired.
+ *
+ * Structurally this is S2 with a failing release: same park-then-add shape, same completion
+ * proofs, same observation window. Only the release differs.
+ */
+test("a checkpoint-error banner never describes a Check that failed after the save", async ({ page }) => {
+  // Expected to fail until F-3 is fixed. An unexpected pass means it was — see the header.
+  test.fail();
+
+  // Park deck A's `/cards/collection` POST. Deck B shares no names, so the predicate does
+  // not match it and it resolves normally — which is what lets the add run to completion.
+  const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S3_PARK_ON));
+
+  const main = await gotoPathBuilder(page, seededPathId());
+
+  const deckBox = main.getByLabel("Deck list");
+  await deckBox.fill(S3_DECK_A);
+
+  const check = main.getByRole("button", { name: "Check", exact: true });
+  await expect(check).toBeEnabled();
+  await check.click();
+
+  // Deck A's resolve must be genuinely in flight before the add starts, or the two runs
+  // never overlap and the assertion below proves nothing.
+  await parked.arrived;
+
+  // The user saves a different list as a checkpoint. The Add CTA is reachable because it is
+  // NOT disabled by an in-flight Check — `:790` gates it on `addState` alone.
+  await main.getByLabel("Checkpoint name").fill(S3_STEP_NAME);
+  await deckBox.fill(S3_DECK_B);
+  await main.getByRole("button", { name: "Add checkpoint" }).click();
+
+  // Prove the add ran to COMPLETION and SUCCEEDED — both halves matter here. The rendered
+  // step is the sharpest proof of each: `setSteps` sits in the same synchronous block as the
+  // `setAddState({status: "idle"})` at `:313`, so a visible step card means the add's own
+  // error state is already cleared and any banner appearing later came from somewhere else.
+  await expect(main.getByRole("heading", { name: S3_STEP_NAME })).toBeVisible();
+  await expect(deckBox).toHaveValue("");
+
+  // Deck A's superseded run must also be shown to complete — `runCheck`'s catch is reached
+  // only once `resolveDeck` has actually rejected.
+  const deckAResponse = page.waitForResponse((response) => isCollectionPostFor(S3_PARK_ON)(response.request()));
+
+  // An observation window, not a sample, for the same reason as S1 and S2: the stale write
+  // lands a React commit later than the response that triggered it.
+  const bannerEverRendered = main
+    .getByRole("alert", { name: CHECKPOINT_ERROR })
+    .waitFor({ state: "visible", timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+
+  // The failing release IS the mechanism under test. A 500 rather than `route.abort()`, so
+  // the throw carries a deterministic message instead of a browser-dependent "Failed to
+  // fetch" — test-plan §6.7 item 8, and the same choice `mockScryfallCollectionFailsOnce`
+  // documents.
+  await parked.releaseWithFailure();
+  await deckAResponse;
+
+  // The contradiction, as two facts that cannot both be right: a banner reporting that the
+  // checkpoint errored, above the checkpoint that saved.
+  expect(await bannerEverRendered).toBe(false);
+  await expect(main.getByRole("heading", { name: S3_STEP_NAME })).toBeVisible();
 });

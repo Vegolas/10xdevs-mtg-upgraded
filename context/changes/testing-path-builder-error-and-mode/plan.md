@@ -485,29 +485,29 @@ signature, so S1 and S2 are untouched.
 
 #### Automated
 
-- [x] 1.1 Linting passes: `npm run lint`
-- [x] 1.2 Type checking passes: `npm run typecheck`
-- [x] 1.3 Unit suite passes: `npm run test`
-- [x] 1.4 Browser suite passes with S1 and S2 still reporting exactly two expected failures and zero unexpected ones: `npm run test:e2e`
+- [x] 1.1 Linting passes: `npm run lint` — 24ff393
+- [x] 1.2 Type checking passes: `npm run typecheck` — 24ff393
+- [x] 1.3 Unit suite passes: `npm run test` — 24ff393
+- [x] 1.4 Browser suite passes with S1 and S2 still reporting exactly two expected failures and zero unexpected ones: `npm run test:e2e` — 24ff393
 
 #### Manual
 
-- [x] 1.5 The path builder renders unchanged — both banners keep their existing appearance, position and copy
-- [x] 1.6 A screen reader announces the checkpoint error banner when an add fails, and the path error banner when a rename or delete fails
+- [x] 1.5 The path builder renders unchanged — both banners keep their existing appearance, position and copy — 24ff393
+- [x] 1.6 A screen reader announces the checkpoint error banner when an add fails, and the path error banner when a rename or delete fails — 24ff393
 
 ### Phase 2: S3 — a Check's failure never lands on a saved checkpoint
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Type checking passes: `npm run typecheck`
-- [ ] 2.3 Browser suite reports exactly three expected failures and zero unexpected ones: `npm run test:e2e`
-- [ ] 2.4 The spec run alone with `test.fail()` commented out fails on the checkpoint-error banner appearing
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Type checking passes: `npm run typecheck`
+- [x] 2.3 Browser suite reports exactly three expected failures and zero unexpected ones: `npm run test:e2e`
+- [x] 2.4 The spec run alone with `test.fail()` commented out fails on the checkpoint-error banner appearing
 
 #### Manual
 
-- [ ] 2.5 The deliberate-break trace shows the checkpoint rendered and the box empty when the banner appears
-- [ ] 2.6 Reading the spec cold, it is clear which finding it pins and what an unexpected pass means
+- [x] 2.5 The deliberate-break trace shows the checkpoint rendered and the box empty when the banner appears
+- [x] 2.6 Reading the spec cold, it is clear which finding it pins and what an unexpected pass means
 
 ### Phase 3: S4 — switching entry mode invalidates the Check in flight
 
