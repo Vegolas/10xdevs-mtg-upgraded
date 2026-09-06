@@ -72,13 +72,18 @@ const S3_DECK_B = "1 Swords to Plowshares\n1 Path to Exile";
 /** The checkpoint S3 saves while A's Check is parked. Fixed string, same reasoning as S2's. */
 const S3_STEP_NAME = "saved before the failure";
 
-/** The pre-save Check verdict rendered when every card resolves (`PathEditor.tsx:724`).
+/** S4's deck. One list is enough — the second event is a mode switch, not a second resolve —
+ *  but it still has to be disjoint from S1's, S2's and S3's for the cache reason above. */
+const S4_DECK = "1 Mana Crypt\n1 Chrome Mox";
+const S4_PARK_ON = "Mana Crypt";
+
+/** The pre-save Check verdict rendered when every card resolves (`PathEditor.tsx:741`).
  *  Substring, so the non-aria-hidden `✓` glyph in that element's text is not in the way. */
 const ALL_RESOLVED = "All cards resolved";
 
-/** The accessible name the add flow's error banner carries (`PathEditor.tsx:759-770`).
+/** The accessible name the add flow's error banner carries (`PathEditor.tsx:771-784`).
  *  It exists BECAUSE of this file: the banner's class string is byte-identical to the
- *  path-level `mutationError` banner at `:596`, so before both were named a locator for one
+ *  path-level `mutationError` banner at `:595-609`, so before both were named a locator for one
  *  matched the other and F-3 was not spec-able at all. Test-plan §6.7 item 1. */
 const CHECKPOINT_ERROR = "Checkpoint error";
 
@@ -151,13 +156,13 @@ function isCollectionPostFor(cardName: string) {
  * S1 — finding F-1: clearing the deck box invalidates nothing.
  *
  * `runCheck` guards its write with `checkToken` (`PathEditor.tsx:326`, `:330`), but the
- * textarea's `onChange` (`:708-710`) only calls `setListText` — it moves no token and
+ * textarea's `onChange` (`:720-722`) only calls `setListText` — it moves no token and
  * resets no state. So a resolve that was in flight when the box was emptied still passes
  * its own token check and writes `checked` over an input that is now empty.
  *
  * NOT the mechanism `lessons.md:78-81` records. That entry blames `runCheck`'s empty-text
  * branch (`:322-324`) for "returning without bumping", but the branch is unreachable: the
- * Check button is `disabled` on empty text (`:771-776`) and the four other call sites all
+ * Check button is `disabled` on empty text (`:792-797`) and the four other call sites all
  * pass non-empty text. Adding a bump there would fix nothing. Load-bearing, because it is
  * the difference between a one-line fix and the right one.
  */
@@ -222,7 +227,7 @@ test("a pre-save verdict never describes a deck box the user cleared", async ({ 
  * re-populates the atoms the add just cleared, over a box the add also emptied.
  *
  * This is drivable through real affordances only because the Add button is NOT disabled
- * during a Check — `:790` gates it on `addState === "resolving"` alone. Without that, the
+ * during a Check — `:811` gates it on `addState === "resolving"` alone. Without that, the
  * overlap could not be produced by a user and the finding would be theoretical.
  *
  * Note what is NOT used here: typing to force the overlap. `lessons.md:9-22` names that as
@@ -297,7 +302,7 @@ test("a pre-save verdict never survives the checkpoint that replaced it", async 
  * entry says the banner is written "by whichever Check throws, SUPERSEDED OR NOT". Both
  * catches DO re-check `checkToken` (`:335`, `:363`) before writing, so a Check superseded by
  * another Check is correctly dropped — and the Check button is disabled while
- * `checkState.status === "checking"` (`:771-776`), so that overlap cannot be driven through
+ * `checkState.status === "checking"` (`:792-797`), so that overlap cannot be driven through
  * the UI in the first place. The defect is not an unguarded write; it is a write GUARDED BY
  * THE WRONG COUNTER. The reachable overlap is therefore Check-versus-ADD, which is what this
  * drives. A spec written to the filed mechanism would have chased an overlap the UI forbids.
@@ -333,7 +338,7 @@ test("a checkpoint-error banner never describes a Check that failed after the sa
   await parked.arrived;
 
   // The user saves a different list as a checkpoint. The Add CTA is reachable because it is
-  // NOT disabled by an in-flight Check — `:790` gates it on `addState` alone.
+  // NOT disabled by an in-flight Check — `:811` gates it on `addState` alone.
   await main.getByLabel("Checkpoint name").fill(S3_STEP_NAME);
   await deckBox.fill(S3_DECK_B);
   await main.getByRole("button", { name: "Add checkpoint" }).click();
@@ -368,4 +373,96 @@ test("a checkpoint-error banner never describes a Check that failed after the sa
   // checkpoint errored, above the checkpoint that saved.
   expect(await bannerEverRendered).toBe(false);
   await expect(main.getByRole("heading", { name: S3_STEP_NAME })).toBeVisible();
+});
+
+/**
+ * S4 — finding F-4: `switchMode` resets three atoms and advances neither counter.
+ *
+ * `switchMode` (`PathEditor.tsx:376-382`) clears `listText` and resets `checkState`,
+ * `diffPreview` and `addState` — while bumping neither `addToken` nor `checkToken`. So a
+ * Check already in flight survives the switch, passes its own token check, and repopulates
+ * the atom the switch just cleared. The one control whose own comment (`:374-375`) says it
+ * exists so the two surfaces "never bleed into each other" is the one control that
+ * invalidates nothing.
+ *
+ * WHY A ROUND TRIP, AND WHY BOTH SWITCHES PRECEDE THE RELEASE. The verdict renders only
+ * under `activeMode === "full"` (`:733`). One switch leaves the app in diff mode, where the
+ * stale write happens but cannot be seen. Releasing first and switching back afterwards is
+ * worse: that second `switchMode` resets `checkState` to `idle` before the user arrives, so
+ * the write is real and still invisible. Both switches must land BEFORE the release, so the
+ * stale write commits while the full-list surface is already back on screen. Get this order
+ * wrong and the spec passes vacuously — its observation window would be watching an element
+ * that can never appear.
+ *
+ * WHAT `findings.md` F-4 PREDICTS CANNOT HAPPEN. That entry expects "a full-list verdict
+ * under the diff-mode textarea". Both previews are mode-gated — `:733` and `:745` — so
+ * neither can ever render under the other mode's surface, and a spec written to that
+ * prediction would assert something the render tree forbids. The only atom that genuinely
+ * crosses modes is `addState` (`:771-784`), which is not gated; S3 already covers a wrong
+ * write to it. What is left for S4, and what this asserts, is the verdict landing over the
+ * box the switch itself emptied.
+ *
+ * WHY THIS IS NOT S1 WITH EXTRA STEPS. S1 drives the textarea's `onChange` (`:720-722`);
+ * this drives `switchMode` (`:376-382`). Two distinct sites that each fail to invalidate,
+ * with different fixes — `onChange` has to bump on every edit, `switchMode` has to advance
+ * both counters. Repairing either leaves the other live, so the two specs retire
+ * independently and neither is redundant.
+ */
+test("a pre-save verdict never survives the entry-mode switch that cleared it", async ({ page }) => {
+  // Expected to fail until F-4 is fixed. An unexpected pass means it was — see the header.
+  test.fail();
+
+  const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S4_PARK_ON));
+
+  const main = await gotoPathBuilder(page, seededPathId());
+
+  const deckBox = main.getByLabel("Deck list");
+  await deckBox.fill(S4_DECK);
+
+  const check = main.getByRole("button", { name: "Check", exact: true });
+  await expect(check).toBeEnabled();
+  await check.click();
+
+  // The resolve must be genuinely in flight before the switch, or there is nothing for the
+  // switch to have failed to invalidate.
+  await parked.arrived;
+
+  // The toggle renders only when `steps.length >= 1` (`:661`), which the seeded path
+  // satisfies — so this needs no second seeded shape. Scoping to the group also keeps
+  // "Changes" from colliding with the diff-mode textarea label, which contains that word.
+  const entryMode = main.getByRole("group", { name: "Entry mode" });
+  const fullList = entryMode.getByRole("button", { name: "Full list" });
+  const changes = entryMode.getByRole("button", { name: "Changes" });
+  await expect(fullList).toHaveAttribute("aria-pressed", "true");
+
+  // Out to diff mode and straight back. Asserting `aria-pressed` between the clicks is what
+  // stops this being two silent no-ops: a toggle that never moved would make everything
+  // below vacuous, and nothing else in the test would notice.
+  await changes.click();
+  await expect(changes).toHaveAttribute("aria-pressed", "true");
+  await fullList.click();
+  await expect(fullList).toHaveAttribute("aria-pressed", "true");
+
+  // The box is empty because `switchMode` emptied it (`:378`) — NOT because this test
+  // cleared it, which is S1's event. That provenance is what makes a verdict about resolved
+  // cards a contradiction here rather than a stale but defensible reading.
+  await expect(deckBox).toHaveValue("");
+
+  // The superseded run must be shown to complete — the token comparison at `:330` is reached
+  // only after `resolveDeck` returns.
+  const checkResponse = page.waitForResponse((response) => isCollectionPostFor(S4_PARK_ON)(response.request()));
+
+  // An observation window, not a sample, for the same reason as S1 and S2.
+  const verdictEverRendered = main
+    .getByText(ALL_RESOLVED)
+    .waitFor({ state: "visible", timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+
+  await parked.release();
+  await checkResponse;
+
+  // A verdict about resolved cards, above the box the mode switch emptied.
+  expect(await verdictEverRendered).toBe(false);
+  await expect(deckBox).toHaveValue("");
 });

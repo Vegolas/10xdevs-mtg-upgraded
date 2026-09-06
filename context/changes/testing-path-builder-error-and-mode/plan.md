@@ -499,30 +499,30 @@ signature, so S1 and S2 are untouched.
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Type checking passes: `npm run typecheck`
-- [x] 2.3 Browser suite reports exactly three expected failures and zero unexpected ones: `npm run test:e2e`
-- [x] 2.4 The spec run alone with `test.fail()` commented out fails on the checkpoint-error banner appearing
+- [x] 2.1 Linting passes: `npm run lint` — 27b52cb
+- [x] 2.2 Type checking passes: `npm run typecheck` — 27b52cb
+- [x] 2.3 Browser suite reports exactly three expected failures and zero unexpected ones: `npm run test:e2e` — 27b52cb
+- [x] 2.4 The spec run alone with `test.fail()` commented out fails on the checkpoint-error banner appearing — 27b52cb
 
 #### Manual
 
-- [x] 2.5 The deliberate-break trace shows the checkpoint rendered and the box empty when the banner appears
-- [x] 2.6 Reading the spec cold, it is clear which finding it pins and what an unexpected pass means
+- [x] 2.5 The deliberate-break trace shows the checkpoint rendered and the box empty when the banner appears — 27b52cb
+- [x] 2.6 Reading the spec cold, it is clear which finding it pins and what an unexpected pass means — 27b52cb
 
 ### Phase 3: S4 — switching entry mode invalidates the Check in flight
 
 #### Automated
 
-- [ ] 3.1 Linting passes: `npm run lint`
-- [ ] 3.2 Type checking passes: `npm run typecheck`
-- [ ] 3.3 Browser suite reports exactly four expected failures and zero unexpected ones: `npm run test:e2e`
-- [ ] 3.4 The spec run alone with `test.fail()` commented out fails on the verdict rendering
-- [ ] 3.5 Bumping `checkToken` inside `switchMode` locally makes the spec report `Expected to fail, but passed.`
+- [x] 3.1 Linting passes: `npm run lint`
+- [x] 3.2 Type checking passes: `npm run typecheck`
+- [x] 3.3 Browser suite reports exactly four expected failures and zero unexpected ones: `npm run test:e2e`
+- [x] 3.4 The spec run alone with `test.fail()` commented out fails on the verdict rendering
+- [x] 3.5 Bumping `checkToken` inside `switchMode` locally makes the spec report `Expected to fail, but passed.`
 
 #### Manual
 
-- [ ] 3.6 Driving the round trip by hand in the browser reproduces the stale verdict over an empty deck box
-- [ ] 3.7 The `aria-pressed` assertions genuinely fail if the toggle is removed
+- [x] 3.6 Driving the round trip by hand in the browser reproduces the stale verdict over an empty deck box
+- [x] 3.7 The `aria-pressed` assertions genuinely fail if the toggle is removed
 
 ### Phase 4: The record
 
