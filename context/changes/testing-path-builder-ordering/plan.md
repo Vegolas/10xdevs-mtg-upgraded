@@ -326,31 +326,31 @@ None. No schema change, no data migration. `tests/e2e/.auth/` must be gitignored
 
 #### Automated
 
-- [x] 2.1 The S1 spec reports as expected-to-fail, not as a failure
-- [x] 2.2 Full browser suite green: `npm run test:e2e`
-- [x] 2.3 Lint and typecheck pass
+- [x] 2.1 The S1 spec reports as expected-to-fail, not as a failure — e57a2c5
+- [x] 2.2 Full browser suite green: `npm run test:e2e` — e57a2c5
+- [x] 2.3 Lint and typecheck pass — e57a2c5
 
 #### Manual
 
-- [x] 2.4 Reviewed against the five agent E2E anti-patterns
-- [x] 2.5 With the guard fixed locally, S1 reports an unexpected pass and the run goes red — then reverted
-- [x] 2.6 The parked resolve is proven in flight before the clear, and complete before the assertion
-- [x] 2.7 No `waitForTimeout`, no `networkidle`; runs standalone in either order
+- [x] 2.4 Reviewed against the five agent E2E anti-patterns — e57a2c5
+- [x] 2.5 With the guard fixed locally, S1 reports an unexpected pass and the run goes red — then reverted — e57a2c5
+- [x] 2.6 The parked resolve is proven in flight before the clear, and complete before the assertion — e57a2c5
+- [x] 2.7 No `waitForTimeout`, no `networkidle`; runs standalone in either order — e57a2c5
 
 ### Phase 3: S2 — a verdict never survives a successful add
 
 #### Automated
 
-- [ ] 3.1 The S2 spec reports as expected-to-fail
-- [ ] 3.2 Full browser suite green: `npm run test:e2e`
-- [ ] 3.3 Lint and typecheck pass
+- [x] 3.1 The S2 spec reports as expected-to-fail
+- [x] 3.2 Full browser suite green: `npm run test:e2e`
+- [x] 3.3 Lint and typecheck pass
 
 #### Manual
 
-- [ ] 3.4 Reviewed against the five agent E2E anti-patterns
-- [ ] 3.5 With `:314-315` moved under a `checkToken` bump locally, S2 reports an unexpected pass — then reverted
-- [ ] 3.6 The add is proven complete before the parked run is released
-- [ ] 3.7 Both specs run standalone and in either order
+- [x] 3.4 Reviewed against the five agent E2E anti-patterns
+- [x] 3.5 With `:314-315` moved under a `checkToken` bump locally, S2 reports an unexpected pass — then reverted
+- [x] 3.6 The add is proven complete before the parked run is released
+- [x] 3.7 Both specs run standalone and in either order
 
 ### Phase 4: The record
 

@@ -50,6 +50,17 @@ const S1_DECK = "1 Sol Ring\n1 Arcane Signet";
 /** The name the parked POST is matched on — the card that must reach Scryfall. */
 const S1_PARK_ON = "Sol Ring";
 
+/** S2's two decks. Disjoint from each other AND from S1's, for the cache reason above and
+ *  because the two `/cards/collection` POSTs have to stay tellable apart: the fixture parks
+ *  on a name from A, and the release is awaited on a response carrying that same name. */
+const S2_DECK_A = "1 Cyclonic Rift\n1 Rhystic Study";
+const S2_PARK_ON = "Cyclonic Rift";
+const S2_DECK_B = "1 Lightning Bolt\n1 Counterspell";
+
+/** The checkpoint S2 adds while A's Check is parked. A fixed string is safe: every test
+ *  seeds its OWN path holding one step named "base", so nothing can collide with it. */
+const S2_STEP_NAME = "added mid-check";
+
 /** The pre-save Check verdict rendered when every card resolves (`PathEditor.tsx:724`).
  *  Substring, so the non-aria-hidden `✓` glyph in that element's text is not in the way. */
 const ALL_RESOLVED = "All cards resolved";
@@ -181,5 +192,78 @@ test("a pre-save verdict never describes a deck box the user cleared", async ({ 
   // The contradiction risk #9 describes, put as two facts that cannot both be right: a
   // verdict about resolved cards, above a box holding no cards.
   expect(await verdictEverRendered).toBe(false);
+  await expect(deckBox).toHaveValue("");
+});
+
+/**
+ * S2 — finding F2: a successful add clears the verdict under the WRONG counter.
+ *
+ * `handleAddStep` resets `checkState` and `diffPreview` on success (`PathEditor.tsx:314`,
+ * `:315`), but the whole add run is guarded by `addToken` (`:225`) — a different `useRef`
+ * from the `checkToken` (`:191`) that `runCheck` bumps. So an add does not invalidate a
+ * Check already in flight: the Check lands afterwards, passes its own token check, and
+ * re-populates the atoms the add just cleared, over a box the add also emptied.
+ *
+ * This is drivable through real affordances only because the Add button is NOT disabled
+ * during a Check — `:790` gates it on `addState === "resolving"` alone. Without that, the
+ * overlap could not be produced by a user and the finding would be theoretical.
+ *
+ * Note what is NOT used here: typing to force the overlap. `lessons.md:9-22` names that as
+ * the anti-pattern for the comparer, where a 700ms debounce coalesces keystrokes into one
+ * run. The path builder has no debounce (`PathEditor.tsx:386`) — both runs are started by
+ * explicit button clicks, so the overlap is real by construction rather than by timing.
+ */
+test("a pre-save verdict never survives the checkpoint that replaced it", async ({ page }) => {
+  // Expected to fail until F2 is fixed. An unexpected pass means it was — see the header.
+  test.fail();
+
+  // Park deck A's `/cards/collection` POST. Deck B's shares no names, so it is not matched
+  // by the predicate and resolves normally — which is what lets the add run to completion.
+  const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S2_PARK_ON));
+
+  const main = await gotoPathBuilder(page, seededPathId());
+
+  const deckBox = main.getByLabel("Deck list");
+  await deckBox.fill(S2_DECK_A);
+
+  const check = main.getByRole("button", { name: "Check", exact: true });
+  await expect(check).toBeEnabled();
+  await check.click();
+
+  // Deck A's resolve must be genuinely in flight before the add starts, or the two runs
+  // never overlap and the assertion below proves nothing.
+  await parked.arrived;
+
+  // The user moves on: a different list, saved as a checkpoint. The Add CTA is reachable
+  // because it is not disabled by an in-flight Check.
+  await main.getByLabel("Checkpoint name").fill(S2_STEP_NAME);
+  await deckBox.fill(S2_DECK_B);
+  await main.getByRole("button", { name: "Add checkpoint" }).click();
+
+  // Prove the add ran to COMPLETION rather than merely having been clicked. The rendered
+  // step is the sharpest available proof: `setSteps` sits in the same synchronous block as
+  // the `:314-315` resets, so a visible step card means those resets have already run.
+  await expect(main.getByRole("heading", { name: S2_STEP_NAME })).toBeVisible();
+  await expect(deckBox).toHaveValue("");
+
+  // Deck A's superseded run must also be shown to complete — the token comparison at `:330`
+  // is reached only after `resolveDeck` returns.
+  const deckAResponse = page.waitForResponse((response) => isCollectionPostFor(S2_PARK_ON)(response.request()));
+
+  // An observation window, not a sample, for the same reason as S1: the stale write lands a
+  // React commit later than the response that triggered it.
+  const verdictEverRendered = main
+    .getByText(ALL_RESOLVED)
+    .waitFor({ state: "visible", timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+
+  await parked.release();
+  await deckAResponse;
+
+  // The checkpoint stands, the box is empty — and no verdict about deck A may appear over
+  // either of them.
+  expect(await verdictEverRendered).toBe(false);
+  await expect(main.getByRole("heading", { name: S2_STEP_NAME })).toBeVisible();
   await expect(deckBox).toHaveValue("");
 });
