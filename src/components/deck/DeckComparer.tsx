@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RotateCw } from "lucide-react";
 import { generateUpgradePlan, applySuggestion, acceptAllSuggestions } from "@/lib/deck";
 import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
+import { useLatestRun } from "@/lib/async/useLatestRun";
 import { Button } from "@/components/ui/button";
 import { NotchButton } from "@/components/ui/NotchButton";
 import { CardGroupColumn } from "./CardGroupColumn";
@@ -37,9 +38,9 @@ function countCardLines(text: string): number {
  * DeckDelta's anonymous, stateless comparer: two deck-list text areas that
  * auto-build the grouped upgrade plan ~700ms after edits settle. A gold Calculate
  * CTA triggers an immediate (guarded) run; once a plan is ready the inputs
- * collapse to a one-line strip that "Edit decklists ▾" reopens. Runs are guarded
- * by a request token so a slow earlier resolution can never clobber a newer plan,
- * and the resolver's transient failure surfaces as a retryable error banner.
+ * collapse to a one-line strip that "Edit decklists ▾" reopens. Runs go through a
+ * {@link useLatestRun} lane so a slow earlier resolution can never clobber a newer
+ * plan, and the resolver's transient failure surfaces as a retryable error banner.
  * Account-backed persistence lives in the path builder (`/paths`); this surface
  * keeps nothing.
  */
@@ -57,37 +58,51 @@ export default function DeckComparer() {
   // first paint, the stored value adopted after mount (hydration-safe).
   const { mode: sortMode, setMode: handleSortChange } = useSortMode();
 
-  // Monotonic token: only the latest run is allowed to write the view.
-  const requestToken = useRef(0);
+  // The plan lane: only the latest run is allowed to write the view. `inFlight`
+  // is unread here — this lane is latest-wins, and nothing about the comparer is
+  // gated on a run being outstanding.
+  const [, planLane] = useLatestRun();
 
   const bothFilled = baseText.trim() !== "" && targetText.trim() !== "";
 
   // Inputs collapse to the strip once a plan is ready, unless reopened for edit.
   const inputsCollapsed = view.status === "ready" && !editing;
 
-  const runPlan = useCallback(async (base: string, target: string) => {
-    const token = ++requestToken.current;
-    setView({ status: "loading" });
+  const runPlan = useCallback(
+    async (base: string, target: string) => {
+      // Outside the run: the spinner is immediate feedback for the click that
+      // started it, not a result the guard may drop.
+      setView({ status: "loading" });
 
-    const outcome = await generateUpgradePlan(base, target);
-    if (token !== requestToken.current) {
-      return; // a newer run started while this one was in flight — drop it.
-    }
+      await planLane.run(async () => {
+        const outcome = await generateUpgradePlan(base, target);
 
-    if (outcome.status === "ok") {
-      setView({ status: "ready", plan: outcome.plan, unresolved: outcome.unresolved });
-    } else if (outcome.status === "error") {
-      setView({ status: "error", message: outcome.message });
-    } else {
-      setView({ status: "idle" });
-    }
-  }, []);
+        // Returned, not written. A newer run started while this one was in
+        // flight means the lane never invokes this — the drop stays as silent
+        // as the token comparison it replaces.
+        if (outcome.status === "ok") {
+          return () => {
+            setView({ status: "ready", plan: outcome.plan, unresolved: outcome.unresolved });
+          };
+        }
+        if (outcome.status === "error") {
+          return () => {
+            setView({ status: "error", message: outcome.message });
+          };
+        }
+        return () => {
+          setView({ status: "idle" });
+        };
+      });
+    },
+    [planLane],
+  );
 
   useEffect(() => {
     if (!bothFilled) {
       // Invalidate any in-flight run so its late result can't land. The idle
       // view is derived from `bothFilled` at render time, so no setState here.
-      requestToken.current++;
+      planLane.invalidate();
       return;
     }
 
@@ -98,7 +113,7 @@ export default function DeckComparer() {
     return () => {
       clearTimeout(handle);
     };
-  }, [baseText, targetText, bothFilled, runPlan]);
+  }, [baseText, targetText, bothFilled, runPlan, planLane]);
 
   // The Calculate CTA: collapse the inputs and build immediately (guarded). The
   // debounce remains the fallback trigger; firing both is safe (the later run
