@@ -593,7 +593,19 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       </div>
 
       {mutationError ? (
-        <p className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]">{mutationError}</p>
+        // `role="alert"` announces the failure to assistive technology, and the `aria-label`
+        // gives the banner an addressable NAME — the checkpoint-error banner further down
+        // renders a `<p>` with a byte-identical class string, so without a name the two are
+        // indistinguishable to any query. Naming both, rather than only one, is deliberate:
+        // a locator that works because nothing else happens to carry `role="alert"` breaks
+        // the moment a third error banner lands on this surface. See test-plan §6.7 item 1.
+        <p
+          role="alert"
+          aria-label="Path error"
+          className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]"
+        >
+          {mutationError}
+        </p>
       ) : null}
 
       {steps.length > 1 ? (
@@ -757,7 +769,16 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
         ) : null}
 
         {addState.status === "error" ? (
-          <p className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]">
+          // Named for the same reason as the path-error banner above, whose class string this
+          // one matches byte for byte. The distinction is load-bearing beyond locators: both
+          // Check flows write THIS atom from inside a `checkToken`-guarded catch (`:335`,
+          // `:363`) even though `addToken` is what guards it, so a message about a failed
+          // Check can land here over a checkpoint that saved cleanly.
+          <p
+            role="alert"
+            aria-label="Checkpoint error"
+            className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]"
+          >
             {addState.message}
           </p>
         ) : null}
