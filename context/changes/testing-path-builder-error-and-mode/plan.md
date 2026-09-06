@@ -528,11 +528,11 @@ signature, so S1 and S2 are untouched.
 
 #### Automated
 
-- [x] 4.1 Linting passes: `npm run lint`
-- [x] 4.2 Full browser suite reports four expected failures and zero unexpected ones: `npm run test:e2e`
-- [x] 4.3 Every file:line reference introduced in this phase resolves to the line it claims
+- [x] 4.1 Linting passes: `npm run lint` — 127019f
+- [x] 4.2 Full browser suite reports four expected failures and zero unexpected ones: `npm run test:e2e` — 127019f
+- [x] 4.3 Every file:line reference introduced in this phase resolves to the line it claims — 127019f
 
 #### Manual
 
-- [x] 4.4 A reader who never saw this change can find F-5's successor argument from `findings.md` alone
-- [x] 4.5 The `lessons.md` entry is legible without opening the archived `findings.md` it supersedes
+- [x] 4.4 A reader who never saw this change can find F-5's successor argument from `findings.md` alone — 127019f
+- [x] 4.5 The `lessons.md` entry is legible without opening the archived `findings.md` it supersedes — 127019f
