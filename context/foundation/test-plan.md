@@ -82,9 +82,9 @@ an **open** set, which is the list a reader still has to act on.
 
 **Open — no phase has answered this one yet.**
 
-| #   | Risk (failure scenario)                                                                                                                                                                                                                                                                     | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                                                                         | Answered by (§3 phase)  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 9   | In the **path builder**, a pre-save Check verdict, a diff preview, or an error banner describes deck text the user has already edited or cleared — a slow earlier resolve lands after the input moved on, so the user decides whether to save on a verdict about text that no longer exists | Medium | Medium     | archived §3 Phase 4 slice `context/archive/2026-08-27-testing-comparer-failure-surfacing/` and the lessons register it created (four verified divergences across the path builder's hand-copied stale-response guards, two of them still live); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02) | Phase 5 `change opened` |
+| #   | Risk (failure scenario)                                                                                                                                                                                                                                                                     | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                                                                         | Answered by (§3 phase)                                                                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 9   | In the **path builder**, a pre-save Check verdict, a diff preview, or an error banner describes deck text the user has already edited or cleared — a slow earlier resolve lands after the input moved on, so the user decides whether to save on a verdict about text that no longer exists | Medium | Medium     | archived §3 Phase 4 slice `context/archive/2026-08-27-testing-comparer-failure-surfacing/` and the lessons register it created (four verified divergences across the path builder's hand-copied stale-response guards, two of them still live); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02) | Phase 5 `complete` — **documented, not protected**: F-1 and F-2 in `context/changes/testing-path-builder-ordering/findings.md` are live, pinned by `test.fail()` specs |
 
 **Impact × Likelihood rubric.** High = user loses access/data/money or failure
 is publicly visible / area changes weekly or already burned us. Medium =
@@ -101,6 +101,19 @@ present in code rather than hypothesized — which is what separates #9 from #8'
 Low — but it has produced no reported incident and `src/components/path` is
 touched only occasionally (2 commits/30d, 9 commits/90d, measured 2026-09-02).
 #1 remains the only High × High row in the map, and #9 does not change that.
+
+**Why #9 stays in this table now that §3 Phase 5 reads `complete`.** The two are not in
+contradiction: a phase completes when it has done what it set out to do, and a risk leaves
+this table when a passing spec proves the failure cannot happen. Phase 5 proved the opposite
+— the failure **does** happen. Every earlier phase found its risk already defended and left
+green specs behind; #9 was promoted on a divergence verified in code, so a faithful spec is
+red today. The suite therefore carries two `test.fail()`-annotated specs
+(`tests/e2e/path-builder-stale-ordering.spec.ts`): they hold the correct behavior on record,
+stay green on today's code, and turn the build red the moment either guard is fixed, at which
+point the annotation comes off and this row moves to the protected table. Until then the risk
+is **documented, not protected**, and the reader still has to act on it — which is exactly
+what this table is for. The four defects behind it are F-1 through F-4 in that change's
+`findings.md`.
 
 **Why two tables, and what that retires.** The map ran to eight rows against the
 schema's 5–7, and the 2026-08-25 refresh recorded the overflow while proposing
@@ -190,13 +203,13 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                           | Goal (one line)                                                                                                                                                                                           | Risks covered | Test types                      | Status        | Change folder                                                                     |
-| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | ------------- | --------------------------------------------------------------------------------- |
-| 1   | Server-boundary auth & ownership     | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                                             | #1, #2        | integration + CI gate           | complete      | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11)    |
-| 2   | API contract pinning                 | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                                                    | #3, #6        | contract + integration + golden | complete      | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)    |
-| 3   | Derive-to-persist correctness        | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                                              | #4, #5        | integration                     | complete      | context/archive/2026-08-19-testing-derive-to-persist/ (archived 2026-08-21)       |
-| 4   | Comparer failure-surfacing           | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison                          | #7, #8        | browser E2E                     | complete      | context/archive/2026-08-27-testing-comparer-failure-surfacing/ (arch. 2026-08-31) |
-| 5   | Path-builder stale-response ordering | Prove a resolve that lands after the deck text changed or was cleared is dropped rather than rendered — no pre-save Check verdict, diff preview or error banner describes text the user has moved on from | #9            | browser E2E                     | change opened | context/changes/testing-path-builder-ordering/                                    |
+| #   | Phase name                           | Goal (one line)                                                                                                                                                                                           | Risks covered | Test types                      | Status   | Change folder                                                                     |
+| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| 1   | Server-boundary auth & ownership     | Prove cross-owner isolation and the signed-out gate on `/api/paths/*` + middleware, and make CI run the suite                                                                                             | #1, #2        | integration + CI gate           | complete | context/archive/2026-06-29-testing-server-boundary-auth/ (archived 2026-08-11)    |
+| 2   | API contract pinning                 | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                                                    | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)    |
+| 3   | Derive-to-persist correctness        | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                                              | #4, #5        | integration                     | complete | context/archive/2026-08-19-testing-derive-to-persist/ (archived 2026-08-21)       |
+| 4   | Comparer failure-surfacing           | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison                          | #7, #8        | browser E2E                     | complete | context/archive/2026-08-27-testing-comparer-failure-surfacing/ (arch. 2026-08-31) |
+| 5   | Path-builder stale-response ordering | Prove a resolve that lands after the deck text changed or was cleared is dropped rather than rendered — no pre-save Check verdict, diff preview or error banner describes text the user has moved on from | #9            | browser E2E                     | complete | context/changes/testing-path-builder-ordering/                                    |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -983,15 +996,21 @@ choice above would have cost.
   pinned to `./tests/e2e` in `playwright.config.ts` — that pin is what stops Playwright's
   default `testMatch` from sweeping the 33 vitest files under `src/` and
   `tests/integration/`.
-- **Naming**: `comparer-<risk>.spec.ts`. No `.int.` infix here — unlike every other suite in
-  this project these do **not** ride an existing job; §5's `e2e` row is a separate CI job and
-  a separate required check.
+- **Naming**: `<surface>-<risk>.spec.ts` (`comparer-…`, `path-builder-…`). No `.int.` infix
+  here — unlike every other suite in this project these do **not** ride an existing job; §5's
+  `e2e` row is a separate CI job and a separate required check.
 - **Reference tests**: `seed.spec.ts` (the exemplar — read it first; what you show is what you
   get), `comparer-failure-surfacing.spec.ts` (risk #7, interception + recovery),
-  `comparer-stale-response.spec.ts` (risk #8, genuine concurrency).
-- **Prerequisite / run locally**: nothing. No Supabase, no `.env.test`, no auth — the comparer
-  mounts at `/` and `src/middleware.ts:7` protects only `/dashboard` and `/paths`. Playwright's
-  `webServer` boots `astro dev` on port 4323 itself. `npm run test:e2e`.
+  `comparer-stale-response.spec.ts` (risk #8, genuine concurrency),
+  `path-builder-stale-ordering.spec.ts` (risk #9, the same concurrency shape **behind auth**,
+  and the only `test.fail()` specs in the suite).
+- **Prerequisite / run locally**: **local Supabase must be running** (`npx supabase start`) and
+  `.env.test` must carry `SUPABASE_KEY` / `SUPABASE_SERVICE_ROLE_KEY`; `tests/e2e/global-setup.ts`
+  fails fast with those instructions if not. Playwright's `webServer` boots `astro dev` on port
+  4323 itself. `npm run test:e2e`. _This bullet read "nothing — no Supabase, no `.env.test`, no
+  auth" until 2026-09-06._ That was true of Phase 4, whose surface mounts at `/`; it was never
+  true of anything behind `src/middleware.ts`, and Phase 5 had to build the harness. See the
+  authenticated-spec subsection below.
 
 The recipe, and why each piece is load-bearing:
 
@@ -1092,6 +1111,77 @@ cards"` on the notice (`UnresolvedNotice.tsx:66-67`) — both of which improve t
     rather than fixed — a spec for any of them would be red today, which would make it a
     different phase. Write the finding down; do not smuggle the fix in.
 
+#### Authenticated browser specs — what §3 Phase 5 added
+
+Items 1–15 were written from two specs that need no session. Everything below is what it
+additionally costs to reach a surface behind `src/middleware.ts`, learned building
+`tests/e2e/path-builder-stale-ordering.spec.ts`. Read it before promising that a browser
+phase's whole cost is the test itself.
+
+16. **`.dev.vars` outranks anything Playwright injects — stash it, do not fight it.**
+    `@astrojs/cloudflare` parses the file and calls `Object.assign(process.env, parsed)` at
+    `dist/index.js:292-303`, _after_ config resolution, so `webServer.env` loses to a
+    contributor's gitignored file every time. `tests/e2e/dev-vars.mjs` moves it aside to
+    `.dev.vars.e2ebak` and puts it back; the stash is chained into `webServer.command` because
+    Playwright starts `webServer` **before** `globalSetup`, which is too late. Restoration is
+    idempotent and also hooked to `process.on("exit")`, so a Ctrl-C leaves the file recoverable.
+17. **The two suites share that file, so they cannot run at once.** `npm run test:integration`
+    rewrites the same `.dev.vars` with a `.dev.vars.intbak` sidecar. Distinct suffixes stop the
+    two snapshots corrupting each other; they do not make concurrent runs safe. Locally
+    `reuseExistingServer: !process.env.CI` compounds it — a dev server someone else started on
+    4323 is reused with whatever env it has, which surfaces as a sign-in redirecting to
+    `/auth/signin?error=…` rather than as an env error. `signIn()` says exactly that in its throw.
+18. **One sign-in per run, in a `setup` project, never through the UI.** `auth.setup.ts` creates
+    an owner with the service-role admin API, signs in by POSTing the app's **own**
+    `/api/auth/signin`, and writes `storageState` to `tests/e2e/.auth/owner.json` (gitignored).
+    The cookies therefore come out in the exact `@supabase/ssr` chunked format the real
+    middleware expects — nothing is hand-built. The chromium project declares
+    `dependencies: ["setup"]` and `use.storageState`. Once per run and not per spec because
+    `supabase/config.toml:189-190` (`sign_in_sign_ups = 30`) caps sign-ins at 30 per 5 minutes
+    per IP and Playwright
+    parallelizes by default. The state is good for **one run only**: `config.toml:158` sets
+    `jwt_expiry = 3600` and the server client forces `autoRefreshToken: false`, so it must never
+    be cached across jobs.
+19. **Seed through the app's API, and always send `Origin`.** `seedPathWithStep()` POSTs
+    `/api/paths` then `/api/paths/:id/steps`, which exercises RLS instead of bypassing it and
+    keeps the seeded row indistinguishable from a real one. Astro's CSRF check answers a
+    plain-text **403** to a same-shape POST arriving without a matching `Origin`, before the
+    handler runs — pinned in `contract-signin.int.test.ts:67-89`. Titles carry a `Date.now()`
+    suffix so parallel workers and re-runs cannot collide. The service-role client is for owner
+    create/delete only; `webServer.env` blanks `SUPABASE_SERVICE_ROLE_KEY` explicitly, because
+    Playwright **merges** that object over `process.env` rather than replacing it, and the CI
+    job exports all three keys into `$GITHUB_ENV`.
+20. **A spec that wants its own identity must move the browser too.** The `request` fixture and
+    the browser context are separate cookie jars seeded from the same `storageState`. Signing a
+    new owner in on `request` moves only the API side; without copying the jar back
+    (`request.storageState()` → `context.clearCookies()` → `addCookies`) the page still browses
+    as the run owner and `/paths/[id]` answers 404 for a path it does not own.
+21. **Teardown is one `deleteUser` — and it must not be the run's shared owner.** Deleting an
+    owner cascades to every path and step they seeded (`on delete cascade`), so per-test cleanup
+    is a single call. A spec that provisions its own owner deletes that one in `afterEach`; the
+    `setup` project's owner belongs to `global-setup.ts`'s teardown, which reads its id from a
+    sidecar file because the setup project runs in a worker the teardown cannot see into.
+22. **`test.fail()` is how a coverage phase pins a live defect — but it inverts the whole test
+    body.** Risk #9 _is_ a set of live defects (F-1 and F-2 in that change's `findings.md`), so a
+    faithful spec is red today. Annotating it `test.fail()` keeps the suite green on current code
+    and turns the build red the moment someone fixes the guard, reported as
+    `Expected to fail, but passed.` Two disciplines come with it. **(a) Put setup in
+    `beforeEach`, not in the body** — the annotation is registered by the body, so a hook failure
+    stays a real failure, while a broken sign-in _inside_ the body would report as an "expected
+    failure" and the file would go green covering nothing. Verified by deliberate break.
+    **(b) Confirm _why_ it failed** before believing it: run once with the annotation commented
+    out and read the error. A `test.fail()` spec that fails on a typo'd locator looks identical
+    in the report to one that fails on the defect.
+23. **Retries: leave them at the config default on an inverted spec.** Item 12's `retries: 0` is
+    right when the failure is the signal — a retry could turn a genuine bug green. Here the
+    failure is the _expected_ state, so a retry cannot hide a defect; it only absorbs a timing
+    flake that would otherwise report a spurious unexpected pass. Same principle, opposite
+    setting.
+24. **CI copies the `integration` job verbatim.** The `e2e` job gained `npx supabase start`, the
+    `supabase status -o env` export into `$GITHUB_ENV`, and `supabase stop` with `if: always()`
+    — keys from the running stack, never from Actions secrets. Costs ~90s. No new job name, so
+    no branch-protection change.
+
 ## 7. What We Deliberately Don't Test
 
 Exclusions agreed during the rollout (Phase 2 interview, Q5), re-scoped
@@ -1181,9 +1271,11 @@ against.
   §6.7); §6.7 filled by rollout Phase 4 (browser E2E); §6.4 filled by rollout Phase 3;
   §6.5 filled 2026-08-25 as a sequencing checklist over §6.2–§6.4, so no sub-section is
   a stub
-- Rollout: §3 Phases 1–4 all `complete` — Phases 1–3 by 2026-08-20, Phase 4 on
-  2026-08-31 — and **Phase 5 open at `not started`** (path-builder stale-response
-  ordering, risk #9), opened 2026-09-02 by the refresh below. Phases 1–3 completing was
+- Rollout: §3 Phases 1–5 all `complete` — Phases 1–3 by 2026-08-20, Phase 4 on
+  2026-08-31, Phase 5 on 2026-09-06 — so the rollout table has no open phase. Note that
+  Phase 5 completing did **not** move risk #9 out of §2's open table; see the entry below
+  and §2's own paragraph for why a completed phase can leave a risk documented rather than
+  protected. Phases 1–3 completing was
   the trigger §7 named for re-evaluating the E2E and component-render exclusions; that
   re-evaluation was taken deliberately on 2026-08-25 and re-taken 2026-09-02: browser
   E2E in at two phases and no further, component render and pixel tests still out
@@ -1302,6 +1394,24 @@ against.
   §3 Phase 5 is the wrong home for it, and if it is ever promoted it belongs with #7's
   family at that layer. §2's not-promoted paragraph carries the decision; a future
   refresh should cite it rather than re-open it.
+- **Rollout Phase 5 landed 2026-09-06** through
+  `context/changes/testing-path-builder-ordering/`. What it changed: **§3**'s Phase 5 row
+  moved to `complete` and names the change folder; **§2** row #9 stayed in the open table
+  with its "Answered by" cell rewritten to `complete` — **documented, not protected**, plus
+  a paragraph stating why those two are not contradictory; **§6.7** gained an
+  authenticated-browser-spec subsection (items 16–24) and had two of its header bullets
+  corrected — the "Prerequisite: nothing, no Supabase, no auth" claim was true only of
+  Phase 4's surface, and the naming convention was written as `comparer-<risk>` when the
+  suite now holds two surfaces. The phase's own premise correction is the substantive one:
+  §3's order rationale placed Phase 5 last partly because "no runner to add, no CI job to
+  write, no branch-protection change to make", and that was **false for risk #9** — the
+  path builder sits behind `src/middleware.ts`, so Phase 1 of the change was harness work
+  (a `.dev.vars` stash, a `setup` project writing `storageState`, seeding helpers, and
+  three CI steps booting local Supabase in the `e2e` job). The cheapness premise held for
+  the marginal spec, not for the phase. Six findings were filed rather than fixed
+  (`findings.md` F-1 through F-6), two of them pinned by `test.fail()` specs; the
+  remaining §2/§3 corrections are listed in that change's `backport.md` for the next
+  `/10x-test-plan --refresh`.
 - Stack versions last verified: 2026-09-02 — every declared-versus-installed pair
   re-read and unchanged: `astro ^6.3.1` resolves to 6.4.8, `vitest ^4.1.9` to 4.1.9 and
   `@playwright/test ^1.62.1` to 1.62.1, so §4's rows and its "Vitest 4 / Astro 6"

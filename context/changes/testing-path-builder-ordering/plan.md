@@ -341,28 +341,28 @@ None. No schema change, no data migration. `tests/e2e/.auth/` must be gitignored
 
 #### Automated
 
-- [x] 3.1 The S2 spec reports as expected-to-fail
-- [x] 3.2 Full browser suite green: `npm run test:e2e`
-- [x] 3.3 Lint and typecheck pass
+- [x] 3.1 The S2 spec reports as expected-to-fail — 0d1ca9b
+- [x] 3.2 Full browser suite green: `npm run test:e2e` — 0d1ca9b
+- [x] 3.3 Lint and typecheck pass — 0d1ca9b
 
 #### Manual
 
-- [x] 3.4 Reviewed against the five agent E2E anti-patterns
-- [x] 3.5 With `:314-315` moved under a `checkToken` bump locally, S2 reports an unexpected pass — then reverted
-- [x] 3.6 The add is proven complete before the parked run is released
-- [x] 3.7 Both specs run standalone and in either order
+- [x] 3.4 Reviewed against the five agent E2E anti-patterns — 0d1ca9b
+- [x] 3.5 With `:314-315` moved under a `checkToken` bump locally, S2 reports an unexpected pass — then reverted — 0d1ca9b
+- [x] 3.6 The add is proven complete before the parked run is released — 0d1ca9b
+- [x] 3.7 Both specs run standalone and in either order — 0d1ca9b
 
 ### Phase 4: The record
 
 #### Automated
 
-- [ ] 4.1 Every file:line in `findings.md` resolves
-- [ ] 4.2 Formatting clean: `npx prettier --check .`
-- [ ] 4.3 Full suite green: `npm test && npm run test:integration && npm run test:e2e`
+- [x] 4.1 Every file:line in `findings.md` resolves
+- [x] 4.2 Formatting clean: `npx prettier --check .` — scoped to this change's files (all 7 pass); repo-wide count unchanged at 132 pre-existing failures in untouched files
+- [x] 4.3 Full suite green: `npm test && npm run test:integration && npm run test:e2e`
 
 #### Manual
 
-- [ ] 4.4 §3 Phase 5 `complete` while §2 row #9 stays open, with the reason stated
-- [ ] 4.5 The lessons entry corrects the mechanism without rewriting the original bullet
-- [ ] 4.6 `findings.md` gives a per-finding deferral reason
-- [ ] 4.7 The backport list names evidence for each correction
+- [x] 4.4 §3 Phase 5 `complete` while §2 row #9 stays open, with the reason stated
+- [x] 4.5 The lessons entry corrects the mechanism without rewriting the original bullet
+- [x] 4.6 `findings.md` gives a per-finding deferral reason
+- [x] 4.7 The backport list names evidence for each correction

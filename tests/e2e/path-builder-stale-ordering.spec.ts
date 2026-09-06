@@ -20,7 +20,7 @@ import { createSignedInOwner, deleteOwner, seedPathWithStep, type Owner } from "
  *
  * This is the coverage-not-repair convention from test-plan §6.7 item 15 — a spec for a
  * live defect would otherwise be red today, which would make this a bug-fix change. The
- * defects are filed as F1–F4 in
+ * defects are filed as F-1 through F-6 in
  * `context/changes/testing-path-builder-ordering/findings.md`; each test names the one it
  * pins.
  *
@@ -131,7 +131,7 @@ function isCollectionPostFor(cardName: string) {
 }
 
 /**
- * S1 — finding F1: clearing the deck box invalidates nothing.
+ * S1 — finding F-1: clearing the deck box invalidates nothing.
  *
  * `runCheck` guards its write with `checkToken` (`PathEditor.tsx:326`, `:330`), but the
  * textarea's `onChange` (`:708-710`) only calls `setListText` — it moves no token and
@@ -145,7 +145,7 @@ function isCollectionPostFor(cardName: string) {
  * the difference between a one-line fix and the right one.
  */
 test("a pre-save verdict never describes a deck box the user cleared", async ({ page }) => {
-  // Expected to fail until F1 is fixed. An unexpected pass means it was — see the header.
+  // Expected to fail until F-1 is fixed. An unexpected pass means it was — see the header.
   test.fail();
 
   // Park the Check's ONE `/cards/collection` POST; everything else resolves normally.
@@ -196,7 +196,7 @@ test("a pre-save verdict never describes a deck box the user cleared", async ({ 
 });
 
 /**
- * S2 — finding F2: a successful add clears the verdict under the WRONG counter.
+ * S2 — finding F-2: a successful add clears the verdict under the WRONG counter.
  *
  * `handleAddStep` resets `checkState` and `diffPreview` on success (`PathEditor.tsx:314`,
  * `:315`), but the whole add run is guarded by `addToken` (`:225`) — a different `useRef`
@@ -214,7 +214,7 @@ test("a pre-save verdict never describes a deck box the user cleared", async ({ 
  * explicit button clicks, so the overlap is real by construction rather than by timing.
  */
 test("a pre-save verdict never survives the checkpoint that replaced it", async ({ page }) => {
-  // Expected to fail until F2 is fixed. An unexpected pass means it was — see the header.
+  // Expected to fail until F-2 is fixed. An unexpected pass means it was — see the header.
   test.fail();
 
   // Park deck A's `/cards/collection` POST. Deck B's shares no names, so it is not matched
