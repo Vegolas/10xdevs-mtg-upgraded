@@ -513,26 +513,26 @@ signature, so S1 and S2 are untouched.
 
 #### Automated
 
-- [x] 3.1 Linting passes: `npm run lint`
-- [x] 3.2 Type checking passes: `npm run typecheck`
-- [x] 3.3 Browser suite reports exactly four expected failures and zero unexpected ones: `npm run test:e2e`
-- [x] 3.4 The spec run alone with `test.fail()` commented out fails on the verdict rendering
-- [x] 3.5 Bumping `checkToken` inside `switchMode` locally makes the spec report `Expected to fail, but passed.`
+- [x] 3.1 Linting passes: `npm run lint` — 9337b06
+- [x] 3.2 Type checking passes: `npm run typecheck` — 9337b06
+- [x] 3.3 Browser suite reports exactly four expected failures and zero unexpected ones: `npm run test:e2e` — 9337b06
+- [x] 3.4 The spec run alone with `test.fail()` commented out fails on the verdict rendering — 9337b06
+- [x] 3.5 Bumping `checkToken` inside `switchMode` locally makes the spec report `Expected to fail, but passed.` — 9337b06
 
 #### Manual
 
-- [x] 3.6 Driving the round trip by hand in the browser reproduces the stale verdict over an empty deck box
-- [x] 3.7 The `aria-pressed` assertions genuinely fail if the toggle is removed
+- [x] 3.6 Driving the round trip by hand in the browser reproduces the stale verdict over an empty deck box — 9337b06
+- [x] 3.7 The `aria-pressed` assertions genuinely fail if the toggle is removed — 9337b06
 
 ### Phase 4: The record
 
 #### Automated
 
-- [ ] 4.1 Linting passes: `npm run lint`
-- [ ] 4.2 Full browser suite reports four expected failures and zero unexpected ones: `npm run test:e2e`
-- [ ] 4.3 Every file:line reference introduced in this phase resolves to the line it claims
+- [x] 4.1 Linting passes: `npm run lint`
+- [x] 4.2 Full browser suite reports four expected failures and zero unexpected ones: `npm run test:e2e`
+- [x] 4.3 Every file:line reference introduced in this phase resolves to the line it claims
 
 #### Manual
 
-- [ ] 4.4 A reader who never saw this change can find F-5's successor argument from `findings.md` alone
-- [ ] 4.5 The `lessons.md` entry is legible without opening the archived `findings.md` it supersedes
+- [x] 4.4 A reader who never saw this change can find F-5's successor argument from `findings.md` alone
+- [x] 4.5 The `lessons.md` entry is legible without opening the archived `findings.md` it supersedes

@@ -1162,8 +1162,13 @@ phase's whole cost is the test itself.
     `setup` project's owner belongs to `global-setup.ts`'s teardown, which reads its id from a
     sidecar file because the setup project runs in a worker the teardown cannot see into.
 22. **`test.fail()` is how a coverage phase pins a live defect — but it inverts the whole test
-    body.** Risk #9 _is_ a set of live defects (F-1 and F-2 in that change's `findings.md`), so a
-    faithful spec is red today. Annotating it `test.fail()` keeps the suite green on current code
+    body.** Risk #9 _is_ a set of live defects — F-1 through F-4 in
+    `context/archive/2026-09-05-testing-path-builder-ordering/findings.md`, of which that change
+    pinned F-1 and F-2 and `testing-path-builder-error-and-mode` pinned F-3 and F-4 — so a
+    faithful spec is red today. `path-builder-stale-ordering.spec.ts` therefore carries **four**
+    inverted specs, not two, and `npm run test:e2e` reports four expected failures; a run
+    reporting fewer has had an annotation removed, and one reporting an unexpected pass has had a
+    guard fixed. Annotating a spec `test.fail()` keeps the suite green on current code
     and turns the build red the moment someone fixes the guard, reported as
     `Expected to fail, but passed.` Two disciplines come with it. **(a) Put setup in
     `beforeEach`, not in the body** — the annotation is registered by the body, so a hook failure
@@ -1181,6 +1186,51 @@ phase's whole cost is the test itself.
     `supabase status -o env` export into `$GITHUB_ENV`, and `supabase stop` with `if: always()`
     — keys from the running stack, never from Actions secrets. Costs ~90s. No new job name, so
     no branch-protection change.
+
+Items 25–27 were added 2026-09-06 by `testing-path-builder-error-and-mode`, which put two more
+inverted specs (S3, S4) into the same file. Each is a fact the phase paid for and the next one
+should not.
+
+25. **A parked route needs a failing release too, and it is a 500, not an abort.**
+    `mockScryfallWithParkedCollection` originally had only `release()`, which fulfills with a
+    successful collection response — so a spec whose mechanism is "the held request comes back an
+    error" had nothing to call. `ParkedRoute.releaseWithFailure(status = 500)`
+    (`tests/e2e/fixtures/scryfall.ts:204`) is the second exit, fulfilling with the same
+    `{object: "error", status}` body `mockScryfallCollectionFailsOnce` uses and sharing the
+    single-shot `released` flag, so a route is released once by either door. **Never
+    `route.abort()`** — item 8's reasoning applies unchanged and is the reason both fixtures do
+    it this way: the 500 trips the explicit `!response.ok` guard at
+    `src/lib/card-data/scryfall.ts:96-98` and yields a message naming endpoint and status, while
+    an abort rejects the raw `fetch` with a browser-dependent `"Failed to fetch"`. When adding
+    a release variant, add it to the interface rather than reaching for `route` in the spec: the
+    handler owns the single-shot guard, and a spec that fulfills the route itself can double-fire
+    it.
+26. **Verify the asserted surface actually renders in the state the spec leaves the app in.**
+    This is item 13's other half, and it is the one that makes an observation window lie. A
+    window watching an element the render tree can never produce resolves false, the negative
+    assertion passes, and the spec reports coverage it does not have — under `test.fail()` the
+    same mistake fails, indistinguishably from a real pin. Both previews on the path builder are
+    mode-gated (`PathEditor.tsx:733`, `:745`), so S4's stale verdict is only observable after a
+    **round trip** back to full mode, and both switches have to precede the release — release
+    first and the second `switchMode` resets the atom before the user arrives. Concretely:
+    before writing the window, read the conditions on the line that renders your target and
+    confirm each one holds at the moment you open it. Where the finding you are pinning *named*
+    the symptom, re-derive it rather than trusting it — see `lessons.md`, "When a finding names a
+    symptom surface, verify the render reaches it before writing the spec", which supersedes two
+    such claims in risk #9's own findings list.
+27. **Two banners with the same class string: name _both_ twins, not just the one you need.**
+    A second instance of item 1, on a different surface. `PathEditor`'s path-level `mutationError`
+    banner and its checkpoint-error banner rendered byte-identical class strings with no role and
+    no name, so a locator for either matched both. The fix was the accepted Phase 4 shape —
+    `role="alert"` plus a distinguishing `aria-label` ("Path error" `:602-608`, "Checkpoint error"
+    `:777-783`) — applied to **both**, though only the second was needed. Naming one and relying
+    on `role="alert"` being unique is relying on accidental uniqueness: it silently breaks when a
+    third error banner lands, and F-3's own recommended fix adds exactly that. Two error banners
+    where one is announced and the other is not is also an accessibility defect on its own terms,
+    which is what makes this a production edit rather than a test-only concession. Related: assert
+    the banner's **name**, not its message, whenever a fix would move the message to a different
+    container — S3 does, because F-3's fix relocates the same text to a Check-owned banner and a
+    text-matched assertion would keep failing after the repair, so the inversion would never lift.
 
 ## 7. What We Deliberately Don't Test
 

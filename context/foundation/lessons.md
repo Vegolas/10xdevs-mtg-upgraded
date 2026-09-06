@@ -142,3 +142,62 @@ passed.`
   `test.fail()` spec the failure is the expected state, so a retry can only absorb a flake that
   would otherwise report a spurious unexpected pass — leave retries at the config default.
 - **Applies to**: plan, plan-review, implement, impl-review
+
+## When a finding names a symptom surface, verify the render reaches it before writing the spec
+
+- **Context**: writing a test from a filed finding — `findings.md`, a bug report, an
+  impl-review note — where the finding describes not just a broken mechanism but the
+  **visible symptom** it produces. Recorded from `testing-path-builder-error-and-mode` (S3 and
+  S4, risk #9's F-3 and F-4), but the shape is general and applies to any layer.
+- **Problem**: a finding's symptom sentence is written while reading the *state* code and is
+  rarely re-checked against the *render* tree. Two of the six risk-#9 findings named symptoms
+  the render forbids, and both survived a research pass, a plan and a plan review before the
+  spec caught them.
+  1. **`findings.md` F-4 predicted "a full-list verdict under the diff-mode textarea."**
+     Impossible: both previews are mode-gated —
+     `PathEditor.tsx:733` (`activeMode === "full" && checkState.status === "checked"`) and
+     `:745` (the diff twin) — so neither can ever render under the other mode's surface. The
+     stale write F-4 describes is completely real; the render it predicts cannot happen. The
+     only atom on that surface which is **not** mode-gated is `addState` (`:771-784`).
+  2. **F-3 said the add-error banner is written "by whichever Check throws, superseded or
+     not."** Both catches *do* re-check `checkToken` before writing (`:335`, `:363`), and the
+     Check button is `disabled` while a Check is in flight (`:792-797`), so the
+     Check-versus-Check overlap the wording implies is both correctly dropped **and**
+     undrivable through the UI. The defect is not an unguarded write — it is a write
+     **guarded by the wrong counter**: the target is `addState`, and only `addToken` (`:189`)
+     guards that. The reachable overlap is Check-versus-**add**.
+- **Why this is load-bearing rather than pedantic**: in both cases the mis-stated symptom
+  changes what the spec does. Written to F-4's prediction, S4 would have switched mode once
+  and watched the diff surface for a full-list verdict — an element that can never appear, so
+  the observation window resolves false and the spec passes **vacuously**, reporting coverage
+  of a live defect it never touched. Written to F-3's mechanism, S3 would have tried to
+  supersede a Check with another Check through a disabled button and failed on the click, not
+  the guard. Both readings also prescribe the wrong fix: F-4's says "the modes bleed into each
+  other" when the actual crossing is one ungated atom, and F-3's says "add a token check" when
+  the checks are already there and the atom ownership is what is wrong.
+- **The trap compounds under `test.fail()`.** An inverted spec whose target is unreachable
+  fails, and a failure is its expected state — so the report is identical to a spec that
+  genuinely pins the defect. The deliberate-break run (see "Pin a live defect with
+  `test.fail()`" above) is what separates them, and it is the *only* thing that does. Run it,
+  read the actual error, and confirm the error names the defect rather than a locator, a
+  timeout, or an element that was never going to render.
+- **Rule**: before writing a spec from a finding, trace the finding's named symptom to the
+  line that renders it and check that line's conditions hold in the state the spec leaves the
+  app in. If they do not, the finding's *mechanism* may still be sound — re-derive the symptom
+  from the render tree and say so in the spec header, because the next reader will otherwise
+  re-derive it from the finding. Two corollaries that both cost a day here: a mode gate,
+  `steps.length` gate or any conditional render can make a real defect **unobservable**
+  without making it absent, which usually means the spec needs a round trip or a different
+  observable, not a different defect; and where a symptom is reached through a control, check
+  that control's `disabled` expression before assuming the overlap is drivable — a four-way
+  `||` (`:792-797`) forbade one of the two overlaps here outright.
+- **Corrects, and supersedes for spec-writing purposes**: F-3's "superseded or not" and F-4's
+  "a full-list verdict under the diff-mode textarea" in
+  `context/archive/2026-09-05-testing-path-builder-ordering/findings.md`. That file is
+  archived and immutable, so this entry is the correction's only home; both findings' *impact*
+  and *suggested fix* still stand. F-4's deferral reason is stale too — it claims a faithful
+  spec "needs a second seeded shape" because the mode toggle requires `steps.length >= 1`,
+  but `seedPathWithStep` already seeds exactly one step, so `canDiff` (`:196`) is true on the
+  shape S1 and S2 were already using. Verified 2026-09-06; see
+  `context/changes/testing-path-builder-error-and-mode/findings.md`.
+- **Applies to**: frame, research, plan, plan-review, implement, impl-review
