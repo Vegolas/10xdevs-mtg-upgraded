@@ -22,7 +22,27 @@ import { expect, type Locator, type Page } from "@playwright/test";
  *    `AppLayout.astro` is what keeps the same spec seeing the same DOM in both places.
  */
 export async function gotoComparer(page: Page): Promise<Locator> {
-  await page.goto("/");
+  return gotoHydrated(page, "/");
+}
+
+/**
+ * Navigate to a path builder and hand back the `main` scope, hydrated and ready to drive.
+ *
+ * Both hazards above apply here unchanged. `PathEditor` mounts `client:load`
+ * (`src/pages/paths/[id].astro:43`) exactly as the comparer does, so the orphaned-fill
+ * trap is the same trap: SSR renders the deck textarea, `fill()` succeeds against the
+ * DOM before React has committed, and the React state the Check button reads stays empty.
+ *
+ * The page is behind the session gate (`src/middleware.ts:21-25`), so this only works
+ * from a project carrying the `setup` project's `storageState`.
+ */
+export async function gotoPathBuilder(page: Page, pathId: string): Promise<Locator> {
+  return gotoHydrated(page, `/paths/${pathId}`);
+}
+
+/** The shared barrier: navigate, wait for React to have committed, scope to `main`. */
+async function gotoHydrated(page: Page, url: string): Promise<Locator> {
+  await page.goto(url);
   await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
   return page.getByRole("main");
 }
