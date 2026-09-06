@@ -356,13 +356,13 @@ None. No schema change, no data migration. `tests/e2e/.auth/` must be gitignored
 
 #### Automated
 
-- [x] 4.1 Every file:line in `findings.md` resolves
-- [x] 4.2 Formatting clean: `npx prettier --check .` — scoped to this change's files (all 7 pass); repo-wide count unchanged at 132 pre-existing failures in untouched files
-- [x] 4.3 Full suite green: `npm test && npm run test:integration && npm run test:e2e`
+- [x] 4.1 Every file:line in `findings.md` resolves — ad5ccba
+- [x] 4.2 Formatting clean: `npx prettier --check .` — scoped to this change's files (all 7 pass); repo-wide count unchanged at 132 pre-existing failures in untouched files — ad5ccba
+- [x] 4.3 Full suite green: `npm test && npm run test:integration && npm run test:e2e` — ad5ccba
 
 #### Manual
 
-- [x] 4.4 §3 Phase 5 `complete` while §2 row #9 stays open, with the reason stated
-- [x] 4.5 The lessons entry corrects the mechanism without rewriting the original bullet
-- [x] 4.6 `findings.md` gives a per-finding deferral reason
-- [x] 4.7 The backport list names evidence for each correction
+- [x] 4.4 §3 Phase 5 `complete` while §2 row #9 stays open, with the reason stated — ad5ccba
+- [x] 4.5 The lessons entry corrects the mechanism without rewriting the original bullet — ad5ccba
+- [x] 4.6 `findings.md` gives a per-finding deferral reason — ad5ccba
+- [x] 4.7 The backport list names evidence for each correction — ad5ccba
