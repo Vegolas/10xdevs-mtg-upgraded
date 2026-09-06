@@ -1,10 +1,10 @@
 ---
 change_id: testing-path-builder-ordering
 title: Prove a superseded path-builder resolve never reports on text the user replaced
-status: implemented
+status: archived
 created: 2026-09-05
 updated: 2026-09-06
-archived_at: null
+archived_at: 2026-09-06T11:18:46Z
 ---
 
 ## Notes
