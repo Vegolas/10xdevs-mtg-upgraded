@@ -307,35 +307,35 @@ None. No schema change, no data migration. `tests/e2e/.auth/` must be gitignored
 
 #### Automated
 
-- [x] 1.1 Lint passes: `npm run lint`
-- [x] 1.2 Typecheck passes: `npm run typecheck`
-- [x] 1.3 Unit suite unaffected: `npm test`
-- [x] 1.4 Integration suite unaffected: `npm run test:integration`
-- [x] 1.5 Playwright collects the setup project and existing specs, no vitest files: `npx playwright test --list`
-- [x] 1.6 Phase 4's two comparer specs still pass with Supabase keys present: `npm run test:e2e`
-- [x] 1.7 `.dev.vars` is byte-identical before and after a full run
+- [x] 1.1 Lint passes: `npm run lint` — 0580745
+- [x] 1.2 Typecheck passes: `npm run typecheck` — 0580745
+- [x] 1.3 Unit suite unaffected: `npm test` — 0580745
+- [x] 1.4 Integration suite unaffected: `npm run test:integration` — 0580745
+- [x] 1.5 Playwright collects the setup project and existing specs, no vitest files: `npx playwright test --list` — 0580745
+- [x] 1.6 Phase 4's two comparer specs still pass with Supabase keys present: `npm run test:e2e` — 0580745
+- [x] 1.7 `.dev.vars` is byte-identical before and after a full run — 0580745
 
 #### Manual
 
-- [x] 1.8 A killed run leaves `.dev.vars` recoverable from `.e2ebak`
-- [x] 1.9 The service-role key never reaches the dev server's env
-- [x] 1.10 The rewritten `e2e` job comment states the current premise
-- [x] 1.11 Concurrent-suite hazard documented, naming the shared file
+- [x] 1.8 A killed run leaves `.dev.vars` recoverable from `.e2ebak` — 0580745
+- [x] 1.9 The service-role key never reaches the dev server's env — 0580745
+- [x] 1.10 The rewritten `e2e` job comment states the current premise — 0580745
+- [x] 1.11 Concurrent-suite hazard documented, naming the shared file — 0580745
 
 ### Phase 2: S1 — a verdict never describes a cleared box
 
 #### Automated
 
-- [ ] 2.1 The S1 spec reports as expected-to-fail, not as a failure
-- [ ] 2.2 Full browser suite green: `npm run test:e2e`
-- [ ] 2.3 Lint and typecheck pass
+- [x] 2.1 The S1 spec reports as expected-to-fail, not as a failure
+- [x] 2.2 Full browser suite green: `npm run test:e2e`
+- [x] 2.3 Lint and typecheck pass
 
 #### Manual
 
-- [ ] 2.4 Reviewed against the five agent E2E anti-patterns
-- [ ] 2.5 With the guard fixed locally, S1 reports an unexpected pass and the run goes red — then reverted
-- [ ] 2.6 The parked resolve is proven in flight before the clear, and complete before the assertion
-- [ ] 2.7 No `waitForTimeout`, no `networkidle`; runs standalone in either order
+- [x] 2.4 Reviewed against the five agent E2E anti-patterns
+- [x] 2.5 With the guard fixed locally, S1 reports an unexpected pass and the run goes red — then reverted
+- [x] 2.6 The parked resolve is proven in flight before the clear, and complete before the assertion
+- [x] 2.7 No `waitForTimeout`, no `networkidle`; runs standalone in either order
 
 ### Phase 3: S2 — a verdict never survives a successful add
 
