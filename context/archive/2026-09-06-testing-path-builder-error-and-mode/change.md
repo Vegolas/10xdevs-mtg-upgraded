@@ -1,10 +1,10 @@
 ---
 change_id: testing-path-builder-error-and-mode
 title: Prove the path builder's error banner and mode switch drop superseded resolves
-status: implemented
+status: archived
 created: 2026-09-06
 updated: 2026-09-06
-archived_at: null
+archived_at: 2026-09-06T14:31:35Z
 ---
 
 ## Notes
