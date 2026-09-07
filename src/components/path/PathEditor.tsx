@@ -207,6 +207,29 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   // the right half of F-4's repair — a mode switch must never invalidate a POST.
   const [addInFlight, add] = useLatestRun();
 
+  // Three mutation lanes, one per route, with TWO disciplines between them — because
+  // the routes do not want one. F-5 recommends a latest-wins token for all three; on
+  // `handleDeleteLast` that would be strictly WORSE than today's absent guard.
+  // `DELETE /api/paths/[id]/steps` removes the highest-position step per CALL
+  // (`src/pages/api/paths/[id]/steps.ts:214-236`), so under latest-wins two overlapping
+  // deletes drop the first one's successful 204 as superseded — no pop — and let the
+  // second's 404 "No steps to delete" set the error, leaving a step rendered against a
+  // server holding zero. That is the rendered-list-disagrees-with-the-server failure the
+  // guard is meant to prevent, manufactured by the guard.
+  //
+  // So both deletes run AT-MOST-ONE: their trigger carries the lane's committed
+  // `inFlight` as `disabled`, so a second request is never issued and no superseded
+  // response can exist. Only the rename is LATEST-WINS — a newer title genuinely
+  // supersedes an older one — and its Save button deliberately does not disable.
+  //
+  // All three still write the one `mutationError` atom, and that is safe here in a way
+  // F-3 was not: no lane invalidates another's, and neither delete can be superseded
+  // within its own lane, so every write to it is guarded by the lane of the flow that
+  // produced it. Split the atom if that ever stops being true.
+  const [deleteLastInFlight, deleteLast] = useLatestRun();
+  const [, rename] = useLatestRun();
+  const [deletePathInFlight, deletePath] = useLatestRun();
+
   // Every event that makes a preview stale routes through here. The lane is
   // invalidated so a resolve already in flight cannot land (F-1, F-2, F-4) AND the
   // atoms it would have written are reset in the same breath: dropping the write
@@ -479,15 +502,22 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
     if (steps.length === 0) {
       return;
     }
+    // Outside the run: clearing the banner is immediate feedback for the click that
+    // started this, not a result the guard may drop.
     setMutationError(null);
-    // 204 on success — no body to read, so success alone is the signal.
-    const result = await requestJson<null>(`/api/paths/${path.id}/steps`, { method: "DELETE" });
-    if (result.ok) {
-      setSteps((prev) => prev.slice(0, -1));
-    } else {
-      setMutationError("Couldn't delete the last checkpoint.");
-    }
-  }, [steps.length, path.id]);
+    await deleteLast.run(async () => {
+      // 204 on success — no body to read, so success alone is the signal.
+      const result = await requestJson<null>(`/api/paths/${path.id}/steps`, { method: "DELETE" });
+      if (result.ok) {
+        return () => {
+          setSteps((prev) => prev.slice(0, -1));
+        };
+      }
+      return () => {
+        setMutationError("Couldn't delete the last checkpoint.");
+      };
+    });
+  }, [steps.length, path.id, deleteLast]);
 
   const handleRename = useCallback(async () => {
     const trimmed = titleDraft.trim();
@@ -495,34 +525,47 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
     setMutationError(null);
-    const request: PathTitleRequest = { title: trimmed };
-    // The PATCH response body is load-bearing: the new title comes from the server,
-    // not from the draft, so a server-side transform (trimming) shows immediately.
-    const result = await requestJson<UpgradePath>(`/api/paths/${path.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request),
+    await rename.run(async () => {
+      const request: PathTitleRequest = { title: trimmed };
+      // The PATCH response body is load-bearing: the new title comes from the server,
+      // not from the draft, so a server-side transform (trimming) shows immediately.
+      const result = await requestJson<UpgradePath>(`/api/paths/${path.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      if (result.ok) {
+        const renamedTo = result.data.title;
+        return () => {
+          setTitle(renamedTo);
+          setRenaming(false);
+        };
+      }
+      return () => {
+        setMutationError("Couldn't rename the path.");
+      };
     });
-    if (result.ok) {
-      setTitle(result.data.title);
-      setRenaming(false);
-    } else {
-      setMutationError("Couldn't rename the path.");
-    }
-  }, [titleDraft, path.id]);
+  }, [titleDraft, path.id, rename]);
 
   const handleDeletePath = useCallback(async () => {
+    // Stays ahead of the run: the confirm is the user's decision to start one at all,
+    // and a dismissed dialog must not mint a token or hold the trigger down.
     if (!window.confirm("Delete this path and all of its checkpoints? This can't be undone.")) {
       return;
     }
-    // 204 on success — no body to read, so success alone is the signal.
-    const result = await requestJson<null>(`/api/paths/${path.id}`, { method: "DELETE" });
-    if (result.ok) {
-      window.location.href = "/paths";
-    } else {
-      setMutationError("Couldn't delete the path.");
-    }
-  }, [path.id]);
+    await deletePath.run(async () => {
+      // 204 on success — no body to read, so success alone is the signal.
+      const result = await requestJson<null>(`/api/paths/${path.id}`, { method: "DELETE" });
+      if (result.ok) {
+        return () => {
+          window.location.href = "/paths";
+        };
+      }
+      return () => {
+        setMutationError("Couldn't delete the path.");
+      };
+    });
+  }, [path.id, deletePath]);
 
   return (
     <div className="space-y-5">
@@ -608,6 +651,11 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             variant="outline"
             size="sm"
             className={btnRClass}
+            // At-most-one, enforced by a COMMITTED attribute rather than by a flag the
+            // handler reads: `inFlight` lands in the DOM before the request is issued, so
+            // the browser refuses the second click instead of the handler having to
+            // recognise it from a closure it was already holding.
+            disabled={deletePathInFlight}
             onClick={() => {
               void handleDeletePath();
             }}
@@ -688,6 +736,11 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             variant="outline"
             size="sm"
             className={btnRClass}
+            // Same at-most-one gate as "Delete path", and here it is the whole repair: a
+            // second DELETE would answer 404 on a path the first one just emptied and write
+            // that over a delete that succeeded. `path-builder-mutation-ordering.spec.ts`
+            // is what keeps this attribute here.
+            disabled={deleteLastInFlight}
             onClick={() => {
               void handleDeleteLast();
             }}

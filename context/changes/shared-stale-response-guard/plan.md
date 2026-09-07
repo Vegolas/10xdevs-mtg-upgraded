@@ -814,36 +814,36 @@ the repair share a commit, and it is the one ordering constraint a revert has to
 
 #### Automated
 
-- [x] 2.1 The browser suite reports zero expected failures and zero unexpected passes: `npm run test:e2e`
-- [x] 2.2 All four repaired specs pass by name: `npx playwright test path-builder-stale-ordering`
-- [x] 2.3 Both comparer specs still pass: `npx playwright test comparer-`
-- [x] 2.4 Lint, typecheck and unit suite pass
-- [x] 2.5 No hand-rolled counter left anywhere in `src/`
+- [x] 2.1 The browser suite reports zero expected failures and zero unexpected passes: `npm run test:e2e` — 1291750
+- [x] 2.2 All four repaired specs pass by name: `npx playwright test path-builder-stale-ordering` — 1291750
+- [x] 2.3 Both comparer specs still pass: `npx playwright test comparer-` — 1291750
+- [x] 2.4 Lint, typecheck and unit suite pass — 1291750
+- [x] 2.5 No hand-rolled counter left anywhere in `src/` — 1291750
 
 #### Manual
 
-- [x] 2.6 The staged three-run sequence: four expected failures → four unexpected passes → four passes
-- [x] 2.7 F-3's targeted break — the Check-versus-add overlap S3 does not drive still lands the checkpoint banner with `checkError` reverted, and does not with it restored
-- [x] 2.8 F-4's targeted break — reverting only `switchMode`'s `invalidate()` reddens S4 alone
-- [x] 2.9 Three error banners unchanged visually, each announced under its own name
-- [x] 2.10 The mode toggle is disabled during an add and enabled during a Check
+- [x] 2.6 The staged three-run sequence: four expected failures → four unexpected passes → four passes — 1291750
+- [x] 2.7 F-3's targeted break — the Check-versus-add overlap S3 does not drive still lands the checkpoint banner with `checkError` reverted, and does not with it restored — 1291750
+- [x] 2.8 F-4's targeted break — reverting only `switchMode`'s `invalidate()` reddens S4 alone — 1291750
+- [x] 2.9 Three error banners unchanged visually, each announced under its own name — 1291750
+- [x] 2.10 The mode toggle is disabled during an add and enabled during a Check — 1291750
 
 ### Phase 3: The mutation flows and their proof
 
 #### Automated
 
-- [ ] 3.1 Both new specs pass: `npx playwright test path-builder-mutation-ordering`
-- [ ] 3.2 The whole browser suite passes with zero expected failures: `npm run test:e2e`
-- [ ] 3.3 Lint, typecheck and unit suite pass
-- [ ] 3.4 The integration suite is unaffected: `npm run test:integration`
-- [ ] 3.5 No hand-rolled guard remains: `grep -rn "useRef(0)\|Token.current" src/`
+- [x] 3.1 Both new specs pass: `npx playwright test path-builder-mutation-ordering`
+- [x] 3.2 The whole browser suite passes with zero expected failures: `npm run test:e2e`
+- [x] 3.3 Lint, typecheck and unit suite pass
+- [x] 3.4 The integration suite is unaffected: `npm run test:integration`
+- [x] 3.5 No hand-rolled guard remains: `grep -rn "useRef(0)\|Token.current" src/`
 
 #### Manual
 
-- [ ] 3.6 Each new spec, run with its guard reverted, fails on the assertion it names
-- [ ] 3.7 Both delete buttons disable during their request; the rename Save button does not
-- [ ] 3.8 Path creation from `/paths` works and double-clicking issues exactly one POST
-- [ ] 3.9 Add, Check, diff mode, accept, delete last and delete path all behave as before
+- [x] 3.6 Each new spec, run with its guard reverted, fails on the assertion it names
+- [x] 3.7 Both delete buttons disable during their request; the rename Save button does not
+- [x] 3.8 Path creation from `/paths` works and double-clicking issues exactly one POST
+- [x] 3.9 Add, Check, diff mode, accept, delete last and delete path all behave as before
 
 ### Phase 4: The record
 
