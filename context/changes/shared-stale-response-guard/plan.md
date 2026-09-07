@@ -87,7 +87,7 @@ contradict the upstream record and change what gets built.
   undrivable; the Add button is gated on the same (`:811`). The mode toggle (`:661-696`) is
   not, so it is the one control that can clear `addState` under an add in flight.
 - **`retries` inverts back the moment the annotations come off.** §6.7 item 23 leaves retries
-  at the config default *because* the specs are inverted; item 12 requires `retries: 0` on
+  at the config default _because_ the specs are inverted; item 12 requires `retries: 0` on
   ordering-sensitive specs, which is what they become once repaired.
 - **A third error banner is unavoidable, and both twins are already named.** F-3's repair
   routes the Check catches to a Check-owned atom, which puts a third `<p>` with the same class
@@ -100,8 +100,8 @@ contradict the upstream record and change what gets built.
 One primitive owns staleness for the whole app. Concretely:
 
 - `src/lib/async/latestRun.ts` exists, is pure, and is covered by `latestRun.test.ts` at the
-  `node`-env unit layer — so the guard's *algebra* is proved at the cheapest layer and the
-  browser specs only have to prove the *wiring*.
+  `node`-env unit layer — so the guard's _algebra_ is proved at the cheapest layer and the
+  browser specs only have to prove the _wiring_.
 - Every one of the eight async-then-setState flows runs through `useLatestRun`. No file in
   `src/` contains a hand-rolled request-token counter. `grep -rn "useRef(0)" src/` returns
   nothing.
@@ -124,7 +124,7 @@ e2e run reporting **zero** expected failures — the number §6.7 item 22 says t
   `change.md` holds it out by name.
 - **Not adding a component-render layer.** No jsdom, no Testing Library, no `.test.tsx`. §7
   keeps component rendering out and this change does not reopen it; the primitive is
-  unit-tested precisely *because* it is pure and needs no renderer.
+  unit-tested precisely _because_ it is pure and needs no renderer.
 - **Not adding a CI job or changing branch protection.** Both new spec files live under
   `tests/e2e/`, which the required `e2e` job already runs, and the unit tests ride `npm test`
   in the required `ci` job. No job name is added, so no required-check list edit.
@@ -137,7 +137,7 @@ e2e run reporting **zero** expected failures — the number §6.7 item 22 says t
   the Check catches already produce; the existing banners keep their wording, position and
   appearance.
 - **Not making the server's own last-write-wins ordering a concern.** The guard's contract is
-  that the newest *user intent* wins on screen. Reconciling a divergent server row is a
+  that the newest _user intent_ wins on screen. Reconciling a divergent server row is a
   different problem and is not in scope.
 - **Not writing a `backport.md`.** Decided during planning: this change takes §2, §6.7 and §8
   itself. §2's edit restriction exists so a frozen cell is not rewritten casually; this change
@@ -159,15 +159,15 @@ because the flow does not write state at all; the hook does.
 
 Invalidation is partitioned into **lanes**, one `useLatestRun()` per lane:
 
-| Lane                       | Flows                       | Discipline                        | Invalidated by                                                                     |
-| -------------------------- | --------------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
-| `preview` (PathEditor)     | `runCheck`, `runDiffCheck`  | latest-wins                       | a new Check, the textarea `onChange`, `switchMode`, a successful add               |
-| `add` (PathEditor)         | `handleAddStep`             | latest-wins + trigger disabled    | a newer add                                                                         |
-| `deleteLast` (PathEditor)  | `handleDeleteLast`          | at-most-one (trigger disabled)    | —                                                                                   |
-| `rename` (PathEditor)      | `handleRename`              | latest-wins                       | a newer rename                                                                      |
-| `deletePath` (PathEditor)  | `handleDeletePath`          | at-most-one (trigger disabled)    | —                                                                                   |
-| `plan` (DeckComparer)      | `runPlan`                   | latest-wins                       | a newer run, either box emptying                                                    |
-| `create` (NewPathForm)     | `handleSubmit`              | at-most-one (trigger disabled)    | —                                                                                   |
+| Lane                      | Flows                      | Discipline                     | Invalidated by                                                       |
+| ------------------------- | -------------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| `preview` (PathEditor)    | `runCheck`, `runDiffCheck` | latest-wins                    | a new Check, the textarea `onChange`, `switchMode`, a successful add |
+| `add` (PathEditor)        | `handleAddStep`            | latest-wins + trigger disabled | a newer add                                                          |
+| `deleteLast` (PathEditor) | `handleDeleteLast`         | at-most-one (trigger disabled) | —                                                                    |
+| `rename` (PathEditor)     | `handleRename`             | latest-wins                    | a newer rename                                                       |
+| `deletePath` (PathEditor) | `handleDeletePath`         | at-most-one (trigger disabled) | —                                                                    |
+| `plan` (DeckComparer)     | `runPlan`                  | latest-wins                    | a newer run, either box emptying                                     |
+| `create` (NewPathForm)    | `handleSubmit`             | at-most-one (trigger disabled) | —                                                                    |
 
 The load-bearing property of this table is what is **absent**: no input event invalidates a
 persist. A keystroke or a mode switch must never drop a POST already in flight, because that
@@ -191,7 +191,7 @@ must be verified by its own targeted break rather than by S3 alone.
 
 **S3 will pass for two independent reasons after Phase 2, and only one of them is F-3's
 repair.** The preview lane's invalidation drops the superseded Check; the `checkError` atom
-means even a *current* Check failure no longer writes the checkpoint banner. Verifying the
+means even a _current_ Check failure no longer writes the checkpoint banner. Verifying the
 repair therefore requires the second overlap S3 does not drive: Check text T, fill the
 checkpoint name, add the same text T with no textarea edit between. That path exercises atom
 ownership with the lane guard passing.
@@ -242,10 +242,17 @@ React and no DOM, so the semantics `lessons.md` says have drifted five ways have
 definition.
 
 **Contract**: Exports `createLatestRun(): LatestRun` where `LatestRun` is
-`{ begin(): number; isCurrent(token: number): boolean; invalidate(): void }`. `begin`
-increments and returns the new token; `isCurrent` compares against the latest; `invalidate`
-increments without returning, so nothing outstanding is current. Pure and total — no throw
-path, no globals, one instance per lane.
+`{ begin(): RunToken; isCurrent(token: RunToken): boolean; invalidate(): void }`. `begin`
+mints a fresh token and returns it; `isCurrent` compares by identity against the latest;
+`invalidate` mints one nobody holds, so nothing outstanding is current. Pure and total — no
+throw path, no globals, one instance per lane.
+
+`RunToken` is an exported but never-externally-constructed `symbol`, **not** a number.
+_Corrected 2026-09-06 during Phase 1: the number form contradicted this phase's own
+cross-lane test case below, because two lanes with independent counters both issue `1` first,
+so one lane's token reads as current in the other. Identity-compared tokens make lane
+isolation structural — passing the wrong lane's token cannot accidentally pass — which is
+what Phase 2's five lanes and Phase 3's two more depend on._
 
 #### 2. Unit coverage for the core
 
@@ -260,6 +267,10 @@ instances are independent; a token from one instance is never current in another
 `isCurrent` calls are stable. Node env, no mocks — rides `npm test` via `vitest.config.ts:14`'s
 `src/**/*.test.ts` glob.
 
+_Shipped 2026-09-06 with two cases beyond this list: an `invalidate` before any run must not
+poison the next one (the textarea's `onChange` fires long before the first Check is clicked),
+and a token no run on this lane ever issued reads as not-current._
+
 #### 3. The hook
 
 **File**: `src/lib/async/useLatestRun.ts`
@@ -273,24 +284,36 @@ instances are independent; a token from one instance is never current in another
 /** The writes a run wants applied, or `null` for "write nothing". */
 export type Commit = (() => void) | null;
 
-export interface GuardedRun {
-  /** True while a run started here has not settled. Drive `disabled` from this. */
-  readonly inFlight: boolean;
+export interface RunControls {
   /** Run `work`; apply its commit only if this run is still the newest. Must not reject. */
   run(work: () => Promise<Commit>): Promise<void>;
   /** Supersede whatever is outstanding — call from the event that made it stale. */
   invalidate(): void;
 }
 
+/** `inFlight` is true while a run started here has not settled. */
+export type GuardedRun = readonly [inFlight: boolean, controls: RunControls];
+
 export function useLatestRun(): GuardedRun;
 ```
 
-`inFlight` is `useState` (a ref cannot drive the re-render that commits `disabled`); the
-counter is a lazily-initialised `useRef<LatestRun | null>`. `run` calls `begin`, sets
-`inFlight`, awaits `work`, and applies the commit only when `isCurrent(token)` — clearing
-`inFlight` in a `finally`, and only for the newest run, so a superseded run cannot re-enable a
-disabled trigger. `invalidate` also clears `inFlight`, since nothing outstanding may write.
-`run` and `invalidate` are `useCallback`-stable so call sites keep clean dep arrays.
+`inFlight` is `useState` (a ref cannot drive the re-render that commits `disabled`). `run`
+calls `begin`, sets `inFlight`, awaits `work`, and applies the commit only when
+`isCurrent(token)` — clearing `inFlight` in a `finally`, and only for the newest run, so a
+superseded run cannot re-enable a disabled trigger. `invalidate` also clears `inFlight`, since
+nothing outstanding may write. `run` and `invalidate` are `useCallback`-stable, and `controls`
+is `useMemo`-stable over them, so call sites keep clean dep arrays.
+
+_Two corrections landed 2026-09-06 during Phase 1._ **The return is a tuple, not one object.**
+An object carrying `inFlight` is a fresh reference every render, and the comparer's debounce
+effect depends on its runner — so bundling the two re-registered a 700 ms timer on every
+render, including the renders `inFlight` itself causes: plan resolves → render → new timer →
+plan runs again, indefinitely. Handing the volatile flag back separately from the stable
+controls makes that unrepresentable rather than leaving it to a convention at eight call
+sites. **The lane is held in `useState(createLatestRun)`, not a lazily-initialised
+`useRef<LatestRun | null>`** — verified by probe, `react-hooks/refs` rejects the ref form at
+error level ("Cannot access refs during render"). Same lifetime, same stability, no ref read
+in render.
 
 #### 4. DeckComparer routed through the hook
 
@@ -354,7 +377,9 @@ F-3's shared failure — a write guarded by a counter that does not own its targ
 unrepresentable rather than merely fixed.
 
 **Contract**: `addToken` (`:189`) and `checkToken` (`:191`) are deleted and replaced by
-`const preview = useLatestRun()` and `const add = useLatestRun()`. `runCheck` (`:321-342`) and
+`const [, preview] = useLatestRun()` and `const [addInFlight, add] = useLatestRun()` — the
+tuple shape Phase 1 shipped, where the second element carries `run` and `invalidate`.
+`runCheck` (`:321-342`) and
 `runDiffCheck` (`:347-372`) both run on `preview`; `handleAddStep` (`:214-316`) runs on `add`.
 Each body's inline token comparisons (`:245`, `:267`, `:275`, `:291`, `:330`, `:335`, `:358`,
 `:363`) are removed — the hook owns the decision — and each `return` path yields a commit
@@ -367,7 +392,7 @@ flight instead of clearing atoms a different counter guards.
 
 **File**: `src/components/path/PathEditor.tsx`
 
-**Intent**: F-1. Invalidate from the handler that *observes* the change, not from a branch
+**Intent**: F-1. Invalidate from the handler that _observes_ the change, not from a branch
 downstream of it — `lessons.md`, "Clearing an input is not an invalidation event", is explicit
 that a bump inside `runCheck`'s empty-text branch (`:322-324`) fixes nothing because that
 branch is unreachable.
@@ -386,7 +411,7 @@ surfaces never bleed into each other is the one control that invalidates nothing
 
 **Contract**: `switchMode` (`:376-382`) calls `preview.invalidate()` alongside its existing
 three resets. It does **not** invalidate the `add` lane; instead both mode buttons (`:667-680`,
-`:681-694`) gain `disabled={add.inFlight}`, mirroring the Check button's existing
+`:681-694`) gain `disabled={addInFlight}`, mirroring the Check button's existing
 `addState.status === "resolving"` gate (`:796`). The toggle stays enabled during a Check — S4
 drives it in exactly that state, and gating it on a Check would make S4 fail on the click.
 
@@ -483,7 +508,9 @@ this plan corrects.
 
 **Contract**: Three lanes — `deleteLast`, `rename`, `deletePath`. `handleDeleteLast`
 (`:433-445`) and `handleDeletePath` (`:469-480`) run at-most-one: their buttons (`:641-652`,
-`:561-572`) gain `disabled={lane.inFlight}`, so no second request is ever issued and no
+`:561-572`) gain `disabled` driven by their lane's own `inFlight` element — each lane is
+destructured as `const [<name>InFlight, <name>] = useLatestRun()` — so no second request is
+ever issued and no
 superseded response can exist. `handleRename` (`:447-467`) runs latest-wins: a newer rename
 supersedes an older one, and the older PATCH's `setTitle` / `setRenaming` commit is dropped.
 Every body returns a commit rather than writing inline; the Save button (`:506-517`) does
@@ -499,7 +526,7 @@ means the next reader still has to re-read all of them, which is the obligation 
 exists to retire.
 
 **Contract**: `handleSubmit` (`:21-46`) runs on a `create` lane at-most-one. The pre-await
-`pending` read (`:23`) and the `pending` state are replaced by `create.inFlight`, which is
+`pending` read (`:23`) and the `pending` state are replaced by the lane's `inFlight`, which is
 committed before the await rather than read from a stale closure — closing the same
 two-clicks-in-one-tick gap `handleDeleteLast` had. The submit control keeps its existing
 disabled behavior, now driven by `inFlight`. The success path still navigates (`:45`); the
@@ -510,7 +537,7 @@ failure commit still writes the same three `setError` messages.
 **File**: `tests/e2e/fixtures/appApi.ts`
 
 **Intent**: The overlap these specs need cannot be produced any other way. Every existing
-fixture routes `https://api.scryfall.com/**`; `fixtures/auth.ts` only *calls* the app API for
+fixture routes `https://api.scryfall.com/**`; `fixtures/auth.ts` only _calls_ the app API for
 seeding and never intercepts it, so there is no way today to hold one `/api/paths/*` request
 while a second completes.
 
@@ -614,8 +641,8 @@ cannot be edited. A new entry supersedes it and states the rule that replaces it
 **Contract**: One entry recording that the duplication is gone, where the single definition
 lives, and the rule that replaces the standing review obligation: a flow that awaits and then
 writes state goes through `useLatestRun`, and a review rejects a new hand-rolled counter. It
-also records the two general lessons this change paid for — that a finding's *suggested fix*
-needs the same render-tree verification its *symptom* does (F-5's latest-wins prescription
+also records the two general lessons this change paid for — that a finding's _suggested fix_
+needs the same render-tree verification its _symptom_ does (F-5's latest-wins prescription
 would have made delete worse), and that a pin can flip for a reason other than the defect it
 names, so a repair needs a targeted break per defect and not just a green suite.
 
@@ -731,10 +758,12 @@ refresh, and that the §7 admissibility argument for risk #10's browser specs is
 
 ## Performance Considerations
 
-None. The primitive is an integer counter and a boolean; one `useState` per lane replaces one
-`useRef` per counter, adding at most one re-render per run transition on components that already
-re-render on every state write in the same flow. No new network traffic and no new allocation in
-render — the `LatestRun` instance is created once per lane and held in a ref.
+None. The primitive is one symbol reference and a boolean; two `useState` slots per lane — the
+lane itself, then its `inFlight` flag — replace one `useRef` per counter, adding at most one
+re-render per run transition on components that already re-render on every state write in the
+same flow. No new network traffic and no new allocation in render: `createLatestRun` is passed
+as `useState`'s lazy initialiser, so it runs once per lane for the component's lifetime, and a
+run mints exactly one symbol.
 
 ## Migration Notes
 
@@ -769,35 +798,35 @@ the repair share a commit, and it is the one ordering constraint a revert has to
 
 #### Automated
 
-- [x] 1.1 Unit suite passes with `latestRun.test.ts` collected: `npm test`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Type checking passes: `npm run typecheck`
-- [x] 1.4 Both comparer specs still pass unchanged: `npx playwright test comparer-`
-- [x] 1.5 The four inverted specs still report exactly four expected failures: `npm run test:e2e`
-- [x] 1.6 No hand-rolled counter left in `src/components/deck/`
+- [x] 1.1 Unit suite passes with `latestRun.test.ts` collected: `npm test` — 643719a
+- [x] 1.2 Linting passes: `npm run lint` — 643719a
+- [x] 1.3 Type checking passes: `npm run typecheck` — 643719a
+- [x] 1.4 Both comparer specs still pass unchanged: `npx playwright test comparer-` — 643719a
+- [x] 1.5 The four inverted specs still report exactly four expected failures: `npm run test:e2e` — 643719a
+- [x] 1.6 No hand-rolled counter left in `src/components/deck/` — 643719a
 
 #### Manual
 
-- [x] 1.7 The comparer behaves identically — debounce, Calculate, empty-box idle, Retry
-- [x] 1.8 Breaking `isCurrent` reddens `comparer-stale-response.spec.ts`, then reverted
+- [x] 1.7 The comparer behaves identically — debounce, Calculate, empty-box idle, Retry — 643719a
+- [x] 1.8 Breaking `isCurrent` reddens `comparer-stale-response.spec.ts`, then reverted — 643719a
 
 ### Phase 2: The repair — PathEditor's pre-save flows
 
 #### Automated
 
-- [ ] 2.1 The browser suite reports zero expected failures and zero unexpected passes: `npm run test:e2e`
-- [ ] 2.2 All four repaired specs pass by name: `npx playwright test path-builder-stale-ordering`
-- [ ] 2.3 Both comparer specs still pass: `npx playwright test comparer-`
-- [ ] 2.4 Lint, typecheck and unit suite pass
-- [ ] 2.5 No hand-rolled counter left anywhere in `src/`
+- [x] 2.1 The browser suite reports zero expected failures and zero unexpected passes: `npm run test:e2e`
+- [x] 2.2 All four repaired specs pass by name: `npx playwright test path-builder-stale-ordering`
+- [x] 2.3 Both comparer specs still pass: `npx playwright test comparer-`
+- [x] 2.4 Lint, typecheck and unit suite pass
+- [x] 2.5 No hand-rolled counter left anywhere in `src/`
 
 #### Manual
 
-- [ ] 2.6 The staged three-run sequence: four expected failures → four unexpected passes → four passes
-- [ ] 2.7 F-3's targeted break — the Check-versus-add overlap S3 does not drive still lands the checkpoint banner with `checkError` reverted, and does not with it restored
-- [ ] 2.8 F-4's targeted break — reverting only `switchMode`'s `invalidate()` reddens S4 alone
-- [ ] 2.9 Three error banners unchanged visually, each announced under its own name
-- [ ] 2.10 The mode toggle is disabled during an add and enabled during a Check
+- [x] 2.6 The staged three-run sequence: four expected failures → four unexpected passes → four passes
+- [x] 2.7 F-3's targeted break — the Check-versus-add overlap S3 does not drive still lands the checkpoint banner with `checkError` reverted, and does not with it restored
+- [x] 2.8 F-4's targeted break — reverting only `switchMode`'s `invalidate()` reddens S4 alone
+- [x] 2.9 Three error banners unchanged visually, each announced under its own name
+- [x] 2.10 The mode toggle is disabled during an add and enabled during a Check
 
 ### Phase 3: The mutation flows and their proof
 

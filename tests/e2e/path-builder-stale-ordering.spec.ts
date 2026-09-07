@@ -9,33 +9,46 @@ import { createSignedInOwner, deleteOwner, seedPathWithStep, type Owner } from "
  * edited or cleared — a slow earlier resolve lands after the input moved on, so the user
  * decides whether to save on a verdict about text that no longer exists."
  *
- * READ THIS BEFORE ACTING ON A RED BUILD. Every test in this file asserts the CORRECT
- * behavior and is annotated `test.fail()`, because risk #9 is a set of live defects rather
- * than a forecast. So:
+ * THESE FOUR SPECS NOW PROTECT A REPAIR. They were written INVERTED — each annotated
+ * `test.fail()` against the correct behavior — because risk #9 was a set of live defects
+ * rather than a forecast, and they were authored before any fix existed precisely so they
+ * would be the specification for one. `shared-stale-response-guard` is that fix: it routes
+ * every async-then-setState flow through one guarded-async lane
+ * (`src/lib/async/useLatestRun.ts`) and repaired F-1 through F-4 in a single commit. All
+ * four reported `Expected to fail, but passed.`, and the annotations came off with the
+ * repair. So:
  *
- *   - "expected failure" in the report is the CURRENT, KNOWN state. Nothing to do.
- *   - "expected to fail but passed" means somebody FIXED the guard. That is the signal
- *     this file exists to raise: delete the `test.fail()` line and the spec becomes an
- *     ordinary regression test protecting the fix.
+ *   - a failure here is now an ORDINARY REGRESSION. One of the four invalidation sites
+ *     stopped invalidating; the failing spec's own header says which.
+ *   - the four sites are distinct and each spec owns one: the textarea's `onChange` (S1),
+ *     the successful add (S2), atom ownership across the two Check catches (S3), and
+ *     `switchMode` (S4). Breaking or repairing one does not move the others, which is why
+ *     four specs and not one.
  *
- * This is the coverage-not-repair convention from test-plan §6.7 item 15 — a spec for a
- * live defect would otherwise be red today, which would make this a bug-fix change. The
- * defects are filed as F-1 through F-6 in
+ * A CAUTION ON READING THE PER-SPEC HEADERS BELOW. Each explains the defect it was written
+ * to pin, in the present tense of the PRE-REPAIR code and with line references into it.
+ * That was left standing deliberately: it is still the reason each spec has the shape it
+ * has, and two of the headers carry corrections to the filed findings that nothing else
+ * records. Read their `PathEditor.tsx:NNN` citations as pointing at the code as it was
+ * before the repair — every line past `:184` moved when `checkError` landed.
+ *
+ * The defects are filed as F-1 through F-6 in
  * `context/archive/2026-09-05-testing-path-builder-ordering/findings.md`; each test names
- * the one it pins. Two of those entries are superseded by what S3 and S4 had to establish
+ * the one it pinned. Two of those entries are superseded by what S3 and S4 had to establish
  * to be writable at all — see each spec's header, and `lessons.md`.
  *
- * WHY SETUP LIVES IN `beforeEach` AND NOT IN THE TEST BODY. `test.fail()` inverts
- * everything the body does, harness failures included — a broken sign-in or a rejected
- * seed would report as an "expected failure" and this file would go green while covering
- * nothing. A hook failure happens before the body registers the annotation, so it stays a
- * real failure. Only the code that drives the risk belongs under the inversion.
+ * WHY SETUP STILL LIVES IN `beforeEach` AND NOT IN THE TEST BODY. Under `test.fail()` this
+ * was mandatory: the annotation inverted everything the body did, harness failures included,
+ * so a broken sign-in or a rejected seed would have reported as an "expected failure" and
+ * the file would have gone green covering nothing. The annotations are gone; the setup stays
+ * where it is, because moving it would edit four bodies that ARE the specification.
  *
- * WHY RETRIES ARE LEFT AT THE CONFIG DEFAULT, unlike `comparer-stale-response.spec.ts`,
- * which forces `retries: 0`. There a retry could turn a genuine out-of-order bug green —
- * the failure was the signal. Here the failure is the EXPECTED state, so a retry cannot
- * hide a defect; it can only absorb a timing flake that spuriously reports an unexpected
- * pass. The two settings are the same principle applied to inverted tests.
+ * WHY RETRIES ARE PINNED TO 0 BELOW. While these specs were inverted the failure was their
+ * expected state, so a retry could only absorb a flake that spuriously reported an
+ * unexpected pass — the config default was right (test-plan §6.7 item 23). Repaired, they
+ * are ordinary ordering specs and item 12 applies again: a genuine out-of-order bug must
+ * never retry its way to green. The setting inverts at exactly the moment the annotations
+ * come off; same principle, not a change of mind.
  *
  * AUTH. Each test provisions its OWN owner and deletes it in `afterEach`; the delete
  * cascades to every path and step that owner seeded (`on delete cascade`), so one call is
@@ -43,6 +56,7 @@ import { createSignedInOwner, deleteOwner, seedPathWithStep, type Owner } from "
  * is what the browser arrives with; `adoptSession` is what makes the browser agree with
  * the API context about who the test is. Nothing here signs in through the UI.
  */
+test.describe.configure({ retries: 0 });
 
 /** Deck text for S1. S2's decks must share no names with these — `card-data/resolve.ts:15`
  *  is a module-level cache with no test seam, so a name already resolved in the same page
@@ -167,9 +181,6 @@ function isCollectionPostFor(cardName: string) {
  * the difference between a one-line fix and the right one.
  */
 test("a pre-save verdict never describes a deck box the user cleared", async ({ page }) => {
-  // Expected to fail until F-1 is fixed. An unexpected pass means it was — see the header.
-  test.fail();
-
   // Park the Check's ONE `/cards/collection` POST; everything else resolves normally.
   // Registered before navigating, or the route would not be in place when it fires.
   const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S1_PARK_ON));
@@ -236,9 +247,6 @@ test("a pre-save verdict never describes a deck box the user cleared", async ({ 
  * explicit button clicks, so the overlap is real by construction rather than by timing.
  */
 test("a pre-save verdict never survives the checkpoint that replaced it", async ({ page }) => {
-  // Expected to fail until F-2 is fixed. An unexpected pass means it was — see the header.
-  test.fail();
-
   // Park deck A's `/cards/collection` POST. Deck B's shares no names, so it is not matched
   // by the predicate and resolves normally — which is what lets the add run to completion.
   const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S2_PARK_ON));
@@ -317,9 +325,6 @@ test("a pre-save verdict never survives the checkpoint that replaced it", async 
  * proofs, same observation window. Only the release differs.
  */
 test("a checkpoint-error banner never describes a Check that failed after the save", async ({ page }) => {
-  // Expected to fail until F-3 is fixed. An unexpected pass means it was — see the header.
-  test.fail();
-
   // Park deck A's `/cards/collection` POST. Deck B shares no names, so the predicate does
   // not match it and it resolves normally — which is what lets the add run to completion.
   const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S3_PARK_ON));
@@ -409,9 +414,6 @@ test("a checkpoint-error banner never describes a Check that failed after the sa
  * independently and neither is redundant.
  */
 test("a pre-save verdict never survives the entry-mode switch that cleared it", async ({ page }) => {
-  // Expected to fail until F-4 is fixed. An unexpected pass means it was — see the header.
-  test.fail();
-
   const parked = await mockScryfallWithParkedCollection(page, (names) => names.includes(S4_PARK_ON));
 
   const main = await gotoPathBuilder(page, seededPathId());

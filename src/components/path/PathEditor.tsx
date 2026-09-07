@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { resolveDeck, applySuggestion, applyAllSuggestions, deckCardsToText } from "@/lib/deck";
 import type { UnresolvedEntry } from "@/lib/deck";
@@ -15,6 +15,7 @@ import {
 import type { DeriveResult, PathStep, StepSnapshot, UnresolvedLite, UpgradePath } from "@/lib/path";
 import { requestJson } from "@/lib/api/client";
 import type { PathTitleRequest, StepCreateRequest } from "@/lib/api/contract";
+import { useLatestRun } from "@/lib/async/useLatestRun";
 import { Button } from "@/components/ui/button";
 import { CardGroupColumn } from "@/components/deck/CardGroupColumn";
 import { CostSummary } from "@/components/deck/CostSummary";
@@ -168,8 +169,10 @@ function StepCard({ step, prev, sortMode }: { step: PathStep; prev: PathStep | n
  * The path editor island: renders a path's checkpoint chain and drives every
  * mutation (add checkpoint, delete last, rename, delete path) against the
  * `/api/paths/*` endpoints. Adding a checkpoint resolves the pasted list
- * client-side — request-token guarded so a slow resolution can't clobber a newer
- * one — builds a {@link StepSnapshot}, and POSTs it; views never re-resolve.
+ * client-side, builds a {@link StepSnapshot}, and POSTs it; views never
+ * re-resolve. Every async-then-setState flow here runs on a {@link useLatestRun}
+ * lane — one lane per set of atoms — so a slow earlier run can never write over
+ * a newer one, an edited box, a switched mode, or the checkpoint that replaced it.
  */
 export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   const [steps, setSteps] = useState<PathStep[]>(initialSteps);
@@ -182,15 +185,39 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   const [mode, setMode] = useState<AddMode>("full");
   const [addState, setAddState] = useState<AddState>({ status: "idle" });
   const [mutationError, setMutationError] = useState<string | null>(null);
+  // The Check flows' own error atom. Both catches used to write `addState` — the
+  // add flow's atom, guarded by the add flow's counter — so a message about a
+  // failed Check could land over a checkpoint that saved cleanly (F-3). One atom
+  // for both Check flows, because they share the `preview` lane.
+  const [checkError, setCheckError] = useState<string | null>(null);
 
   const { mode: sortMode, setMode: handleSortChange } = useSortMode();
 
-  // Only the latest add run may write the view (mirrors DeckComparer).
-  const addToken = useRef(0);
-  // Only the latest Check run may write the check state (same guard, separate counter).
-  const checkToken = useRef(0);
   const [checkState, setCheckState] = useState<CheckState>({ status: "idle" });
   const [diffPreview, setDiffPreview] = useState<DiffPreview>({ status: "idle" });
+
+  // Two lanes, split by the atoms they own rather than by flow. `preview` covers
+  // both Check flows, which own `checkState`, `diffPreview` and `checkError`;
+  // `add` covers `handleAddStep`, which owns `addState` and `steps`. Ownership is
+  // the split that matters: F-2 and F-3 were both a write guarded by a counter
+  // that did not own its target, and that is no longer expressible.
+  const [, preview] = useLatestRun();
+  // `addInFlight` drives the entry-mode toggle's `disabled`. The toggle is the one
+  // control that can clear `addState` under an add in flight, and disabling it is
+  // the right half of F-4's repair — a mode switch must never invalidate a POST.
+  const [addInFlight, add] = useLatestRun();
+
+  // Every event that makes a preview stale routes through here. The lane is
+  // invalidated so a resolve already in flight cannot land (F-1, F-2, F-4) AND the
+  // atoms it would have written are reset in the same breath: dropping the write
+  // alone would leave `checkState` stuck on "checking" and the Check CTA disabled
+  // with nothing outstanding left to finish it.
+  const invalidatePreview = useCallback(() => {
+    preview.invalidate();
+    setCheckState({ status: "idle" });
+    setDiffPreview({ status: "idle" });
+    setCheckError(null);
+  }, [preview]);
 
   // Diff-mode needs a predecessor to derive from; a fresh path is full-paste only.
   const canDiff = steps.length >= 1;
@@ -222,128 +249,139 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
 
-    const token = ++addToken.current;
+    // Outside the run: the spinner is immediate feedback for the click that started
+    // it, not a result the guard may drop. It is also what disables the Add CTA and
+    // the entry-mode toggle, so it has to commit before the first await rather than
+    // arrive with one.
     setAddState({ status: "resolving" });
 
-    // Build the snapshot per mode. Full-paste resolves the list as-is; diff-mode
-    // derives it from the prior step's frozen snapshot, and the POSTed `listText`
-    // becomes the *derived* full list so the stored column stays meaningful.
-    let snapshot: StepSnapshot;
-    let postListText: string;
-    // Diff-mode persists the raw delta as provenance; full paste sends none.
-    let postDeltaText: string | null = null;
-    // …and names the step it derived from, so the server can refuse a raced append.
-    let postPriorStepId: string | null = null;
-    try {
-      if (activeMode === "diff") {
-        const priorStep = steps.at(-1);
-        if (!priorStep) {
-          setAddState({ status: "error", message: "Diff mode needs a previous checkpoint to build on." });
-          return;
+    await add.run(async () => {
+      // Build the snapshot per mode. Full-paste resolves the list as-is; diff-mode
+      // derives it from the prior step's frozen snapshot, and the POSTed `listText`
+      // becomes the *derived* full list so the stored column stays meaningful.
+      let snapshot: StepSnapshot;
+      let postListText: string;
+      // Diff-mode persists the raw delta as provenance; full paste sends none.
+      let postDeltaText: string | null = null;
+      // …and names the step it derived from, so the server can refuse a raced append.
+      let postPriorStepId: string | null = null;
+      try {
+        if (activeMode === "diff") {
+          const priorStep = steps.at(-1);
+          if (!priorStep) {
+            return () => {
+              setAddState({ status: "error", message: "Diff mode needs a previous checkpoint to build on." });
+            };
+          }
+          const result = await deriveSnapshot(priorStep.snapshot, listText);
+          snapshot = result.snapshot;
+          postListText = deckCardsToText(result.snapshot.cards);
+          postDeltaText = listText;
+          // The server re-checks `prior ± delta` against *this* step, and answers 409
+          // if another tab appended in the meantime — see the 409 branch below.
+          postPriorStepId = priorStep.id;
+        } else {
+          const resolved = await resolveDeck(listText);
+          snapshot = {
+            cards: resolved.deck,
+            unresolved: resolved.unresolved.map((entry) => ({
+              name: entry.name,
+              reason: entry.reason,
+              suggestion: entry.suggestion,
+            })),
+          };
+          postListText = listText;
         }
-        const result = await deriveSnapshot(priorStep.snapshot, listText);
-        if (token !== addToken.current) {
-          return;
-        }
-        snapshot = result.snapshot;
-        postListText = deckCardsToText(result.snapshot.cards);
-        postDeltaText = listText;
-        // The server re-checks `prior ± delta` against *this* step, and answers 409
-        // if another tab appended in the meantime — see the 409 branch below.
-        postPriorStepId = priorStep.id;
-      } else {
-        const resolved = await resolveDeck(listText);
-        snapshot = {
-          cards: resolved.deck,
-          unresolved: resolved.unresolved.map((entry) => ({
-            name: entry.name,
-            reason: entry.reason,
-            suggestion: entry.suggestion,
-          })),
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not reach the card database.";
+        return () => {
+          setAddState({ status: "error", message });
         };
-        postListText = listText;
       }
-    } catch (error) {
-      if (token !== addToken.current) {
-        return;
+
+      const request: StepCreateRequest = {
+        name: trimmedName,
+        listText: postListText,
+        snapshot,
+        deltaText: postDeltaText,
+        priorStepId: postPriorStepId,
+      };
+      const result = await requestJson<PathStep>(`/api/paths/${path.id}/steps`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      if (!result.ok) {
+        // A 409 is the only failure the server's own words don't help with: it means
+        // another tab appended after this one read `prior`, so the derive is stale and
+        // the fix is a reload, not an edit. Everything else — including the verifier's
+        // "prior ± delta" refusals — carries a message written for this form.
+        const message =
+          result.kind === "transport"
+            ? "Couldn't save the checkpoint. Check your connection and retry."
+            : result.status === 409
+              ? "This path changed somewhere else. Reload the page, then re-enter your changes."
+              : result.fromBody
+                ? result.error
+                : `Couldn't save the checkpoint (${result.status}).`;
+        return () => {
+          setAddState({ status: "error", message });
+        };
       }
-      const message = error instanceof Error ? error.message : "Could not reach the card database.";
-      setAddState({ status: "error", message });
-      return;
-    }
-
-    if (token !== addToken.current) {
-      return;
-    }
-
-    const request: StepCreateRequest = {
-      name: trimmedName,
-      listText: postListText,
-      snapshot,
-      deltaText: postDeltaText,
-      priorStepId: postPriorStepId,
-    };
-    const result = await requestJson<PathStep>(`/api/paths/${path.id}/steps`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request),
+      const created = result.data;
+      return () => {
+        setSteps((prev) => [...prev, created]);
+        setName("");
+        setListText("");
+        setAddState({ status: "idle" });
+        // F-2: the add SUPERSEDES a Check in flight rather than only clearing the
+        // atoms that Check writes. Clearing them under the add's own counter is
+        // exactly what let a slower Check re-populate them a moment later — and
+        // `setListText("")` above is programmatic, so the textarea's own
+        // invalidation never fires for it.
+        invalidatePreview();
+      };
     });
-    if (token !== addToken.current) {
-      return;
-    }
-    if (!result.ok) {
-      // A 409 is the only failure the server's own words don't help with: it means
-      // another tab appended after this one read `prior`, so the derive is stale and
-      // the fix is a reload, not an edit. Everything else — including the verifier's
-      // "prior ± delta" refusals — carries a message written for this form.
-      const message =
-        result.kind === "transport"
-          ? "Couldn't save the checkpoint. Check your connection and retry."
-          : result.status === 409
-            ? "This path changed somewhere else. Reload the page, then re-enter your changes."
-            : result.fromBody
-              ? result.error
-              : `Couldn't save the checkpoint (${result.status}).`;
-      setAddState({ status: "error", message });
-      return;
-    }
-    setSteps((prev) => [...prev, result.data]);
-    setName("");
-    setListText("");
-    setAddState({ status: "idle" });
-    setCheckState({ status: "idle" });
-    setDiffPreview({ status: "idle" });
-  }, [name, listText, path.id, activeMode, steps]);
+  }, [name, listText, path.id, activeMode, steps, add, invalidatePreview]);
 
   // Pre-save Check: resolve the pasted list (no POST) so unresolved cards surface
-  // with a one-click Accept before the immutable snapshot is written. Token-guarded
-  // so a slow resolve can't clobber a newer one (mirrors the add flow).
-  const runCheck = useCallback(async (text: string) => {
-    if (text.trim() === "") {
-      setCheckState({ status: "idle" });
-      return;
-    }
-    const token = ++checkToken.current;
-    setCheckState({ status: "checking" });
-    try {
-      const resolved = await resolveDeck(text);
-      if (token !== checkToken.current) {
+  // with a one-click Accept before the immutable snapshot is written. Runs on the
+  // `preview` lane, so a slow resolve cannot write over a newer Check, an edit to
+  // the box, a mode switch, or the checkpoint that replaced it.
+  const runCheck = useCallback(
+    async (text: string) => {
+      if (text.trim() === "") {
+        setCheckState({ status: "idle" });
         return;
       }
-      setCheckState({ status: "checked", unresolved: resolved.unresolved });
-    } catch (error) {
-      if (token !== checkToken.current) {
-        return;
-      }
-      const message = error instanceof Error ? error.message : "Could not reach the card database.";
-      setAddState({ status: "error", message });
-      setCheckState({ status: "idle" });
-    }
-  }, []);
+      // Immediate feedback for the click and what disables the Check CTA, so it
+      // commits outside the guard — same reason as the add flow's "resolving".
+      setCheckState({ status: "checking" });
+      setCheckError(null);
+      await preview.run(async () => {
+        try {
+          const resolved = await resolveDeck(text);
+          return () => {
+            setCheckState({ status: "checked", unresolved: resolved.unresolved });
+          };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Could not reach the card database.";
+          // F-3: the Check's OWN atom. This used to be `setAddState`, which the add
+          // flow owns and this lane does not guard.
+          return () => {
+            setCheckError(message);
+            setCheckState({ status: "idle" });
+          };
+        }
+      });
+    },
+    [preview],
+  );
 
   // Diff-mode pre-save Check: derive the next snapshot from the prior step (no
   // POST) so the summary, full derived list, and unapplicable-line warnings
-  // preview before save. Token-guarded with the same counter as `runCheck`.
+  // preview before save. Shares the `preview` lane with `runCheck`: the two are
+  // alternate readings of the same box, so either supersedes the other.
   const runDiffCheck = useCallback(
     async (text: string) => {
       const prior = steps.at(-1)?.snapshot;
@@ -351,35 +389,42 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
         setDiffPreview({ status: "idle" });
         return;
       }
-      const token = ++checkToken.current;
       setDiffPreview({ status: "checking" });
-      try {
-        const result = await deriveSnapshot(prior, text);
-        if (token !== checkToken.current) {
-          return;
+      setCheckError(null);
+      await preview.run(async () => {
+        try {
+          const result = await deriveSnapshot(prior, text);
+          return () => {
+            setDiffPreview({ status: "checked", result });
+          };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Could not reach the card database.";
+          // F-3, diff twin: the Check's own atom, not the add flow's.
+          return () => {
+            setCheckError(message);
+            setDiffPreview({ status: "idle" });
+          };
         }
-        setDiffPreview({ status: "checked", result });
-      } catch (error) {
-        if (token !== checkToken.current) {
-          return;
-        }
-        const message = error instanceof Error ? error.message : "Could not reach the card database.";
-        setAddState({ status: "error", message });
-        setDiffPreview({ status: "idle" });
-      }
+      });
     },
-    [steps],
+    [steps, preview],
   );
 
   // Switching entry mode clears the field and every preview/error so the two
-  // surfaces never bleed into each other.
-  const switchMode = useCallback((next: AddMode) => {
-    setMode(next);
-    setListText("");
-    setCheckState({ status: "idle" });
-    setDiffPreview({ status: "idle" });
-    setAddState({ status: "idle" });
-  }, []);
+  // surfaces never bleed into each other. F-4: it now INVALIDATES the preview lane
+  // too, because clearing the atoms is not the same as stopping the run that is
+  // about to write them. It deliberately leaves the `add` lane alone — a mode
+  // switch must never drop a POST already in flight, which would save a checkpoint
+  // the UI never renders; the toggle is disabled during an add instead.
+  const switchMode = useCallback(
+    (next: AddMode) => {
+      setMode(next);
+      setListText("");
+      invalidatePreview();
+      setAddState({ status: "idle" });
+    },
+    [invalidatePreview],
+  );
 
   // Accept one fuzzy suggestion: rewrite the matching line(s) in the paste text,
   // then re-check so the notice reflects the correction. Mirrors DeckComparer's
@@ -594,11 +639,11 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
 
       {mutationError ? (
         // `role="alert"` announces the failure to assistive technology, and the `aria-label`
-        // gives the banner an addressable NAME — the checkpoint-error banner further down
-        // renders a `<p>` with a byte-identical class string, so without a name the two are
-        // indistinguishable to any query. Naming both, rather than only one, is deliberate:
-        // a locator that works because nothing else happens to carry `role="alert"` breaks
-        // the moment a third error banner lands on this surface. See test-plan §6.7 item 1.
+        // gives the banner an addressable NAME — the checkpoint-error and check-error banners
+        // further down each render a `<p>` with a byte-identical class string, so without a
+        // name the three are indistinguishable to any query. Naming all of them, rather than
+        // only the one a spec happened to need, is what kept this surface spec-able when the
+        // third banner landed with F-3's repair. See test-plan §6.7 items 1 and 27.
         <p
           role="alert"
           aria-label="Path error"
@@ -667,6 +712,12 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
               <button
                 type="button"
                 aria-pressed={activeMode === "full"}
+                // F-4: `switchMode` clears `addState`, which the `add` lane owns, so the
+                // toggle is the one uncontrolled control that can wipe an add's own state
+                // mid-flight. Disabling it beats invalidating the add — dropping a POST
+                // already in flight would save a checkpoint the UI never renders. Gated on
+                // the add ALONE: a Check in flight must leave the toggle live.
+                disabled={addInFlight}
                 onClick={() => {
                   switchMode("full");
                 }}
@@ -681,6 +732,8 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
               <button
                 type="button"
                 aria-pressed={activeMode === "diff"}
+                // Same gate as its twin above, for the same reason.
+                disabled={addInFlight}
                 onClick={() => {
                   switchMode("diff");
                 }}
@@ -719,6 +772,12 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
             value={listText}
             onChange={(event) => {
               setListText(event.target.value);
+              // F-1: invalidate from the handler that OBSERVES the edit. A branch inside
+              // the async worker is downstream of the event — and for the empty-text case
+              // unreachable — so this is the only place the invalidation can live. It
+              // covers every edit, not just an emptying one. See `lessons.md`, "Clearing
+              // an input is not an invalidation event".
+              invalidatePreview();
             }}
             placeholder={
               activeMode === "diff"
@@ -768,12 +827,28 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
           </div>
         ) : null}
 
+        {checkError !== null ? (
+          // The third `role="alert"` banner on this surface, and the reason all three carry
+          // an `aria-label`: the class string below matches the other two byte for byte, so
+          // the accessible NAME is the only thing that tells a query which banner it found
+          // (test-plan §6.7 items 1 and 27). Owned by the Check flows — F-3's repair is
+          // exactly that a failed Check no longer writes `addState` below.
+          <p
+            role="alert"
+            aria-label="Check error"
+            className="rounded-md border border-[#6e3a33] bg-[#2a1714] p-3 text-sm text-[#e0867d]"
+          >
+            {checkError}
+          </p>
+        ) : null}
+
         {addState.status === "error" ? (
-          // Named for the same reason as the path-error banner above, whose class string this
-          // one matches byte for byte. The distinction is load-bearing beyond locators: both
-          // Check flows write THIS atom from inside a `checkToken`-guarded catch (`:335`,
-          // `:363`) even though `addToken` is what guards it, so a message about a failed
-          // Check can land here over a checkpoint that saved cleanly.
+          // Named for the same reason as the two banners it shares a class string with. The
+          // distinction is load-bearing beyond locators: both Check flows used to write THIS
+          // atom from inside a `checkToken`-guarded catch even though `addToken` was what
+          // guarded it, so a message about a failed Check could land here over a checkpoint
+          // that saved cleanly (F-3). They write `checkError` above instead, and S3 in
+          // `tests/e2e/path-builder-stale-ordering.spec.ts` is what keeps them there.
           <p
             role="alert"
             aria-label="Checkpoint error"
