@@ -76,6 +76,25 @@ export function parseDeltaList(text: string): ParsedDelta {
 }
 
 /**
+ * True when `text` contains no diff lines at all — the diff-mode twin of
+ * `@/lib/deck`'s `hasNoCardLines` (zero-card-list-validation).
+ *
+ * Separate from that predicate rather than sharing it, because
+ * {@link parseDeltaList} requires a leading `+`/`-` sign that `parseDeckList`
+ * knows nothing about: run over `+ Sol Ring`, the full-paste parser reads a card
+ * literally named "+ Sol Ring" and a guard built on it would never fire here.
+ *
+ * Sensitive to `malformed` for the same reason as its twin: an unsigned line
+ * ("Sol Ring") is a *bad* diff line, not an absent one, and already surfaces
+ * through a `DeltaWarning` — so this returns false for it. `delta.test.ts` pins
+ * that with an explicit false-for-unsigned assertion.
+ */
+export function hasNoDeltaLines(text: string): boolean {
+  const { entries, malformed } = parseDeltaList(text);
+  return entries.length === 0 && malformed.length === 0;
+}
+
+/**
  * Reconstruct a display line from a parsed {@link DeltaEntry} — the inverse of
  * {@link parseDeltaList}, near enough for a human to read back.
  *

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDeltaList, applyDeltaSuggestion, applyAllDeltaSuggestions } from "./delta";
+import { parseDeltaList, hasNoDeltaLines, applyDeltaSuggestion, applyAllDeltaSuggestions } from "./delta";
 
 describe("parseDeltaList", () => {
   it("reads a bare signed line as ±1", () => {
@@ -81,5 +81,46 @@ describe("applyAllDeltaSuggestions", () => {
     ];
 
     expect(applyAllDeltaSuggestions(text, entries)).toBe("+ Black Lotus\n- Sol Ring");
+  });
+});
+
+describe("hasNoDeltaLines", () => {
+  it("is true for empty and whitespace-only text", () => {
+    expect(hasNoDeltaLines("")).toBe(true);
+    expect(hasNoDeltaLines("   ")).toBe(true);
+    expect(hasNoDeltaLines("\n\n  \n")).toBe(true);
+  });
+
+  it("is true for comment-only text in both spellings", () => {
+    expect(hasNoDeltaLines("// note")).toBe(true);
+    expect(hasNoDeltaLines("# note")).toBe(true);
+  });
+
+  it("is true for a multi-line combination of comments and blank lines", () => {
+    const paste = ["// my commander deck", "", "# changes below", "   "].join("\n");
+
+    expect(hasNoDeltaLines(paste)).toBe(true);
+  });
+
+  it("is false as soon as one real signed line is present", () => {
+    expect(hasNoDeltaLines("+ Sol Ring")).toBe(false);
+    expect(hasNoDeltaLines("-2 Forest")).toBe(false);
+    expect(hasNoDeltaLines("// a note\n\n+ Sol Ring")).toBe(false);
+  });
+
+  it("is false for an unsigned line — malformed is not absent", () => {
+    // An unsigned "Sol Ring" yields no entries but IS a diff line, a bad one,
+    // and already surfaces through a DeltaWarning. Same reasoning as
+    // hasNoCardLines' count-only assertion in parse.test.ts.
+    expect(hasNoDeltaLines("Sol Ring")).toBe(false);
+    expect(hasNoDeltaLines("+")).toBe(false);
+    expect(hasNoDeltaLines("// a note\nSol Ring")).toBe(false);
+  });
+
+  it("is false where the full-paste predicate would see nothing", () => {
+    // The reason there are two predicates: parseDeckList reads "+ Sol Ring" as a
+    // card literally named "+ Sol Ring", so a hasNoCardLines-based guard would
+    // never fire on diff text. This pins that the diff twin does.
+    expect(hasNoDeltaLines("+ Sol Ring\n- Island")).toBe(false);
   });
 });
