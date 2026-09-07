@@ -1,10 +1,10 @@
 ---
 change_id: shared-stale-response-guard
 title: Extract one guarded-async helper and retire the five hand-copied stale-response guards
-status: implemented
+status: archived
 created: 2026-09-06
 updated: 2026-09-07
-archived_at: null
+archived_at: 2026-09-07T10:13:01Z
 ---
 
 ## Notes
