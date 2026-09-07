@@ -849,12 +849,12 @@ the repair share a commit, and it is the one ordering constraint a revert has to
 
 #### Automated
 
-- [x] 4.1 Every referenced path resolves and every cited line number is current
-- [x] 4.2 Formatting clean on this change's files: `npx prettier --check`
-- [x] 4.3 The full gate stack passes: lint, typecheck, unit, integration, e2e
+- [x] 4.1 Every referenced path resolves and every cited line number is current — c36e1c6
+- [x] 4.2 Formatting clean on this change's files: `npx prettier --check` — c36e1c6
+- [x] 4.3 The full gate stack passes: lint, typecheck, unit, integration, e2e — c36e1c6
 
 #### Manual
 
-- [x] 4.4 §2's protected table reads coherently with #9's explanatory paragraph
-- [x] 4.5 Risk #10 survives §7's admissibility test on its own terms
-- [x] 4.6 `lessons.md`'s new entry reads correctly standing alone
+- [x] 4.4 §2's protected table reads coherently with #9's explanatory paragraph — c36e1c6
+- [x] 4.5 Risk #10 survives §7's admissibility test on its own terms — c36e1c6
+- [x] 4.6 `lessons.md`'s new entry reads correctly standing alone — c36e1c6
