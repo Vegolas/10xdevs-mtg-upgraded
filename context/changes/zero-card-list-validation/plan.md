@@ -439,33 +439,33 @@ stops new ones from being created through the UI.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Type checking passes: `npm run typecheck`
-- [x] 1.3 Linting passes: `npm run lint`
-- [x] 1.4 Both predicates are reachable from the barrels
+- [x] 1.1 Unit tests pass: `npm test` — ea400ef
+- [x] 1.2 Type checking passes: `npm run typecheck` — ea400ef
+- [x] 1.3 Linting passes: `npm run lint` — ea400ef
+- [x] 1.4 Both predicates are reachable from the barrels — ea400ef
 
 #### Manual
 
-- [x] 1.5 App behavior is unchanged after this phase
+- [x] 1.5 App behavior is unchanged after this phase — ea400ef
 
 ### Phase 2: PathEditor's three guards
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Type checking passes: `npm run typecheck`
-- [ ] 2.3 Linting passes: `npm run lint`
-- [ ] 2.4 The new specs pass: `npx playwright test tests/e2e/path-builder-zero-cards.spec.ts`
-- [ ] 2.5 The existing path-builder specs still pass
-- [ ] 2.6 No raw-text guard is left on a parse path
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Type checking passes: `npm run typecheck`
+- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.4 The new specs pass: `npx playwright test tests/e2e/path-builder-zero-cards.spec.ts`
+- [x] 2.5 The existing path-builder specs still pass
+- [x] 2.6 No raw-text guard is left on a parse path
 
 #### Manual
 
-- [ ] 2.7 Targeted break, full Check — spec (1) reddens on the missing banner
-- [ ] 2.8 Targeted break, diff Check — spec (2) reddens, (1) and (3) stay green
-- [ ] 2.9 Targeted break, add — spec (3) reddens on the reload assertion
-- [ ] 2.10 Count-only `4x` still renders `UnresolvedNotice`
-- [ ] 2.11 Typing a real card line clears the banner on the first keystroke
+- [x] 2.7 Targeted break, full Check — spec (1) reddens on the missing banner
+- [x] 2.8 Targeted break, diff Check — spec (2) reddens, (1) and (3) stay green
+- [x] 2.9 Targeted break, add — spec (3) reddens on the reload assertion
+- [x] 2.10 Count-only `4x` still renders `UnresolvedNotice`
+- [x] 2.11 Typing a real card line clears the banner on the first keystroke
 
 ### Phase 3: DeckComparer's no-cards verdict
 

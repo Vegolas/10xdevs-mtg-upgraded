@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { resolveDeck, applySuggestion, applyAllSuggestions, deckCardsToText } from "@/lib/deck";
+import { resolveDeck, applySuggestion, applyAllSuggestions, deckCardsToText, hasNoCardLines } from "@/lib/deck";
 import type { UnresolvedEntry } from "@/lib/deck";
 import type { UnresolvedCard } from "@/lib/card-data";
 import {
@@ -8,6 +8,7 @@ import {
   applyDeltaSuggestion,
   cumulativePathCost,
   deriveSnapshot,
+  hasNoDeltaLines,
   isUpgradePlan,
   overallPathSummary,
   stepPlan,
@@ -272,6 +273,26 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
       return;
     }
 
+    // The zero-ENTRY guard, distinct from the empty-TEXT guard above and deliberately
+    // second: text can be non-empty by `trim()` and still parse to no cards at all
+    // (comments, section headers, blank lines), which is what every guard on this
+    // surface used to miss (F-6). This is the only one of the three sites that
+    // PERSISTS, and in diff mode the worst of them: `deriveSnapshot` seeds its working
+    // set from the prior snapshot and returns it unchanged when there are no entries
+    // to apply, so the save is a silent duplicate of its predecessor reading 0 in /
+    // 0 out. Predicate by mode, because the two modes read the box through two
+    // different parsers. Ahead of the "resolving" commit below so no spinner appears
+    // for a click that is already refused.
+    const noEntries = activeMode === "diff" ? hasNoDeltaLines(listText) : hasNoCardLines(listText);
+    if (noEntries) {
+      const message =
+        activeMode === "diff"
+          ? "No + / − changes found — comments, headers and blank lines aren't changes."
+          : "No card lines found — comments, headers and blank lines aren't cards.";
+      setAddState({ status: "error", message });
+      return;
+    }
+
     // Outside the run: the spinner is immediate feedback for the click that started
     // it, not a result the guard may drop. It is also what disables the Add CTA and
     // the entry-mode toggle, so it has to commit before the first await rather than
@@ -373,8 +394,16 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   // the box, a mode switch, or the checkpoint that replaced it.
   const runCheck = useCallback(
     async (text: string) => {
-      if (text.trim() === "") {
+      // Parse-based, not `trim()`-based: `// my commander deck` is non-empty text that
+      // yields no entries, and `resolveCards([])` returns before any fetch, so the run
+      // used to complete cleanly and render "✓ All cards resolved." — the one signal on
+      // this surface meaning "safe to save" — for a list holding no cards (F-6). Says so
+      // instead, on the Check flows' own atom, and subsumes the old empty-text case
+      // (unreachable through the UI: the CTA is `disabled` on `trim()`, and
+      // `handleAccept` always passes rewritten non-empty text).
+      if (hasNoCardLines(text)) {
         setCheckState({ status: "idle" });
+        setCheckError("No card lines found — comments, headers and blank lines aren't cards.");
         return;
       }
       // Immediate feedback for the click and what disables the Check CTA, so it
@@ -408,8 +437,21 @@ export default function PathEditor({ path, initialSteps }: PathEditorProps) {
   const runDiffCheck = useCallback(
     async (text: string) => {
       const prior = steps.at(-1)?.snapshot;
-      if (!prior || text.trim() === "") {
+      // Kept separate from the zero-entry branch below: "no previous checkpoint" is a
+      // different condition with a different remedy, and conflating them would answer
+      // a fresh path with a message about comment lines.
+      if (!prior) {
         setDiffPreview({ status: "idle" });
+        return;
+      }
+      // The diff twin of `runCheck`'s guard, and NOT the same predicate: this text goes
+      // to `parseDeltaList`, which requires a leading +/- sign that `parseDeckList` knows
+      // nothing about — the latter would read `+ Sol Ring` as a card literally named
+      // "+ Sol Ring" and never fire here. Left unguarded, the derive returns the prior
+      // snapshot unchanged and the preview reads "+0 added, −0 removed".
+      if (hasNoDeltaLines(text)) {
+        setDiffPreview({ status: "idle" });
+        setCheckError("No + / − changes found — comments, headers and blank lines aren't changes.");
         return;
       }
       setDiffPreview({ status: "checking" });

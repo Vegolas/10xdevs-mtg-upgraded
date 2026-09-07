@@ -2,7 +2,7 @@
   "package": "@przeprogramowani/10x-cli",
   "version": "1.20.0",
   "manifestVersion": 3,
-  "lastApplied": "2026-09-07T07:01:59.528Z",
+  "lastApplied": "2026-09-07T19:05:22.352Z",
   "lessonId": "m0l0",
   "course": "10xdevs3",
   "tool": "claude-code",
@@ -1719,7 +1719,7 @@
       "configs": []
     },
     "m0l0": {
-      "appliedAt": "2026-09-07T07:01:59.526Z",
+      "appliedAt": "2026-09-07T19:05:22.350Z",
       "skills": {},
       "prompts": [
         "skill-explainer.md",
