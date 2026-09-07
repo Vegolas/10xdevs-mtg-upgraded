@@ -6,16 +6,22 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-09-02 (the rollout has one open front again. §2 now reads
-> as two tables — eight risks each naming the `complete` phase that answers
-> them, and an open set of one: **risk #9**, the path builder reporting on deck
-> text the user has already changed or cleared. §3 **Phase 5** is open at
-> `not started` to answer it, riding the `e2e` job Phase 4 already made
-> required. §7's path-builder exclusion is narrowed to that surface's
-> **render** — its client-side ordering is explicitly not excluded — and §7
-> now states outright the boundary that makes a browser phase admissible;
-> component render and pixel tests stay out. Phases 1–4 remain `complete`. See
-> §8 for what else this refresh re-stamped.)
+> Last updated: 2026-09-07 (**§2's open set is empty for the first time.** Risk
+> #9 — the path builder reporting on deck text the user has already changed or
+> cleared — was **repaired**, not just pinned, and moved to the protected table;
+> risk **#10** entered already protected, covering the same surface's
+> mutations. Both were carried there by `shared-stale-response-guard`, a repair
+> change that opened **no §3 rollout phase**, so the protected table's last
+> column now names whatever holds the proof rather than assuming a phase does.
+> §6.7 gained items 28–29. Read §2's own note above the empty open table before
+> concluding there is nothing left: F-6 is still live and sits in that change's
+> `findings.md`, at the unit layer, where it never earned a row. §3 Phases 1–5
+> all remain `complete` and the rollout has had no open front since 2026-09-06.
+> §7 was re-read and deliberately left unchanged — see §8. Prior baseline
+> 2026-09-02, which split §2 into two tables, opened Phase 5, and narrowed §7's
+> path-builder exclusion to that surface's **render** while stating outright the
+> boundary that makes a browser phase admissible; component render and pixel
+> tests stay out. See §8 for the rest.)
 
 ## 1. Strategy
 
@@ -64,27 +70,43 @@ risk = impact × likelihood. Risks are failure scenarios in user / business
 terms, not test names. The Source column cites the _evidence that surfaced
 this risk_ — never a specific file as "where the failure lives" (that is
 research's job, see §1 principle #3). The map reads as two tables: a
-**protected** set, where a `complete` §3 phase already answers the row, and
-an **open** set, which is the list a reader still has to act on.
+**protected** set, where a passing spec already proves the row's failure
+cannot happen, and an **open** set, which is the list a reader still has to
+act on. For #1–#8 that proof is a `complete` §3 phase; #9 and #10 were
+carried there by a repair change instead, so the protected table's last
+column names whatever holds the proof rather than assuming a phase does. The
+open set has been empty since 2026-09-07 — read the note above it before
+concluding there is nothing left to do.
 
-**Protected — every row below is answered by a `complete` §3 rollout phase.**
+**Protected — every row below has a passing spec proving the failure cannot happen.** For
+#1–#8 that proof came from a `complete` §3 rollout phase. #9 and #10 arrived by a different
+route — a **repair change** that opened no §3 phase — so the last column names whatever
+carries the proof rather than assuming a phase does. The distinction matters to a reader
+acting on this table: a phase is a budgeted slice of the rollout, a repair change is not, and
+#9 is the row that proved a risk can leave this list without one.
 
-| #   | Risk (failure scenario)                                                                                                                                                                  | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                | Protected by (§3 phase) |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 1   | A signed-in user reads or mutates **another owner's** upgrade path because a query path bypasses RLS or skips an ownership check on `/api/paths/*`                                       | High   | High       | interview Q1 (top fear) + Q2 (lived incident: RLS looked right, a query path bypassed it, rows leaked cross-tenant); hot-spot dir `src/pages/api` (8 commits/30d); abuse lens (authorization / IDOR)                                                                          | Phase 1 `complete`      |
-| 2   | An **unauthenticated or expired-session** request reaches `/api/paths/*`, or a gated route (`/paths`, `/dashboard`) is served while signed-out — or a signed-in owner is wrongly bounced | High   | Medium     | roadmap baseline (middleware gates `/paths`/`/dashboard`); interview Q4 (server boundary untested); hot-spot dir `src/components/auth` (12 commits/30d); abuse lens (access)                                                                                                  | Phase 1 `complete`      |
-| 3   | A handler's **request/response contract changes** and a stale caller still references the old shape — a path-builder flow breaks silently                                                | Medium | Medium     | interview Q3 (changing API handlers, fear of a forgotten reference to the old one); hot-spot dir `src/pages/api` (8 commits/30d)                                                                                                                                              | Phase 2 `complete`      |
-| 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                  | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                                                                                           | Phase 3 `complete`      |
-| 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                        | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                                                                                               | Phase 3 `complete`      |
-| 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                     | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                                                                                                      | Phase 2 `complete`      |
-| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders      | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 recorded no browser or render layer when this risk was surfaced, so the wiring was covered at no layer — Phase 4 closed that (see §4's `e2e` row) | Phase 4 `complete`      |
-| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                              | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 listed no browser or render layer when this risk was surfaced; guard stable since first commit ⇒ Low                                              | Phase 4 `complete`      |
+| #   | Risk (failure scenario)                                                                                                                                                                                                                                                                     | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                                                                                                                                                             | Protected by                                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A signed-in user reads or mutates **another owner's** upgrade path because a query path bypasses RLS or skips an ownership check on `/api/paths/*`                                                                                                                                          | High   | High       | interview Q1 (top fear) + Q2 (lived incident: RLS looked right, a query path bypassed it, rows leaked cross-tenant); hot-spot dir `src/pages/api` (8 commits/30d); abuse lens (authorization / IDOR)                                                                                                                                                                                                                       | Phase 1 `complete`                                                                                                                                                                                                         |
+| 2   | An **unauthenticated or expired-session** request reaches `/api/paths/*`, or a gated route (`/paths`, `/dashboard`) is served while signed-out — or a signed-in owner is wrongly bounced                                                                                                    | High   | Medium     | roadmap baseline (middleware gates `/paths`/`/dashboard`); interview Q4 (server boundary untested); hot-spot dir `src/components/auth` (12 commits/30d); abuse lens (access)                                                                                                                                                                                                                                               | Phase 1 `complete`                                                                                                                                                                                                         |
+| 3   | A handler's **request/response contract changes** and a stale caller still references the old shape — a path-builder flow breaks silently                                                                                                                                                   | Medium | Medium     | interview Q3 (changing API handlers, fear of a forgotten reference to the old one); hot-spot dir `src/pages/api` (8 commits/30d)                                                                                                                                                                                                                                                                                           | Phase 2 `complete`                                                                                                                                                                                                         |
+| 4   | A diff-mode checkpoint **persists a list that does not equal `prior frozen list ± delta`**, silently corrupting an immutable saved step                                                                                                                                                     | High   | Medium     | prd-v3 §Guardrails (derived-snapshot correctness) + §Success Criteria; hot-spot dir `src/lib/path` (23 commits/30d)                                                                                                                                                                                                                                                                                                        | Phase 3 `complete`                                                                                                                                                                                                         |
+| 5   | An **unapplicable delta** (`− card` absent from the prior list) or an **unresolved `+ card`** is silently dropped at persist instead of being flagged before save                                                                                                                           | High   | Medium     | prd-v3 FR-003 / US-02 + PRD §Guardrails (graceful input handling, no silent omission); hot-spot dirs `src/lib/card-data` (23) + `src/lib/path` (23 commits/30d)                                                                                                                                                                                                                                                            | Phase 3 `complete`                                                                                                                                                                                                         |
+| 6   | The **preserved full-paste add flow or the resolve/diff/cost engine** regresses behind the additive diff-mode change                                                                                                                                                                        | Medium | Medium     | prd-v3 FR-005 / FR-007 (preserved behavior promise); hot-spot dirs `src/lib/deck` (29) + `src/lib/path` (23 commits/30d)                                                                                                                                                                                                                                                                                                   | Phase 2 `complete`                                                                                                                                                                                                         |
+| 7   | A partial resolution or a card-data transport failure reaches the user as a plan that **looks complete**, because the unresolved notice or the retryable error banner never renders                                                                                                         | High   | Medium     | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 recorded no browser or render layer when this risk was surfaced, so the wiring was covered at no layer — Phase 4 closed that (see §4's `e2e` row)                                                                                                                                              | Phase 4 `complete`                                                                                                                                                                                                         |
+| 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                                                                                                                                 | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 listed no browser or render layer when this risk was surfaced; guard stable since first commit ⇒ Low                                                                                                                                                                                           | Phase 4 `complete`                                                                                                                                                                                                         |
+| 9   | In the **path builder**, a pre-save Check verdict, a diff preview, or an error banner describes deck text the user has already edited or cleared — a slow earlier resolve lands after the input moved on, so the user decides whether to save on a verdict about text that no longer exists | Medium | Medium     | archived §3 Phase 4 slice `context/archive/2026-08-27-testing-comparer-failure-surfacing/` and the lessons register it created (four verified divergences across the path builder's hand-copied stale-response guards, two of them still live); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02)                                                                                     | `shared-stale-response-guard` (2026-09-07) — F-1 through F-4 repaired, the four `test.fail()` annotations off, `tests/e2e/path-builder-stale-ordering.spec.ts` green at `retries: 0`. No §3 phase; see the paragraph below |
+| 10  | In the **path builder**, a mutation's superseded response leaves the rendered path disagreeing with the server — two overlapping deletes, renames or creates settle in an order the UI did not account for, so the user acts on a checkpoint list or a title the server does not hold       | Medium | Low        | F-5 in `context/archive/2026-09-06-testing-path-builder-error-and-mode/findings.md` (three mutation flows verified 2026-09-06 to carry no guard at all), plus the two corrections `shared-stale-response-guard` had to make to that entry before it was testable at all (its `findings.md` C-1, C-2); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02, re-read unchanged 2026-09-07) | `shared-stale-response-guard` (2026-09-07) — enters the map already protected: `tests/e2e/path-builder-mutation-ordering.spec.ts` green at `retries: 0`, both disciplines driven                                           |
 
-**Open — no phase has answered this one yet.**
-
-| #   | Risk (failure scenario)                                                                                                                                                                                                                                                                     | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                                                                         | Answered by (§3 phase)                                                                                                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 9   | In the **path builder**, a pre-save Check verdict, a diff preview, or an error banner describes deck text the user has already edited or cleared — a slow earlier resolve lands after the input moved on, so the user decides whether to save on a verdict about text that no longer exists | Medium | Medium     | archived §3 Phase 4 slice `context/archive/2026-08-27-testing-comparer-failure-surfacing/` and the lessons register it created (four verified divergences across the path builder's hand-copied stale-response guards, two of them still live); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02) | Phase 5 `complete` — **documented, not protected**: F-1 and F-2 in `context/changes/testing-path-builder-ordering/findings.md` are live, pinned by `test.fail()` specs |
+**Open — empty as of 2026-09-07, for the first time since this map was written.** Every risk
+in the map now carries a passing spec. This is a state to read carefully rather than to
+celebrate: it means nothing in the map is waiting on a reader, **not** that nothing is left.
+Two things sit outside the table and stay actionable — the not-promoted set below (each with
+the layer that already covers it, so a future refresh cites the decision instead of
+re-opening it), and `context/changes/shared-stale-response-guard/findings.md`, which carries
+F-6 forward as a live validation defect that belongs at the unit layer and therefore never
+earned a row here. Keep the heading and this note when the next risk is promoted; an empty
+table with no explanation reads as an oversight.
 
 **Impact × Likelihood rubric.** High = user loses access/data/money or failure
 is publicly visible / area changes weekly or already burned us. Medium =
@@ -93,27 +115,77 @@ source. Low = cosmetic / stable code. Risk #1 is the only High × High — the
 lived cross-tenant incident plus the most-churned untested boundary — so it
 is protected first.
 
-**Risk #9's rating against that rubric.** **Medium** impact because §3 Phase 3
-already defends the persist boundary: the blast radius stops at what the user is
-shown _before_ saving, so a superseded verdict misleads a decision rather than
-corrupting a saved step. **Medium** likelihood because the divergence is verified
-present in code rather than hypothesized — which is what separates #9 from #8's
-Low — but it has produced no reported incident and `src/components/path` is
-touched only occasionally (2 commits/30d, 9 commits/90d, measured 2026-09-02).
-#1 remains the only High × High row in the map, and #9 does not change that.
+**Risk #9's rating against that rubric, as of surfacing.** Read the tense deliberately:
+like every protected row, #9's cells record the evidence and rating **as of the day it was
+promoted** (2026-09-02) and must not be read as a live claim — the repair has since
+falsified the likelihood half, which is the whole point of the row being protected.
+**Medium** impact because §3 Phase 3 already defended the persist boundary: the blast radius
+stopped at what the user is shown _before_ saving, so a superseded verdict misled a decision
+rather than corrupting a saved step. **Medium** likelihood because the divergence was
+verified present in code rather than hypothesized — which is what separated #9 from #8's
+Low — but it had produced no reported incident and `src/components/path` was touched only
+occasionally (2 commits/30d, 9 commits/90d, measured 2026-09-02).
+#1 remains the only High × High row in the map, and neither #9 nor #10 changes that.
 
-**Why #9 stays in this table now that §3 Phase 5 reads `complete`.** The two are not in
-contradiction: a phase completes when it has done what it set out to do, and a risk leaves
-this table when a passing spec proves the failure cannot happen. Phase 5 proved the opposite
-— the failure **does** happen. Every earlier phase found its risk already defended and left
-green specs behind; #9 was promoted on a divergence verified in code, so a faithful spec is
-red today. The suite therefore carries two `test.fail()`-annotated specs
-(`tests/e2e/path-builder-stale-ordering.spec.ts`): they hold the correct behavior on record,
-stay green on today's code, and turn the build red the moment either guard is fixed, at which
-point the annotation comes off and this row moves to the protected table. Until then the risk
-is **documented, not protected**, and the reader still has to act on it — which is exactly
-what this table is for. The four defects behind it are F-1 through F-4 in that change's
-`findings.md`.
+**Risk #10's rating against that rubric.** **Medium** impact, matching #9's for the same
+reason inverted: a mutation's stale response cannot corrupt a saved step either — `path_steps`
+rows are immutable and the server's own state is always correct — but unlike #9 it leaves the
+**rendered** path disagreeing with the server, which #9's pre-save surfaces cannot. A reload
+corrects it and no data is lost, which is what keeps it out of High. **Low** likelihood, not
+#9's Medium, and the difference is deliberate: every one of #9's four divergences was verified
+reachable through ordinary UI affordances, whereas #10 needs two mutations genuinely in flight
+at once on a surface with no debounce and one trigger per action — reachable, driven in a
+browser, but requiring a double-click or a second click inside a single request's window. It
+enters the map already protected, so the rating is recorded to justify the row rather than to
+schedule work.
+
+**Why #9 moved to the protected table on 2026-09-07, and why a change rather than a phase
+carried it there.** This row is the one the two-table split was built to handle, and it has now
+been through both states, so the sequence is worth stating once in full rather than
+reconstructed from three ledger entries. #9 was promoted on a divergence **verified in code**,
+not forecast — so unlike #1–#8 it did not arrive already defended, and §3 Phase 5 completing
+did not protect it. Phase 5 proved the opposite: the failure did happen. What it left behind
+was two `test.fail()`-annotated specs, joined by two more from
+`testing-path-builder-error-and-mode` on 2026-09-06 — four inverted specs holding the correct
+behavior on record, green against the defect, and written before any fix existed precisely so
+they would be the **specification** for one. Through both of those changes the row read
+**documented, not protected**, and the reader still had to act on it.
+
+`shared-stale-response-guard` is the fix, landed 2026-09-07. It extracted one guarded-async
+primitive (`src/lib/async/latestRun.ts` + `useLatestRun.ts`), routed all eight
+async-then-setState flows through it, and repaired F-1 through F-4 in a single commit; all four
+specs reported `Expected to fail, but passed.` and their annotations came off with the repair.
+The file now carries `retries: 0` and passes as four ordinary regression tests. That is what
+this table asks for, so the row moved.
+
+**It opened no §3 rollout phase, and that is not an oversight.** §3 has had no open phase since
+Phase 5 closed on 2026-09-06, and this change added no risk, no runner and no CI job — both
+spec files live under `tests/e2e/`, which the required `e2e` job already runs. A rollout phase
+is a budgeted slice of coverage work; this was repair. So the last column names the change, and
+the protected table's preamble was widened to admit that rather than leaving a cell that
+disagrees with the prose beneath it — which is the exact defect §8 recorded against this row's
+previous cell, and the reason both corrections it owed are superseded rather than carried a
+third time: the cell they described no longer exists.
+
+**What replaced the standing obligation.** The duplication behind #9 was a review obligation
+recorded in `context/foundation/lessons.md` ("Treat the stale-response guard as five hand
+copies, not one pattern") for as long as the row was open. That entry is now superseded by "The
+stale-response guard has one definition now — reject a new hand-rolled counter", and the
+invariant is mechanical: `grep -rn "useRef(0)\|Token.current" src/` returns nothing. A new
+hand-rolled counter is what would re-open this row, and it is cheap enough to check.
+
+**Risk #10 enters already protected, which is a first for this map.** Every earlier row was
+promoted before its coverage existed. #10 was promoted **by** the change that covers it, which
+is why its Source cell cites a finding rather than an interview or a roadmap line: F-5 named
+the failure class, and the same change that repaired it wrote the two green specs. Two things
+made this admissible rather than a shortcut. It passes §7's boundary on its own terms — the
+divergence exists nowhere but the rendered result, and with no component-render layer in §4
+there is no cheaper place to see it. And it is **append-only**: #9's frozen cell was not
+widened to cover a failure it never described (#9 is pre-save surfaces; #10 is persists), so
+neither row now claims the other's coverage. The alternative — routing the decision to
+`/10x-test-plan --refresh` — was considered and declined in the change's plan, on the grounds
+that deferring would leave the map wrong in the actionable direction for however long the
+refresh took.
 
 **Why two tables, and what that retires.** The map ran to eight rows against the
 schema's 5–7, and the 2026-08-25 refresh recorded the overflow while proposing
@@ -185,17 +257,18 @@ deliberate degrade path changes.
 
 ### Risk Response Guidance
 
-| Risk | What would prove protection                                                                                                                                                                                                                                                       | Must challenge                                                                                                               | Context `/10x-research` must ground                                                                                                                                                                                                                                | Likely cheapest layer                                                                                                                  | Anti-pattern to avoid                                                                                                                                                |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #1   | Owner A requesting Owner B's `path_id` is denied, and B's rows are never returned through any read/write route                                                                                                                                                                    | "logged in ⇒ authorized for this resource"; "an RLS policy exists ⇒ every query path is actually scoped"                     | the real handler→query path for each `/api/paths/*` route; how the cookie-bound Supabase client scopes the owner; what enforces ownership beyond RLS                                                                                                               | integration against the **real** handler + DB (local Supabase), not a mock that can't reproduce an RLS bypass                          | happy-path-only (owner reads own path and calling it "auth tested"); asserting the policy SQL instead of exercising the live query path                              |
-| #2   | No-session and expired-session requests get 401/redirect on the API; gated routes redirect when signed-out; a valid owner still gets through                                                                                                                                      | "middleware runs on every protected path"; "build-green ⇒ the gate works"                                                    | middleware matcher coverage; session/cookie shape on expiry; the redirect target for signed-out access                                                                                                                                                             | integration                                                                                                                            | testing only the signed-in path; mocking away the session check so the gate is never exercised                                                                       |
-| #3   | A change to a handler's shape makes a stale caller's test fail loudly rather than silently breaking the flow                                                                                                                                                                      | "all callers get updated together with the handler"                                                                          | the request/response contract of each `/api/paths/*` route and who consumes it                                                                                                                                                                                     | contract + integration                                                                                                                 | mirroring the handler's _current_ output as the expected value (oracle problem — pins the bug, not the contract)                                                     |
-| #4   | The persisted list equals an **independently constructed** `prior ± delta`, verified through the POST→persist path, not just the pure function                                                                                                                                    | "the derive logic is unit-tested, so the wired flow must be correct too"                                                     | the derive→resolve→persist seam; the frozen prior-snapshot source the delta reads from                                                                                                                                                                             | integration                                                                                                                            | building the "expected" list by calling the same derive function under test (tautological oracle)                                                                    |
-| #5   | An unapplicable or unresolved line blocks-or-flags the save; the wrong snapshot is never persisted                                                                                                                                                                                | "no error returned ⇒ everything resolved/applied"                                                                            | where the surfacing/rejection happens before persist; how `− not present` vs `+ unresolved` differ                                                                                                                                                                 | integration                                                                                                                            | happy-path-only; asserting the _absence_ of an error rather than the _presence_ of the flag/rejection                                                                |
-| #6   | The engine's golden output is unchanged and a full-paste add still produces an identical snapshot after the diff-mode change                                                                                                                                                      | "an additive change cannot touch the preserved path"                                                                         | the engine's stable output contract; the full-paste add-flow seam                                                                                                                                                                                                  | golden output + integration                                                                                                            | duplicating the existing strong unit suite instead of pinning the engine output and the add-flow seam                                                                |
-| #7   | A partial resolution and a transport failure each surface their own notice in the rendered plan, instead of a plan that reads as complete                                                                                                                                         | "a plan rendered means a plan complete"; "the resolver returned the outcome ⇒ the user was told"                             | the outcome-to-render seam: which rendered surface owns each resolver outcome, and what the retry affordance does on a transport failure                                                                                                                           | browser E2E (§3 Phase 4) — the notice exists only once rendered; the outcomes are already unit-owned                                   | a happy-path browser test that never induces a partial resolution or a transport failure, so no notice is ever exercised                                             |
-| #8   | Two overlapping comparisons resolve out of order and the rendered plan matches the newest input, never the superseded one                                                                                                                                                         | "the token guard exists, so ordering is safe"; "the newer request always resolves last"                                      | the ordering guarantee: what marks a resolution stale, and where an out-of-order arrival is dropped before it reaches the rendered plan                                                                                                                            | browser E2E (§3 Phase 4) — rides Phase 4's harness; needs two real in-flight resolutions to overlap                                    | a test that passes because it never actually overlaps two runs — sequential awaits cannot reproduce an out-of-order arrival                                          |
-| #9   | Every path-builder surface that reports on deck text — the pre-save Check verdict, the diff preview, the error banner — matches the text currently in the box, and a superseded resolve leaves no trace on any of them, including when the box was cleared while it was in flight | "this flow is safe because it mirrors the one next to it"; "clearing an input cannot race — there is nothing left in flight" | each flow's own guard checkpoints and how many it has; which counter each flow advances and which flows share one; whether the empty-input path invalidates work already in flight; and which state atom each guarded write targets versus which counter guards it | browser E2E (§3 Phase 5) — the drop is a silent return that never reaches the DOM, so no cheaper layer can observe whether it happened | driving the overlap by typing — the debounce coalesces keystrokes into a single run, so the second run never starts and the test passes without overlapping anything |
+| Risk | What would prove protection                                                                                                                                                                                                                                                       | Must challenge                                                                                                                                                                                                                                                                                                                                                     | Context `/10x-research` must ground                                                                                                                                                                                                                                                                                                                                              | Likely cheapest layer                                                                                                                                                                                   | Anti-pattern to avoid                                                                                                                                                                                                                                                                                                            |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #1   | Owner A requesting Owner B's `path_id` is denied, and B's rows are never returned through any read/write route                                                                                                                                                                    | "logged in ⇒ authorized for this resource"; "an RLS policy exists ⇒ every query path is actually scoped"                                                                                                                                                                                                                                                           | the real handler→query path for each `/api/paths/*` route; how the cookie-bound Supabase client scopes the owner; what enforces ownership beyond RLS                                                                                                                                                                                                                             | integration against the **real** handler + DB (local Supabase), not a mock that can't reproduce an RLS bypass                                                                                           | happy-path-only (owner reads own path and calling it "auth tested"); asserting the policy SQL instead of exercising the live query path                                                                                                                                                                                          |
+| #2   | No-session and expired-session requests get 401/redirect on the API; gated routes redirect when signed-out; a valid owner still gets through                                                                                                                                      | "middleware runs on every protected path"; "build-green ⇒ the gate works"                                                                                                                                                                                                                                                                                          | middleware matcher coverage; session/cookie shape on expiry; the redirect target for signed-out access                                                                                                                                                                                                                                                                           | integration                                                                                                                                                                                             | testing only the signed-in path; mocking away the session check so the gate is never exercised                                                                                                                                                                                                                                   |
+| #3   | A change to a handler's shape makes a stale caller's test fail loudly rather than silently breaking the flow                                                                                                                                                                      | "all callers get updated together with the handler"                                                                                                                                                                                                                                                                                                                | the request/response contract of each `/api/paths/*` route and who consumes it                                                                                                                                                                                                                                                                                                   | contract + integration                                                                                                                                                                                  | mirroring the handler's _current_ output as the expected value (oracle problem — pins the bug, not the contract)                                                                                                                                                                                                                 |
+| #4   | The persisted list equals an **independently constructed** `prior ± delta`, verified through the POST→persist path, not just the pure function                                                                                                                                    | "the derive logic is unit-tested, so the wired flow must be correct too"                                                                                                                                                                                                                                                                                           | the derive→resolve→persist seam; the frozen prior-snapshot source the delta reads from                                                                                                                                                                                                                                                                                           | integration                                                                                                                                                                                             | building the "expected" list by calling the same derive function under test (tautological oracle)                                                                                                                                                                                                                                |
+| #5   | An unapplicable or unresolved line blocks-or-flags the save; the wrong snapshot is never persisted                                                                                                                                                                                | "no error returned ⇒ everything resolved/applied"                                                                                                                                                                                                                                                                                                                  | where the surfacing/rejection happens before persist; how `− not present` vs `+ unresolved` differ                                                                                                                                                                                                                                                                               | integration                                                                                                                                                                                             | happy-path-only; asserting the _absence_ of an error rather than the _presence_ of the flag/rejection                                                                                                                                                                                                                            |
+| #6   | The engine's golden output is unchanged and a full-paste add still produces an identical snapshot after the diff-mode change                                                                                                                                                      | "an additive change cannot touch the preserved path"                                                                                                                                                                                                                                                                                                               | the engine's stable output contract; the full-paste add-flow seam                                                                                                                                                                                                                                                                                                                | golden output + integration                                                                                                                                                                             | duplicating the existing strong unit suite instead of pinning the engine output and the add-flow seam                                                                                                                                                                                                                            |
+| #7   | A partial resolution and a transport failure each surface their own notice in the rendered plan, instead of a plan that reads as complete                                                                                                                                         | "a plan rendered means a plan complete"; "the resolver returned the outcome ⇒ the user was told"                                                                                                                                                                                                                                                                   | the outcome-to-render seam: which rendered surface owns each resolver outcome, and what the retry affordance does on a transport failure                                                                                                                                                                                                                                         | browser E2E (§3 Phase 4) — the notice exists only once rendered; the outcomes are already unit-owned                                                                                                    | a happy-path browser test that never induces a partial resolution or a transport failure, so no notice is ever exercised                                                                                                                                                                                                         |
+| #8   | Two overlapping comparisons resolve out of order and the rendered plan matches the newest input, never the superseded one                                                                                                                                                         | "the token guard exists, so ordering is safe"; "the newer request always resolves last"                                                                                                                                                                                                                                                                            | the ordering guarantee: what marks a resolution stale, and where an out-of-order arrival is dropped before it reaches the rendered plan                                                                                                                                                                                                                                          | browser E2E (§3 Phase 4) — rides Phase 4's harness; needs two real in-flight resolutions to overlap                                                                                                     | a test that passes because it never actually overlaps two runs — sequential awaits cannot reproduce an out-of-order arrival                                                                                                                                                                                                      |
+| #9   | Every path-builder surface that reports on deck text — the pre-save Check verdict, the diff preview, the error banner — matches the text currently in the box, and a superseded resolve leaves no trace on any of them, including when the box was cleared while it was in flight | "this flow is safe because it mirrors the one next to it"; "clearing an input cannot race — there is nothing left in flight"                                                                                                                                                                                                                                       | each flow's own guard checkpoints and how many it has; which counter each flow advances and which flows share one; whether the empty-input path invalidates work already in flight; and which state atom each guarded write targets versus which counter guards it                                                                                                               | browser E2E (§3 Phase 5) — the drop is a silent return that never reaches the DOM, so no cheaper layer can observe whether it happened                                                                  | driving the overlap by typing — the debounce coalesces keystrokes into a single run, so the second run never starts and the test passes without overlapping anything                                                                                                                                                             |
+| #10  | Two overlapping path-builder mutations settle out of order and the rendered path still agrees with the server: one delete removes exactly one checkpoint and reports **no** error, and a superseded rename never restores the title it asked for                                  | "one discipline fits all three mutations" — a latest-wins token on delete-last is verified to make it **worse** than no guard, because it drops the successful 204 and keeps the 404's error; "the filed symptom is the failure" — F-5's was wrong, and both its symptom and its suggested fix had to be re-derived from the route before anything could be tested | each route's own **per-call** semantics (`DELETE /steps` removes the highest-position step per call, so two overlapping deletes delete two rows and the client's count is not the divergence); which flows share an error atom versus which lane guards each write; and whether the trigger or the run is the right thing to gate — no input event may ever invalidate a persist | browser E2E — the divergence exists nowhere but the rendered result, and §4 carries no component-render layer that could see it; the client-side ordering is not reachable from integration or contract | a spec whose parked mutation never reaches the server, so the second half of the overlap answers success too, no divergence is ever produced, and the spec passes with its guard reverted — and its sibling, signalling "in flight" on the request's arrival rather than the server's answer, which leaves the two halves racing |
 
 ## 3. Phased Rollout
 
@@ -209,7 +282,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 2   | API contract pinning                 | Freeze `/api/paths/*` request/response shapes and the engine golden output so a stale caller or preserved-flow regression fails loudly                                                                    | #3, #6        | contract + integration + golden | complete | context/archive/2026-08-11-testing-api-contract-pinning/ (archived 2026-08-19)    |
 | 3   | Derive-to-persist correctness        | Prove the persisted snapshot equals `prior ± delta` and that unapplicable/unresolved lines are flagged, not silently dropped                                                                              | #4, #5        | integration                     | complete | context/archive/2026-08-19-testing-derive-to-persist/ (archived 2026-08-21)       |
 | 4   | Comparer failure-surfacing           | Prove the comparer surfaces its own failures — a partial resolution or a card-data transport failure is visible in the rendered plan — and never renders a superseded comparison                          | #7, #8        | browser E2E                     | complete | context/archive/2026-08-27-testing-comparer-failure-surfacing/ (arch. 2026-08-31) |
-| 5   | Path-builder stale-response ordering | Prove a resolve that lands after the deck text changed or was cleared is dropped rather than rendered — no pre-save Check verdict, diff preview or error banner describes text the user has moved on from | #9            | browser E2E                     | complete | context/changes/testing-path-builder-ordering/                                    |
+| 5   | Path-builder stale-response ordering | Prove a resolve that lands after the deck text changed or was cleared is dropped rather than rendered — no pre-save Check verdict, diff preview or error banner describes text the user has moved on from | #9            | browser E2E                     | complete | context/archive/2026-09-05-testing-path-builder-ordering/                         |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened`
 → `researched` → `planned` → `implementing` → `complete`.
@@ -1002,8 +1075,11 @@ choice above would have cost.
 - **Reference tests**: `seed.spec.ts` (the exemplar — read it first; what you show is what you
   get), `comparer-failure-surfacing.spec.ts` (risk #7, interception + recovery),
   `comparer-stale-response.spec.ts` (risk #8, genuine concurrency),
-  `path-builder-stale-ordering.spec.ts` (risk #9, the same concurrency shape **behind auth**,
-  and the only `test.fail()` specs in the suite).
+  `path-builder-stale-ordering.spec.ts` (risk #9, the same concurrency shape **behind auth**;
+  it held the suite's only `test.fail()` specs until they were repaired on 2026-09-07 — the
+  suite now carries none), `path-builder-mutation-ordering.spec.ts` (risk #10, two overlapping
+  **mutations** against the app's own API, and the reference for `parkAppApi` and for a spec
+  written green inside the change that repairs its defect).
 - **Prerequisite / run locally**: **local Supabase must be running** (`npx supabase start`) and
   `.env.test` must carry `SUPABASE_KEY` / `SUPABASE_SERVICE_ROLE_KEY`; `tests/e2e/global-setup.ts`
   fails fast with those instructions if not. Playwright's `webServer` boots `astro dev` on port
@@ -1162,13 +1238,18 @@ phase's whole cost is the test itself.
     `setup` project's owner belongs to `global-setup.ts`'s teardown, which reads its id from a
     sidecar file because the setup project runs in a worker the teardown cannot see into.
 22. **`test.fail()` is how a coverage phase pins a live defect — but it inverts the whole test
-    body.** Risk #9 _is_ a set of live defects — F-1 through F-4 in
+    body.** **Historical as of 2026-09-07: the defects this item was written about are repaired
+    and the annotations are gone** — `path-builder-stale-ordering.spec.ts` now carries **zero**
+    inverted specs and `npm run test:e2e` reports **zero** expected failures, which is the
+    number to read there now. See item 29 for the sequence that retired them. The two
+    disciplines below are what generalize, so the item stays. Risk #9 **was** a set of live
+    defects — F-1 through F-4 in
     `context/archive/2026-09-05-testing-path-builder-ordering/findings.md`, of which that change
     pinned F-1 and F-2 and `testing-path-builder-error-and-mode` pinned F-3 and F-4 — so a
-    faithful spec is red today. `path-builder-stale-ordering.spec.ts` therefore carries **four**
-    inverted specs, not two, and `npm run test:e2e` reports four expected failures; a run
-    reporting fewer has had an annotation removed, and one reporting an unexpected pass has had a
-    guard fixed. Annotating a spec `test.fail()` keeps the suite green on current code
+    faithful spec was red, and the file carried **four** inverted specs against four expected
+    failures. While that held, a run reporting fewer had had an annotation removed and one
+    reporting an unexpected pass had had a guard fixed. Annotating a spec `test.fail()` keeps
+    the suite green on current code
     and turns the build red the moment someone fixes the guard, reported as
     `Expected to fail, but passed.` Two disciplines come with it. **(a) Put setup in
     `beforeEach`, not in the body** — the annotation is registered by the body, so a hook failure
@@ -1181,7 +1262,9 @@ phase's whole cost is the test itself.
     right when the failure is the signal — a retry could turn a genuine bug green. Here the
     failure is the _expected_ state, so a retry cannot hide a defect; it only absorbs a timing
     flake that would otherwise report a spurious unexpected pass. Same principle, opposite
-    setting.
+    setting. **The inversion is temporary by construction**: the moment the annotations come
+    off, this item stops applying and item 12 resumes — see item 29, which is the sequence that
+    did exactly that to risk #9's four pins on 2026-09-07.
 24. **CI copies the `integration` job verbatim.** The `e2e` job gained `npx supabase start`, the
     `supabase status -o env` export into `$GITHUB_ENV`, and `supabase stop` with `if: always()`
     — keys from the running stack, never from Actions secrets. Costs ~90s. No new job name, so
@@ -1214,7 +1297,7 @@ should not.
     **round trip** back to full mode, and both switches have to precede the release — release
     first and the second `switchMode` resets the atom before the user arrives. Concretely:
     before writing the window, read the conditions on the line that renders your target and
-    confirm each one holds at the moment you open it. Where the finding you are pinning *named*
+    confirm each one holds at the moment you open it. Where the finding you are pinning _named_
     the symptom, re-derive it rather than trusting it — see `lessons.md`, "When a finding names a
     symptom surface, verify the render reaches it before writing the spec", which supersedes two
     such claims in risk #9's own findings list.
@@ -1231,6 +1314,67 @@ should not.
     the banner's **name**, not its message, whenever a fix would move the message to a different
     container — S3 does, because F-3's fix relocates the same text to a Check-owned banner and a
     text-matched assertion would keep failing after the repair, so the inversion would never lift.
+
+Items 28–29 were added 2026-09-07 by `shared-stale-response-guard`, the first change on this
+surface that **repaired** rather than pinned. Each is a fact that phase paid for and the next
+one should not.
+
+28. **Parking the app's OWN API is a different fixture from parking Scryfall, in three ways
+    that each cost a run.** `mockScryfallWithParkedCollection` cannot be copied for
+    `/api/paths/*`: Scryfall is mocked end to end, so its handler answers everything itself,
+    while the app's API is real and the page's navigation, the seed and the second half of
+    every overlap all have to reach the dev server. `parkAppApi`
+    (`tests/e2e/fixtures/appApi.ts`) is the shape that works, and the differences are
+    load-bearing rather than stylistic.
+    (a) **The default branch is `route.continue()`**, not a synthetic fulfil, and the predicate
+    receives **method plus URL** — these routes are told apart by verb (`PATCH /api/paths/[id]`
+    and `DELETE /api/paths/[id]` differ in nothing else).
+    (b) **Whether the held request reaches the server decides whether the spec can pin
+    anything.** Answering a held mutation with a synthetic body keeps the server out of the
+    assertion, which is exactly right for the rename spec: the held `PATCH` is answered with a
+    stale `UpgradePath` the server never saw, so the server holds one title and the claim is
+    about the client guard alone. It is exactly wrong for the delete spec: the false banner
+    only exists once the server has actually lost its last step, so parking without delivering
+    leaves the second `DELETE` answering 204 too, no banner ever renders, and the spec passes
+    with its guard reverted. Hence the `deliver` option — forward on arrival, hold the server's
+    own response — and `releaseFromServer()` as its release door. Decide which one the
+    assertion needs **before** writing the window, and say so in the spec header.
+    (c) **`arrived` must resolve on the server's ANSWER, not on the request's arrival**, when
+    delivering. Signalling on arrival leaves the delivered request racing the spec's next
+    action at the server: two `DELETE`s that overlap there both read the same last step and
+    both answer 204, so the 404 never happens. This one is not visible by reading — the race
+    resolves the harmless way often enough that the spec looks green. It was found by
+    reverting the guard and getting the wrong failure.
+    Add a release variant to the interface rather than reaching for `route` in the spec, for
+    item 25's reason: the handler owns the single-shot guard.
+29. **Retiring a `test.fail()` pin is a staged three-run sequence, and the retry setting flips
+    at the third step.** Run it in this order and read each result before moving on: with the
+    production edit **reverted**, the suite reports N expected failures; with the edit
+    **applied and the annotations still in place**, it reports N **unexpected passes** — that
+    is the signal the repair works, and it is a failing run; with the annotations **removed**,
+    N passes. Any other sequence means a spec is passing for a reason other than the repair.
+    The annotations and the repair must land in **one commit** (see §6.6's rollback note): a
+    revert that drops one without the other leaves the suite reporting unexpected passes
+    against unrepaired code. At the moment the annotations come off, **item 23 stops applying
+    and item 12 resumes** — the file gains `test.describe.configure({ retries: 0 })`, because
+    the failure has gone back to being the signal rather than the expected state.
+    **And a green suite is not the finish line: a repair covering N findings needs a targeted
+    break per finding.** One repair can flip a pin belonging to another. Verified here: S2 and
+    S3 both edit the deck textarea before clicking Add, so invalidating in the textarea's
+    `onChange` flips **all four** risk-#9 pins — S3 included, whose actual subject is atom
+    ownership — while F-3's real defect stays reachable through the one overlap S3 does not
+    drive. Revert each finding's repair alone, confirm the suite reddens, and confirm it
+    reddens on the spec that owns that finding. Where a pin flips for two independent reasons,
+    the targeted break needs a path the pinned spec does not drive; write that path into the
+    plan's manual verification rather than discovering it at review. The same obligation
+    applies to a spec written **green** inside the change that repairs the defect, where
+    nothing forces the question — see `lessons.md`, "A repair covering N findings needs a
+    targeted break per finding, not one green suite", for the two ways that bit here.
+    One of them is worth stating as a locator rule in its own right: **`getByRole`'s `name` is
+    a case-insensitive SUBSTRING match by default.** `{ name: "base" }` also matched the "Add
+    base deck" section heading — which renders _precisely when_ the checkpoint is gone — so the
+    assertion that the step disappeared read as if it had not. Pass `exact: true` whenever a
+    short accessible name could be contained in another one on the same surface.
 
 ## 7. What We Deliberately Don't Test
 
@@ -1308,26 +1452,47 @@ against.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-09-02 — §1 (the `lessons.md` companion-read
+- Strategy (§1–§5) last reviewed: 2026-09-07 — **§2 only**, by
+  `shared-stale-response-guard` (see the dated entry below): risk #9 moved to the protected
+  table, risk #10 appended already protected with its response row, the protected table's
+  preamble widened to admit a row protected by a change rather than a `complete` §3 phase,
+  the open table emptied with a note on how to read that, and #9's disposition paragraph
+  rewritten. **§1**'s header block was re-stamped in the same pass, because its "Last
+  updated" note asserted "an open set of one: **risk #9**" — a live claim this change
+  falsified. §3, §4, §5 and §7 re-read 2026-09-07 as still current and unchanged. The
+  2026-09-02 review is the prior baseline: §1 (the `lessons.md` companion-read
   pointer; the three principles themselves unchanged since 2026-06-29 and re-read as
   still current, with principle 1's rhetorical suite figure dropped), §2 (split into
   protected and open tables, risk #9 and its response row appended, `src/components/deck`
   churn re-stamped, the quantity-degradation deferral closed), §3 (Phase 5 opened, with
   the branch-protection read behind its order rationale) and §4 (all four grounding
-  bullets re-stamped, the `unit (logic)` count re-derived) updated 2026-09-02 by the
-  refresh below; §5 deliberately unchanged — see the non-actions entry
-- Cookbook (§6) last reviewed: 2026-09-06 — §6.7's authenticated-spec subsection gained
-  items 25–27 and had item 22's findings reference corrected (see the dated entry below);
+  bullets re-stamped, the `unit (logic)` count re-derived); §5 deliberately unchanged
+  then and now — see the non-actions entry
+- Cookbook (§6) last reviewed: 2026-09-07 — §6.7 gained items **28–29** (parking the app's
+  own API, and retiring a `test.fail()` pin as a staged three-run sequence with a targeted
+  break per finding), appended by `shared-stale-response-guard`. The same pass corrected three
+  live claims the repair falsified: **item 22** said "risk #9 _is_ a set of live defects" and
+  that the suite reports **four** expected failures — it now reads as history and states that
+  the number to read is **zero**; **item 23** now says outright that its retry inversion is
+  temporary and points at item 29; and the subsection's **reference-tests** list no longer
+  calls `path-builder-stale-ordering.spec.ts` "the only `test.fail()` specs in the suite" and
+  gains `path-builder-mutation-ordering.spec.ts`. Unchanged from the
+  2026-09-06 review otherwise, when the same subsection gained
+  items 25–27 and had item 22's findings reference corrected (see the dated entries below);
   everything else re-read as still current and unchanged from the 2026-09-02 review, which
   gave the preamble the `lessons.md` pointer and the record of §6's two schema deviations
   (seven sub-sections; §6.6 preceding §6.7). §6.7 filled by rollout Phase 4 (browser E2E);
   §6.4 filled by rollout Phase 3; §6.5 filled 2026-08-25 as a sequencing checklist over
   §6.2–§6.4, so no sub-section is a stub
 - Rollout: §3 Phases 1–5 all `complete` — Phases 1–3 by 2026-08-20, Phase 4 on
-  2026-08-31, Phase 5 on 2026-09-06 — so the rollout table has no open phase. Note that
-  Phase 5 completing did **not** move risk #9 out of §2's open table; see the entry below
-  and §2's own paragraph for why a completed phase can leave a risk documented rather than
-  protected. Phases 1–3 completing was
+  2026-08-31, Phase 5 on 2026-09-06 — so the rollout table has no open phase, and has had
+  none since. Note that Phase 5 completing did **not** move risk #9 out of §2's open table;
+  what moved it, on 2026-09-07, was `shared-stale-response-guard` — a repair change that
+  opened no §3 phase. So the rollout table and the risk map are no longer in step, and that
+  is deliberate rather than drift: §2's protected column now names whatever carries the
+  proof, and #10 entered the map already protected by the same change. See §2's own
+  paragraphs for why a completed phase can leave a risk documented rather than protected,
+  and why closing one needed no phase at all. Phases 1–3 completing was
   the trigger §7 named for re-evaluating the E2E and component-render exclusions; that
   re-evaluation was taken deliberately on 2026-08-25 and re-taken 2026-09-02: browser
   E2E in at two phases and no further, component render and pixel tests still out
@@ -1447,7 +1612,8 @@ against.
   family at that layer. §2's not-promoted paragraph carries the decision; a future
   refresh should cite it rather than re-open it.
 - **Rollout Phase 5 landed 2026-09-06** through
-  `context/changes/testing-path-builder-ordering/`. What it changed: **§3**'s Phase 5 row
+  `context/archive/2026-09-05-testing-path-builder-ordering/` (archived 2026-09-06). What it
+  changed: **§3**'s Phase 5 row
   moved to `complete` and names the change folder; **§2** row #9 stayed in the open table
   with its "Answered by" cell rewritten to `complete` — **documented, not protected**, plus
   a paragraph stating why those two are not contradictory; **§6.7** gained an
@@ -1469,7 +1635,7 @@ against.
   phase — §3 has had none since Phase 5 closed the same day — because it added no new risk
   and no new job: two more specs joined the file Phase 5 created, in the job Phase 5's CI
   work already built. What it changed: **§6.7** gained items **25–27** on the
-  authenticated-spec subsection — a parked route needs a *failing* release
+  authenticated-spec subsection — a parked route needs a _failing_ release
   (`ParkedRoute.releaseWithFailure`, and why a 500 rather than `route.abort()`,
   cross-referencing item 8); an observation window must be pointed at a surface that can
   actually render in the state the spec leaves the app in, or the negative assertion passes
@@ -1504,6 +1670,90 @@ against.
   **documented, not protected** disposition: the specs are still inverted, the guards are
   still unrepaired, and #9 still belongs in the open table. A future refresh should fix the
   path, restate the count, and leave everything else in the row alone.
+- **Risk #9 was repaired — not pinned — on 2026-09-07** through
+  `context/changes/shared-stale-response-guard/`, the fourth and last change in that chain and
+  the first that fixed rather than documented. It opened **no §3 rollout phase** (§3 has had
+  none since Phase 5 closed on 2026-09-06) and **no CI job**: both browser spec files live
+  under `tests/e2e/`, which the required `e2e` job already runs, and the new unit tests ride
+  `npm test` in the required `ci` job. So no job name was added and the required-check list on
+  `main` needed no read — the one gate condition §5 imposes.
+  What it changed in the product: one guarded-async primitive
+  (`src/lib/async/latestRun.ts`, pure and unit-tested at the `node` layer, plus the
+  `useLatestRun.ts` hook) now owns staleness for the whole app, and **all eight**
+  async-then-setState flows run through it — `DeckComparer.runPlan`, `PathEditor`'s six, and
+  `NewPathForm.handleSubmit`, an eighth site no upstream record had counted. The invariant is
+  mechanical: `grep -rn "useRef(0)\|Token.current" src/` returns nothing.
+  What it changed here: **§2** as listed in the Strategy bullet above — #9 to the protected
+  table, #10 appended already protected, the protected preamble widened, the open table
+  emptied; **§6.7** gained items **28–29**. Nothing in §1, §3, §4, §5 or §7 moved. §7 in
+  particular was **re-read and deliberately not touched**: its "two phases and no further"
+  bullet still describes the phases correctly, because this change added neither a phase nor a
+  runner, and #10's browser specs are admissible on the boundary that bullet already states —
+  the divergence exists nowhere but the rendered result and §4 carries no component-render
+  layer that could see it. The admissibility argument is in the change's `plan.md`, and the
+  decision to take the §2 edits here rather than route them to `/10x-test-plan --refresh` is
+  recorded there too: this is the change that falsified #9's disposition, so deferring would
+  have left the map wrong in the actionable direction for however long a refresh took. No
+  `backport.md` was written, deliberately.
+  Findings: `findings.md` carries **F-6** forward (non-empty text parsing to zero cards still
+  renders the success verdict) with line numbers re-verified against the post-repair file and a
+  **third** affected site the archived entry never cited (`runDiffCheck`'s identical raw-text
+  guard); and files **F-7**, the `NewPathForm` site, as found-and-closed-here with one residual
+  accepted in the open (the submit control re-enables as navigation starts, where the old
+  `pending` stayed set — and `NewPathForm` has no browser spec to pin either behavior).
+- **Three claims in the archived risk-#9 record were superseded, not implemented** — the same
+  pattern as the F-3/F-4 corrections the 2026-09-06 entry records, and for the same reason:
+  the source files are archived and immutable. All three are in
+  `context/archive/2026-09-06-testing-path-builder-error-and-mode/findings.md` F-5, all three
+  **changed what got built**, and all three are held in
+  `context/changes/shared-stale-response-guard/findings.md` (C-1 through C-4) plus
+  `context/foundation/lessons.md`. (a) F-5's **symptom** is wrong: `DELETE /steps` removes the
+  highest-position step per **call**, so two overlapping deletes produce two server deletes and
+  the client's count agrees — the reachable divergence is a false error banner over a delete
+  that succeeded. (b) F-5's **suggested fix** — read naturally as one discipline for all three
+  mutations — would have made `handleDeleteLast` **worse than the defect**, dropping the
+  successful 204 as superseded while the 404 set the error, leaving a step rendered against a
+  server holding zero. The three mutations therefore ship under two disciplines. This is the
+  generalizable one: `lessons.md` previously required a finding's named **symptom** to be
+  re-derived from the render tree, and said nothing about its **fix**; it now requires both.
+  (c) The four `test.fail()` pins were **necessary but not sufficient** as a specification — S2
+  and S3 both edit the textarea before adding, so a two-line repair flips all four while F-3's
+  actual defect stays reachable. Hence the rule now in §6.7 item 29 and in `lessons.md`: a
+  repair covering N findings needs a targeted break **per finding**, and a green spec written
+  inside the repairing change needs the deliberate-break run as much as an inverted one does.
+- **The two §2 corrections the 2026-09-06 entry recorded as owed are now superseded, not
+  fixed.** Both were in risk #9's "Answered by" cell — a `context/changes/...` path that had
+  archived away, and a stale "F-1 and F-2" count that the prose beneath the table already
+  contradicted. That cell no longer exists: the row moved to the protected table and the cell
+  was replaced wholesale. A future refresh should **not** look for them. The generalizable
+  half is worth keeping, because it is what the manual verification for this edit was written
+  against: the defect those two corrections described was a **cell disagreeing with the prose
+  beneath it**, so widening the protected table's preamble to admit a row protected by a change
+  was not cosmetic — leaving it reading "every row below is answered by a `complete` §3 phase"
+  above a row protected by no phase would have reproduced the same defect one table over.
+- **A third stale change-folder path, found and fixed rather than recorded as owed,
+  2026-09-07.** §3's Phase 5 row and this ledger's own Phase 5 entry both still pointed at
+  `context/changes/testing-path-builder-ordering/`, which archived on 2026-09-06 — the same
+  dead path the two owed §2 corrections above describe, in two more places nobody had checked.
+  Both now name `context/archive/2026-09-05-testing-path-builder-ordering/`. This one was
+  **taken** rather than deferred, unlike the §2 pair, and the distinction is the reason: those
+  two sat in a frozen §2 cell that §2's own prose puts under edit restriction, so they wanted a
+  refresh's authority; a §3 change-folder cell is under no such restriction and the convention
+  is unambiguous — the other four §3 rows all carry archive paths, and every other §8 entry
+  cites the archive path with its archived date. A one-cell path correction with four
+  precedents is not a judgement call. **The generalizable point for whoever archives next:
+  archiving a change breaks every §3 and §8 citation of its folder, and `/10x-archive` does not
+  rewrite them.** Grep the foundation docs for the old `context/changes/<change-id>/` path in
+  the same pass — this is the third time the omission has been found downstream rather than at
+  archive time.
+- **`lessons.md` gained three entries and one supersession, 2026-09-07.** "Treat the
+  stale-response guard as five hand copies, not one pattern" — the standing review obligation
+  that justified this whole chain — is superseded by "The stale-response guard has one
+  definition now — reject a new hand-rolled counter". The register is append-only, so the
+  original stays put with its present-tense wording; read the superseding entry for the current
+  state. The other two are general rather than surface-specific: a finding's suggested **fix**
+  needs the same verification against the code as its symptom, and a repair covering N findings
+  needs a targeted break per finding rather than one green suite.
 - Stack versions last verified: 2026-09-02 — every declared-versus-installed pair
   re-read and unchanged: `astro ^6.3.1` resolves to 6.4.8, `vitest ^4.1.9` to 4.1.9 and
   `@playwright/test ^1.62.1` to 1.62.1, so §4's rows and its "Vitest 4 / Astro 6"

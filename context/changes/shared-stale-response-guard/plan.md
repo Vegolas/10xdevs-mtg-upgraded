@@ -832,29 +832,29 @@ the repair share a commit, and it is the one ordering constraint a revert has to
 
 #### Automated
 
-- [x] 3.1 Both new specs pass: `npx playwright test path-builder-mutation-ordering`
-- [x] 3.2 The whole browser suite passes with zero expected failures: `npm run test:e2e`
-- [x] 3.3 Lint, typecheck and unit suite pass
-- [x] 3.4 The integration suite is unaffected: `npm run test:integration`
-- [x] 3.5 No hand-rolled guard remains: `grep -rn "useRef(0)\|Token.current" src/`
+- [x] 3.1 Both new specs pass: `npx playwright test path-builder-mutation-ordering` — cb79859
+- [x] 3.2 The whole browser suite passes with zero expected failures: `npm run test:e2e` — cb79859
+- [x] 3.3 Lint, typecheck and unit suite pass — cb79859
+- [x] 3.4 The integration suite is unaffected: `npm run test:integration` — cb79859
+- [x] 3.5 No hand-rolled guard remains: `grep -rn "useRef(0)\|Token.current" src/` — cb79859
 
 #### Manual
 
-- [x] 3.6 Each new spec, run with its guard reverted, fails on the assertion it names
-- [x] 3.7 Both delete buttons disable during their request; the rename Save button does not
-- [x] 3.8 Path creation from `/paths` works and double-clicking issues exactly one POST
-- [x] 3.9 Add, Check, diff mode, accept, delete last and delete path all behave as before
+- [x] 3.6 Each new spec, run with its guard reverted, fails on the assertion it names — cb79859
+- [x] 3.7 Both delete buttons disable during their request; the rename Save button does not — cb79859
+- [x] 3.8 Path creation from `/paths` works and double-clicking issues exactly one POST — cb79859
+- [x] 3.9 Add, Check, diff mode, accept, delete last and delete path all behave as before — cb79859
 
 ### Phase 4: The record
 
 #### Automated
 
-- [ ] 4.1 Every referenced path resolves and every cited line number is current
-- [ ] 4.2 Formatting clean on this change's files: `npx prettier --check`
-- [ ] 4.3 The full gate stack passes: lint, typecheck, unit, integration, e2e
+- [x] 4.1 Every referenced path resolves and every cited line number is current
+- [x] 4.2 Formatting clean on this change's files: `npx prettier --check`
+- [x] 4.3 The full gate stack passes: lint, typecheck, unit, integration, e2e
 
 #### Manual
 
-- [ ] 4.4 §2's protected table reads coherently with #9's explanatory paragraph
-- [ ] 4.5 Risk #10 survives §7's admissibility test on its own terms
-- [ ] 4.6 `lessons.md`'s new entry reads correctly standing alone
+- [x] 4.4 §2's protected table reads coherently with #9's explanatory paragraph
+- [x] 4.5 Risk #10 survives §7's admissibility test on its own terms
+- [x] 4.6 `lessons.md`'s new entry reads correctly standing alone

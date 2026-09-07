@@ -201,3 +201,112 @@ passed.`
   shape S1 and S2 were already using. Verified 2026-09-06; see
   `context/changes/testing-path-builder-error-and-mode/findings.md`.
 - **Applies to**: frame, research, plan, plan-review, implement, impl-review
+
+## The stale-response guard has one definition now — reject a new hand-rolled counter
+
+- **Context**: any flow anywhere in `src/` that awaits and then writes React state. Recorded
+  2026-09-07 by `shared-stale-response-guard`; supersedes "Treat the stale-response guard as
+  five hand copies, not one pattern" above, which this file being append-only cannot edit.
+- **What changed**: the duplication is gone. `src/lib/async/latestRun.ts` is the one
+  definition — pure, DOM-free, React-free, unit-tested at the `node` layer in
+  `latestRun.test.ts` — and `src/lib/async/useLatestRun.ts` is the only intended consumer.
+  All **eight** async-then-setState flows run through it: `DeckComparer.runPlan`,
+  `PathEditor`'s `handleAddStep` / `runCheck` / `runDiffCheck` / `handleDeleteLast` /
+  `handleRename` / `handleDeletePath`, and `NewPathForm.handleSubmit` — the eighth site, which
+  no upstream record had counted (this change's `findings.md` F-7).
+- **Rule**: a flow that awaits and then writes state goes through `useLatestRun`, one lane per
+  set of atoms. A review **rejects** a new hand-rolled request-token counter;
+  `grep -rn "useRef(0)\|Token.current" src/` returning nothing is the invariant, and it is
+  cheap enough to be an actual check rather than an intention. Two properties are what make
+  the rule worth enforcing rather than merely tidy, and both are structural:
+  1. **A flow has no checkpoint count to get wrong**, because it does not write state at all —
+     it returns a commit thunk and the hook decides whether to apply it. That retires the first
+     divergence the superseded entry recorded: adding an `await` to a flow can no longer open
+     an unguarded window.
+  2. **A token is a fresh `symbol`, not a counter value**, so a lane's token can never read as
+     current in another lane. Handing the wrong lane's token to `isCurrent` cannot silently
+     guard nothing, which is what "two counters, unevenly shared" was.
+- **The part that is still a judgement call, and the one thing not to copy blindly.** One
+  primitive does not mean one discipline. `useLatestRun` returns `[inFlight, controls]` and the
+  choice of what to do with `inFlight` is per flow: drive a trigger's `disabled` from it for
+  **at-most-one-in-flight**, or ignore it for **latest-wins**. Both ship here, and the split is
+  not stylistic — a latest-wins token on `handleDeleteLast` is verified to make it _worse_ than
+  no guard at all (see the next entry). The load-bearing invariant across all eight lanes is
+  what is **absent**: no input event invalidates a persist. A keystroke or a mode switch must
+  never drop a POST already in flight, because that saves a checkpoint the UI never renders and
+  reports no error. Where an input event and a persist genuinely conflict, disable the trigger;
+  do not invalidate the run.
+- **Applies to**: frame, research, plan, plan-review, implement, impl-review
+
+## A finding's suggested FIX needs the same verification against the code as its symptom
+
+- **Context**: acting on any filed finding — `findings.md`, a bug report, an impl-review note —
+  that carries a recommended fix. Recorded 2026-09-07 from risk #9's F-5, but the shape is
+  general and applies at any layer.
+- **The companion to "When a finding names a symptom surface" above**, and the gap that entry
+  left. That one says: trace the named _symptom_ to the line that renders it before writing a
+  spec. It says nothing about the _suggested fix_, which is written in the same sitting, from
+  the same partial reading, and is then inherited by whoever implements it — usually as the
+  plan's starting point rather than as a claim to check.
+- **What it cost here.** F-5 filed three unguarded mutation flows and named "one guarded-async
+  helper" as the fix, read naturally as one discipline for all three. Applied to
+  `handleDeleteLast` that is strictly worse than the defect. `DELETE /api/paths/[id]/steps`
+  removes the highest-position step **per call**, so under latest-wins the first call's
+  successful 204 is dropped as superseded — no pop — while the second call's 404
+  `"No steps to delete"` sets the error. The result is a step rendered against a server holding
+  zero: the exact rendered-list-disagrees-with-the-server failure F-5 names as its own impact,
+  manufactured by the guard meant to prevent it. F-5's _symptom_ was wrong in the same pass
+  ("two rapid deletes can pop two steps for one server delete" — they produce two server
+  deletes and the client agrees; the reachable divergence is a false error banner), and the two
+  errors have one cause: the route's per-call semantics were never read.
+- **Rule**: before implementing a finding's recommended fix, re-derive it from the code the fix
+  would touch — for an ordering fix, that means the **route's or function's own semantics**,
+  not just the client flow the finding describes. Ask specifically: does this fix's failure
+  mode differ from the defect's, and is it worse? A fix that turns a cosmetic wrong message
+  into a rendered or persisted disagreement has moved the failure up a severity class. And
+  state the answer in the plan: a plan that silently narrows a finding's fix looks identical to
+  one that missed it.
+- **Corrects, and supersedes for implementation purposes**: F-5's symptom sentence and its
+  single-discipline fix in
+  `context/archive/2026-09-06-testing-path-builder-error-and-mode/findings.md`. That file is
+  archived and immutable, so this entry plus
+  `context/changes/shared-stale-response-guard/findings.md` (C-1, C-2) are the correction's
+  only home. F-5's _impact_ still stands, and so does its identification of the three flows.
+- **Applies to**: frame, research, plan, plan-review, implement, impl-review
+
+## A repair covering N findings needs a targeted break per finding, not one green suite
+
+- **Context**: landing a change that retires more than one filed defect at once — a refactor
+  over a set of findings, or any repair whose regression net is several pre-existing specs.
+  Recorded 2026-09-07 from `shared-stale-response-guard`, which retired five.
+- **Problem**: a green suite proves that no pinned path is red. It does **not** prove that each
+  defect was individually addressed, because one repair can flip a pin belonging to another.
+  Verified here: S2 and S3 both edit the deck textarea before clicking Add, so invalidating in
+  the textarea's `onChange` flips **all four** risk-#9 pins — including S3, whose actual
+  subject is atom ownership. A two-line fix would have produced four
+  `Expected to fail, but passed.` reports, come off annotation, and left F-3's real defect
+  reachable by the one overlap S3 does not drive (Check text T, fill the checkpoint name, add
+  the same text T with no edit between).
+- **Rule**: for each finding the change claims to retire, revert **only that finding's** repair
+  and confirm the suite reddens — and confirm it reddens on the spec that owns that finding and
+  not on others. Where a pin flips for two independent reasons, the targeted break is the only
+  thing that separates them, and it usually needs a path the pinned spec does not drive; write
+  that path down in the plan's manual verification rather than discovering it at review.
+- **The same rule holds for a spec written GREEN** inside the change that repairs the defect,
+  and this is where it is easiest to skip: there is no `test.fail()` to lift, so nothing forces
+  the question. Trap 2 of "Pin a live defect with `test.fail()`" above applies unchanged — a
+  green spec that never actually reproduced the overlap is indistinguishable from one that did.
+  It bit twice here, both times silently:
+  1. **A parked request that never reaches the server can make the spec vacuous.** Holding the
+     first `DELETE` without delivering it left the server holding its last step, so the second
+     `DELETE` also answered 204, the 404 never happened, and the spec passed with its guard
+     reverted. Caught only by reverting the guard. The same shape has a second form: resolving
+     the fixture's `arrived` signal on the request's **arrival** rather than on the server's
+     **answer** leaves the delivered request racing the spec's next action, and the race
+     resolves the harmless way often enough to look green.
+  2. **`getByRole`'s `name` is a case-insensitive SUBSTRING match by default.**
+     `{ name: "base" }` also matched the "Add base deck" heading — which renders _precisely
+     when_ the checkpoint is gone, so the assertion that the step disappeared read as if it had
+     not. Pass `exact: true` whenever a short accessible name could be contained in another one
+     on the same surface.
+- **Applies to**: plan, plan-review, implement, impl-review

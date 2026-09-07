@@ -25,21 +25,21 @@ half arrives with its specification already on disk. F-5's three mutation flows 
 No file in `src/` holds a hand-rolled request token. All eight flows run through one
 `useLatestRun` lane each, with the discipline that matches what they do. The browser suite
 reports **zero** expected failures — the four annotations are gone and the specs are ordinary
-regression tests — and two new green specs cover the mutation half. Risk #9 reads *protected*
+regression tests — and two new green specs cover the mutation half. Risk #9 reads _protected_
 in the risk map for the first time.
 
 ## Key Decisions Made
 
-| Decision                        | Choice                                                          | Why (1 sentence)                                                                                       | Source       |
-| ------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------ |
-| Helper API                      | Commit-thunk — the body returns the writes, the hook applies them | Structurally retires "checkpoint count differs per flow": a new `await` cannot open an unguarded window. | Plan         |
-| Packaging                       | Pure `latestRun.ts` + unit tests + thin `useLatestRun` hook       | Proves the guard's algebra at the cheapest layer, with no jsdom and no §7 exception needed.              | Plan         |
-| Invalidation                    | Preview lane + one lane per mutation                              | No input event may invalidate a persist, or a saved checkpoint never renders and nothing reports it.     | Plan         |
-| F-5 discipline                  | Split — at-most-one for deletes, latest-wins for rename           | A latest-wins token on delete-last is verified to make it worse than today.                              | Plan         |
-| F-5 coverage                    | Two green specs plus a new app-API parked fixture                 | Neither discipline may ship on the argument that it mirrors the other — that is how F-5 happened.        | Plan         |
-| Test-plan authority             | This change edits §2, §6.7 and §8; no `backport.md`               | It is the change that falsifies #9's disposition, so deferring leaves the map wrong where it costs work. | Plan         |
-| F-5's risk row                  | New risk #10, protected on arrival                                | #9's wording is pre-save only, and §2 rows are append-only so widening it is not available.              | Plan         |
-| F-6 and the pin convention      | Out of scope; F-5 specs written green, not as pins                | Settled when the change was opened and not re-litigated here.                                            | Change brief |
+| Decision                   | Choice                                                            | Why (1 sentence)                                                                                         | Source       |
+| -------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------ |
+| Helper API                 | Commit-thunk — the body returns the writes, the hook applies them | Structurally retires "checkpoint count differs per flow": a new `await` cannot open an unguarded window. | Plan         |
+| Packaging                  | Pure `latestRun.ts` + unit tests + thin `useLatestRun` hook       | Proves the guard's algebra at the cheapest layer, with no jsdom and no §7 exception needed.              | Plan         |
+| Invalidation               | Preview lane + one lane per mutation                              | No input event may invalidate a persist, or a saved checkpoint never renders and nothing reports it.     | Plan         |
+| F-5 discipline             | Split — at-most-one for deletes, latest-wins for rename           | A latest-wins token on delete-last is verified to make it worse than today.                              | Plan         |
+| F-5 coverage               | Two green specs plus a new app-API parked fixture                 | Neither discipline may ship on the argument that it mirrors the other — that is how F-5 happened.        | Plan         |
+| Test-plan authority        | This change edits §2, §6.7 and §8; no `backport.md`               | It is the change that falsifies #9's disposition, so deferring leaves the map wrong where it costs work. | Plan         |
+| F-5's risk row             | New risk #10, protected on arrival                                | #9's wording is pre-save only, and §2 rows are append-only so widening it is not available.              | Plan         |
+| F-6 and the pin convention | Out of scope; F-5 specs written green, not as pins                | Settled when the change was opened and not re-litigated here.                                            | Change brief |
 
 ## Scope
 
@@ -65,12 +65,12 @@ trigger is disabled rather than the run invalidated.
 
 ## Phases at a Glance
 
-| Phase                              | What it delivers                                                  | Key risk                                                                                     |
-| ---------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 1. The guard, and its first consumer | Pure core + unit tests + hook + `DeckComparer` wired               | A silent behavior change in `runPlan`; the two green comparer specs are the only net           |
-| 2. The repair — pre-save flows      | F-1 to F-4 repaired; four annotations off; `retries: 0`            | The `onChange` bump flips S3 by accident, so F-3's repair needs its own targeted break         |
-| 3. The mutation flows and their proof | F-5 + the eighth site repaired; new fixture; two green specs      | The fixture must `continue()` what it does not park, or the seed and navigation break          |
-| 4. The record                       | `findings.md`, `lessons.md`, test-plan §2 / §6.7 / §8              | Rewriting a §2 cell §8 reserved for a refresh's authority                                      |
+| Phase                                 | What it delivers                                             | Key risk                                                                               |
+| ------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| 1. The guard, and its first consumer  | Pure core + unit tests + hook + `DeckComparer` wired         | A silent behavior change in `runPlan`; the two green comparer specs are the only net   |
+| 2. The repair — pre-save flows        | F-1 to F-4 repaired; four annotations off; `retries: 0`      | The `onChange` bump flips S3 by accident, so F-3's repair needs its own targeted break |
+| 3. The mutation flows and their proof | F-5 + the eighth site repaired; new fixture; two green specs | The fixture must `continue()` what it does not park, or the seed and navigation break  |
+| 4. The record                         | `findings.md`, `lessons.md`, test-plan §2 / §6.7 / §8        | Rewriting a §2 cell §8 reserved for a refresh's authority                              |
 
 **Prerequisites:** local Supabase running (`npx supabase start`) and `.env.test` carrying
 `SUPABASE_KEY` / `SUPABASE_SERVICE_ROLE_KEY`; the integration suite must not run concurrently

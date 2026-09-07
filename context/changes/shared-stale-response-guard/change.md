@@ -1,7 +1,7 @@
 ---
 change_id: shared-stale-response-guard
 title: Extract one guarded-async helper and retire the five hand-copied stale-response guards
-status: implementing
+status: implemented
 created: 2026-09-06
 updated: 2026-09-07
 archived_at: null
@@ -56,7 +56,7 @@ one of these five sites from another, and never let a review accept 'mirrors X' 
 
 F-5's three flows call `requestJson` against the app's **own** `/api/paths/*`. Every fixture
 in `tests/e2e/fixtures/scryfall.ts` routes `https://api.scryfall.com/**` and nothing else;
-`tests/e2e/fixtures/auth.ts` only *calls* the app API for seeding and never intercepts it.
+`tests/e2e/fixtures/auth.ts` only _calls_ the app API for seeding and never intercepts it.
 So browser coverage for F-5 needs a **new parked-route fixture for the app's own API**. That
 is Phase-1-style harness work, and it is exactly the false cheapness premise test-plan §8
 already records from risk #9 — read that entry before estimating.
@@ -75,7 +75,7 @@ browser and no shared guard.
 
 **Test-plan question this change must settle, not inherit.** §2 has no risk row covering
 F-5's failure (a rendered step list disagreeing with the server after a mutation) — risk #9
-is specifically about *pre-save* surfaces. §7 scopes browser E2E to "two phases and no
+is specifically about _pre-save_ surfaces. §7 scopes browser E2E to "two phases and no
 further". If this change wants browser coverage for F-5, it must either argue admissibility
 in its own plan or route the decision to `/10x-test-plan --refresh`. Also note risk #9's row
 carries two stale cells, recorded in test-plan §8 as owed corrections; if this change flips
