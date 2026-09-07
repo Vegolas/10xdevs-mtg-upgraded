@@ -103,7 +103,7 @@ in the map now carries a passing spec. This is a state to read carefully rather 
 celebrate: it means nothing in the map is waiting on a reader, **not** that nothing is left.
 Two things sit outside the table and stay actionable — the not-promoted set below (each with
 the layer that already covers it, so a future refresh cites the decision instead of
-re-opening it), and `context/changes/shared-stale-response-guard/findings.md`, which carries
+re-opening it), and `context/archive/2026-09-06-shared-stale-response-guard/findings.md`, which carries
 F-6 forward as a live validation defect that belongs at the unit layer and therefore never
 earned a row here. Keep the heading and this note when the next risk is promoted; an empty
 table with no explanation reads as an oversight.
@@ -1671,7 +1671,7 @@ against.
   still unrepaired, and #9 still belongs in the open table. A future refresh should fix the
   path, restate the count, and leave everything else in the row alone.
 - **Risk #9 was repaired — not pinned — on 2026-09-07** through
-  `context/changes/shared-stale-response-guard/`, the fourth and last change in that chain and
+  `context/archive/2026-09-06-shared-stale-response-guard/` (archived 2026-09-07), the fourth and last change in that chain and
   the first that fixed rather than documented. It opened **no §3 rollout phase** (§3 has had
   none since Phase 5 closed on 2026-09-06) and **no CI job**: both browser spec files live
   under `tests/e2e/`, which the required `e2e` job already runs, and the new unit tests ride
@@ -1706,7 +1706,7 @@ against.
   the source files are archived and immutable. All three are in
   `context/archive/2026-09-06-testing-path-builder-error-and-mode/findings.md` F-5, all three
   **changed what got built**, and all three are held in
-  `context/changes/shared-stale-response-guard/findings.md` (C-1 through C-4) plus
+  `context/archive/2026-09-06-shared-stale-response-guard/findings.md` (C-1 through C-4) plus
   `context/foundation/lessons.md`. (a) F-5's **symptom** is wrong: `DELETE /steps` removes the
   highest-position step per **call**, so two overlapping deletes produce two server deletes and
   the client's count agrees — the reachable divergence is a false error banner over a delete
