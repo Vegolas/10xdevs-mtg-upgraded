@@ -186,6 +186,22 @@ export interface ParkedRoute {
   readonly arrived: Promise<void>;
   /** Fulfil the parked request with the response it was holding. */
   release(): Promise<void>;
+  /**
+   * Fail the parked request instead of fulfilling it, so the run that was holding it
+   * THROWS rather than resolving. For specs whose subject is the catch path of a
+   * superseded run, not its success path.
+   *
+   * A status, never `route.abort()` — the same choice `mockScryfallCollectionFailsOnce`
+   * documents above, and test-plan §6.7 item 8. The non-2xx trips the explicit
+   * `!response.ok` guard in `scryfall.ts:96-98` and yields a deterministic
+   * `Scryfall /cards/collection failed: 500`; an abort rejects the raw `fetch` with a
+   * browser-dependent "Failed to fetch" that no spec can assert on. Leave `statusText`
+   * out of any assertion — `route.fulfill()` does not reliably populate it.
+   *
+   * Shares the single-shot guard with `release()`: a parked route is released once, one
+   * way or the other, and the second call is a no-op.
+   */
+  releaseWithFailure(status?: number): Promise<void>;
 }
 
 /**
@@ -241,6 +257,13 @@ export async function mockScryfallWithParkedCollection(
       }
       released = true;
       await parkedRoute.fulfill({ json: collectionResponse(parkedNames) });
+    },
+    async releaseWithFailure(status = 500) {
+      if (released || parkedRoute === null) {
+        return;
+      }
+      released = true;
+      await parkedRoute.fulfill({ status, json: { object: "error", status } });
     },
   };
 }

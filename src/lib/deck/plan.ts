@@ -42,10 +42,15 @@ export interface ResolvedDeck {
  *   - `ok`    — a renderable plan plus any unresolved inputs to flag.
  *   - `empty` — at least one deck has no parsed entries; no lookup was made.
  *   - `error` — the card-data source could not be reached (retryable).
+ *
+ * `empty` carries `sides` because there are two boxes and an unattributed "no
+ * cards" message is barely better than the silence it replaces: the user cannot
+ * tell which paste was the problem. Always in base-then-target order, so a
+ * consumer can render it without sorting.
  */
 export type PlanOutcome =
   | { status: "ok"; plan: UpgradePlan; unresolved: UnresolvedEntry[] }
-  | { status: "empty" }
+  | { status: "empty"; sides: DeckSide[] }
   | { status: "error"; message: string };
 
 /**
@@ -82,13 +87,26 @@ export async function resolveDeck(text: string): Promise<ResolvedDeck> {
  * and stays Scryfall-polite), diffs the resolved cards, and merges each deck's
  * malformed + unresolved inputs, tagging each with its {@link DeckSide}. A
  * transient resolver throw becomes `error`.
+ *
+ * Zero entries is NOT the same as empty text: comments, section headers and
+ * blank lines all parse away to nothing (F-6), so this branch is the one that
+ * fires for a box the user has visibly filled. Both sides are collected rather
+ * than short-circuiting on the first, because naming only one of two offending
+ * boxes sends the user back for a second round trip.
  */
 export async function generateUpgradePlan(baseText: string, targetText: string): Promise<PlanOutcome> {
   const baseParsed = parseDeckList(baseText);
   const targetParsed = parseDeckList(targetText);
 
-  if (baseParsed.entries.length === 0 || targetParsed.entries.length === 0) {
-    return { status: "empty" };
+  const emptySides: DeckSide[] = [];
+  if (baseParsed.entries.length === 0) {
+    emptySides.push("base");
+  }
+  if (targetParsed.entries.length === 0) {
+    emptySides.push("target");
+  }
+  if (emptySides.length > 0) {
+    return { status: "empty", sides: emptySides };
   }
 
   try {

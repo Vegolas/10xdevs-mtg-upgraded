@@ -3,7 +3,7 @@
  * Consumers import from `@/lib/deck`. Mirrors `card-data/index.ts`.
  */
 
-export { parseDeckList } from "./parse";
+export { parseDeckList, hasNoCardLines } from "./parse";
 export type { DeckEntry, ParsedDeck } from "./parse";
 export { deckCardsToText } from "./serialize";
 export { diffDecks, CATEGORY_ORDER, groupByCategory } from "./diff";

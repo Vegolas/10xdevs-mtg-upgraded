@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDeckList } from "./parse";
+import { parseDeckList, hasNoCardLines } from "./parse";
 
 describe("parseDeckList", () => {
   it("parses a leading count, an 'Nx' count, and a bare name", () => {
@@ -95,5 +95,44 @@ describe("parseDeckList", () => {
       { name: "Sol Ring", quantity: 1 },
       { name: "Forest", quantity: 2 },
     ]);
+  });
+});
+
+describe("hasNoCardLines", () => {
+  it("is true for empty and whitespace-only text", () => {
+    expect(hasNoCardLines("")).toBe(true);
+    expect(hasNoCardLines("   ")).toBe(true);
+    expect(hasNoCardLines("\n\n  \n")).toBe(true);
+  });
+
+  it("is true for comment-only text in both spellings", () => {
+    expect(hasNoCardLines("// note")).toBe(true);
+    expect(hasNoCardLines("# note")).toBe(true);
+  });
+
+  it("is true for section headers with and without a parenthesized count", () => {
+    expect(hasNoCardLines("Commander")).toBe(true);
+    expect(hasNoCardLines("Deck (99)")).toBe(true);
+  });
+
+  it("is true for a multi-line combination of comments, headers and blank lines", () => {
+    const paste = ["// my commander deck", "", "Commander (1)", "   ", "Deck (99)", "# end"].join("\n");
+
+    expect(hasNoCardLines(paste)).toBe(true);
+  });
+
+  it("is false as soon as one real card line is present", () => {
+    expect(hasNoCardLines("Sol Ring")).toBe(false);
+    expect(hasNoCardLines("3 Llanowar Elves")).toBe(false);
+    expect(hasNoCardLines("// my deck\n\nDeck (99)\nSol Ring")).toBe(false);
+  });
+
+  it("is false for a count-only line — malformed is not absent", () => {
+    // "4x" yields no entries but IS a card line, a bad one, and already surfaces
+    // through UnresolvedNotice. Folding `malformed` into the predicate would
+    // swallow that path; this assertion is what stops that "simplification".
+    expect(hasNoCardLines("4x")).toBe(false);
+    expect(hasNoCardLines("4")).toBe(false);
+    expect(hasNoCardLines("// my deck\n4x")).toBe(false);
   });
 });

@@ -126,3 +126,24 @@ export function parseDeckList(text: string): ParsedDeck {
 
   return { entries, malformed };
 }
+
+/**
+ * True when `text` contains no card lines at all — the zero-entry case that a
+ * raw `text.trim() === ""` guard cannot see (zero-card-list-validation).
+ *
+ * Comments, section headers and blank lines are non-empty text that
+ * {@link parseDeckList} deliberately drops, so `// my commander deck` yields no
+ * entries while passing every `trim()` check. Consumers gate on this instead, so
+ * the rule lives once beside the parser that defines what a card line is rather
+ * than being restated at each call site.
+ *
+ * Sensitive to `malformed` on purpose: a count-only line ("4", "4x") is a *bad*
+ * card line, not an absent one, and already surfaces to the user through
+ * `UnresolvedNotice` — so text carrying one is NOT "no card lines" and this
+ * returns false. Folding `malformed` into the predicate would swallow that path;
+ * `parse.test.ts` pins it with an explicit false-for-`4x` assertion.
+ */
+export function hasNoCardLines(text: string): boolean {
+  const { entries, malformed } = parseDeckList(text);
+  return entries.length === 0 && malformed.length === 0;
+}

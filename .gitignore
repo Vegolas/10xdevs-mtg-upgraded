@@ -42,6 +42,13 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+# Signed-in browser state written by the `setup` project. Holds a real session for
+# one local owner and expires in an hour (jwt_expiry) — never commit, never cache.
+tests/e2e/.auth/
+# Playwright CLI session dir, and the storageState it writes at the repo root.
+# Same class of secret as tests/e2e/.auth/ above — a live owner session cookie.
+.playwright-cli/
+/auth.json
 
 # ---- Editors ----
 # JetBrains

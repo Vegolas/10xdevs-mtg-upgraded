@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RotateCw } from "lucide-react";
 import { generateUpgradePlan, applySuggestion, acceptAllSuggestions } from "@/lib/deck";
-import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
+import type { UpgradePlan, UnresolvedEntry, DeckSide } from "@/lib/deck";
+import { useLatestRun } from "@/lib/async/useLatestRun";
 import { Button } from "@/components/ui/button";
 import { NotchButton } from "@/components/ui/NotchButton";
 import { CardGroupColumn } from "./CardGroupColumn";
@@ -21,6 +22,7 @@ type View =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "ready"; plan: UpgradePlan; unresolved: UnresolvedEntry[] }
+  | { status: "no-cards"; sides: DeckSide[] }
   | { status: "error"; message: string };
 
 const textareaClasses =
@@ -34,12 +36,33 @@ function countCardLines(text: string): number {
 }
 
 /**
+ * Name the box (or boxes) that parsed to nothing, using the wording of the visible
+ * `<label>` above each textarea so the sentence points at something the user can see.
+ *
+ * The verb belongs to the subject rather than to a shared template: "Neither deck" needs
+ * "has any", the single-side rows need "has no", and gluing one verb onto all three
+ * produces a double negative for the case hit most often — both boxes pasted from the
+ * same source. The trailing clause is the one the path builder uses verbatim, so the two
+ * surfaces explain the same rule the same way.
+ */
+function noCardsMessage(sides: DeckSide[]): string {
+  const subject =
+    sides.length === 2
+      ? "Neither deck has any card lines"
+      : sides[0] === "base"
+        ? "Base deck has no card lines"
+        : "Target deck has no card lines";
+
+  return `${subject} — comments, headers and blank lines aren't cards.`;
+}
+
+/**
  * DeckDelta's anonymous, stateless comparer: two deck-list text areas that
  * auto-build the grouped upgrade plan ~700ms after edits settle. A gold Calculate
  * CTA triggers an immediate (guarded) run; once a plan is ready the inputs
- * collapse to a one-line strip that "Edit decklists ▾" reopens. Runs are guarded
- * by a request token so a slow earlier resolution can never clobber a newer plan,
- * and the resolver's transient failure surfaces as a retryable error banner.
+ * collapse to a one-line strip that "Edit decklists ▾" reopens. Runs go through a
+ * {@link useLatestRun} lane so a slow earlier resolution can never clobber a newer
+ * plan, and the resolver's transient failure surfaces as a retryable error banner.
  * Account-backed persistence lives in the path builder (`/paths`); this surface
  * keeps nothing.
  */
@@ -57,37 +80,55 @@ export default function DeckComparer() {
   // first paint, the stored value adopted after mount (hydration-safe).
   const { mode: sortMode, setMode: handleSortChange } = useSortMode();
 
-  // Monotonic token: only the latest run is allowed to write the view.
-  const requestToken = useRef(0);
+  // The plan lane: only the latest run is allowed to write the view. `inFlight`
+  // is unread here — this lane is latest-wins, and nothing about the comparer is
+  // gated on a run being outstanding.
+  const [, planLane] = useLatestRun();
 
   const bothFilled = baseText.trim() !== "" && targetText.trim() !== "";
 
   // Inputs collapse to the strip once a plan is ready, unless reopened for edit.
   const inputsCollapsed = view.status === "ready" && !editing;
 
-  const runPlan = useCallback(async (base: string, target: string) => {
-    const token = ++requestToken.current;
-    setView({ status: "loading" });
+  const runPlan = useCallback(
+    async (base: string, target: string) => {
+      // Outside the run: the spinner is immediate feedback for the click that
+      // started it, not a result the guard may drop.
+      setView({ status: "loading" });
 
-    const outcome = await generateUpgradePlan(base, target);
-    if (token !== requestToken.current) {
-      return; // a newer run started while this one was in flight — drop it.
-    }
+      await planLane.run(async () => {
+        const outcome = await generateUpgradePlan(base, target);
 
-    if (outcome.status === "ok") {
-      setView({ status: "ready", plan: outcome.plan, unresolved: outcome.unresolved });
-    } else if (outcome.status === "error") {
-      setView({ status: "error", message: outcome.message });
-    } else {
-      setView({ status: "idle" });
-    }
-  }, []);
+        // Returned, not written. A newer run started while this one was in
+        // flight means the lane never invokes this — the drop stays as silent
+        // as the token comparison it replaces.
+        if (outcome.status === "ok") {
+          return () => {
+            setView({ status: "ready", plan: outcome.plan, unresolved: outcome.unresolved });
+          };
+        }
+        if (outcome.status === "error") {
+          return () => {
+            setView({ status: "error", message: outcome.message });
+          };
+        }
+        // `empty` used to map to `idle`, which reprints "Paste a deck list into each box."
+        // over two boxes the user can see are full: the outcome was computed and then
+        // thrown away (F-6). `generateUpgradePlan` already knows which side is at fault,
+        // and now says so — this branch renders what it knows.
+        return () => {
+          setView({ status: "no-cards", sides: outcome.sides });
+        };
+      });
+    },
+    [planLane],
+  );
 
   useEffect(() => {
     if (!bothFilled) {
       // Invalidate any in-flight run so its late result can't land. The idle
       // view is derived from `bothFilled` at render time, so no setState here.
-      requestToken.current++;
+      planLane.invalidate();
       return;
     }
 
@@ -98,7 +139,7 @@ export default function DeckComparer() {
     return () => {
       clearTimeout(handle);
     };
-  }, [baseText, targetText, bothFilled, runPlan]);
+  }, [baseText, targetText, bothFilled, runPlan, planLane]);
 
   // The Calculate CTA: collapse the inputs and build immediately (guarded). The
   // debounce remains the fallback trigger; firing both is safe (the later run
@@ -210,6 +251,23 @@ export default function DeckComparer() {
           <p className="text-muted-foreground flex items-center gap-2 text-sm">
             <span className="border-muted-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
             Building plan…
+          </p>
+        ) : null}
+
+        {bothFilled && view.status === "no-cards" ? (
+          // INFORMATIONAL, not destructive: nothing failed. The text reached the parser and
+          // parsed cleanly to no cards, so the transport banner below — hardcoded to
+          // "Couldn't reach the card database." with a Retry CTA — would be actively wrong
+          // advice here, and re-running identical text would answer identically anyway.
+          // `role="alert"` announces the verdict; the `aria-label` is what tells a query
+          // which of this surface's two alerts it found (test-plan §6.7 items 1 and 27),
+          // because role and class string cannot.
+          <p
+            role="alert"
+            aria-label="No card lines"
+            className="border-border bg-card text-muted-foreground rounded-md border p-3 text-sm"
+          >
+            {noCardsMessage(view.sides)}
           </p>
         ) : null}
 

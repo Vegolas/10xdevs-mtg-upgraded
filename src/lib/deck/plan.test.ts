@@ -85,10 +85,21 @@ describe("resolveDeck", () => {
 });
 
 describe("generateUpgradePlan", () => {
-  it("short-circuits to empty without resolving when either deck has no entries", async () => {
-    const result = await generateUpgradePlan("", "Sol Ring");
+  it("short-circuits to empty without resolving, naming every side that has no entries", async () => {
+    // Comment and section-header text, not "" — this is the shape F-6 is about, and the one
+    // the old `{status: "empty"}` could not describe. It is non-empty by `trim()`, so a guard
+    // written against raw text lets it through, and it still parses to zero entries.
+    const NO_CARDS = "// my commander deck\n\nDeck (99)";
 
-    expect(result).toEqual({ status: "empty" });
+    // All three combinations: only "either side" was pinned before, which cannot tell a
+    // `sides` built from one test from one built from both.
+    await expect(generateUpgradePlan(NO_CARDS, "Sol Ring")).resolves.toEqual({ status: "empty", sides: ["base"] });
+    await expect(generateUpgradePlan("Sol Ring", NO_CARDS)).resolves.toEqual({ status: "empty", sides: ["target"] });
+    // Base then target, the order the comparer's message names them in.
+    await expect(generateUpgradePlan(NO_CARDS, "")).resolves.toEqual({ status: "empty", sides: ["base", "target"] });
+
+    // The short-circuit itself, still intact for all three: no lookup fires for a deck that
+    // parsed to nothing, so the comparer answers instantly and Scryfall never hears about it.
     expect(resolveCardsMock).not.toHaveBeenCalled();
   });
 

@@ -62,15 +62,18 @@ jobs:
         if: always()
         run: npx supabase stop
 
-  # Browser-E2E suite: the comparer's failure surfacing (test-plan §3 Phase 4,
-  # risks #7 and #8). Third sibling job so a red spec is attributable on sight.
+  # Browser-E2E suite: the comparer's failure surfacing (test-plan §3 Phase 4, risks
+  # #7 and #8) and the path builder's stale-response ordering (§3 Phase 5, risk #9).
+  # Third sibling job so a red spec is attributable on sight.
   #
-  # NO Supabase, deliberately. The comparer mounts at `/`, middleware protects only
-  # `/dashboard` and `/paths`, and every spec intercepts Scryfall — so copying the
-  # `integration` job's stack would add ~90s and a service-role key to a job that
-  # touches neither. The page renders its config-error banner here (no keys) and not
-  # on a contributor's machine (`.dev.vars`); specs scope to the `<main>` landmark,
-  # which is what keeps both DOMs the same.
+  # Supabase IS booted here, and that is a Phase 5 reversal. Phase 4 ran this job
+  # without a stack on the grounds that the comparer mounts at `/` and needs no
+  # session — true for the comparer, false for the path builder, which sits behind the
+  # middleware session gate and is simply unreachable without keys. So the same
+  # EPHEMERAL local stack the `integration` job boots is booted here too (~90s), and
+  # the suite signs one owner in through the app's own route before the specs run.
+  # The comparer specs are unaffected: they scope to the `<main>` landmark, so the
+  # config-error banner that keys now suppress was never in their DOM anyway.
   #
   # The job id is `e2e` with no `name:`, matching `ci` and `integration`, so the
   # reported check context is literally `e2e` — the string that goes in main's
@@ -89,9 +92,27 @@ jobs:
       # rendering tests. `--with-deps` installs the OS libraries, which live outside
       # ~/.cache/ms-playwright and are why caching the browser is not worth it here.
       - run: npx playwright install --with-deps chromium
-      # `playwright.config.ts` owns the dev server (webServer), the port, and
-      # testDir — nothing to wire here.
+      # `start` applies supabase/migrations, so RLS is live for the suite.
+      - name: Start local Supabase
+        run: npx supabase start
+      # Keys come from the running stack, NOT from repo secrets — the
+      # service-role key is ephemeral and dies with the job. `-o env` emits
+      # NAME="value": grep drops CLI warnings, sed strips the quotes.
+      - name: Export local Supabase env
+        run: |
+          npx supabase status -o env \
+            --override-name api.url=SUPABASE_URL \
+            --override-name auth.anon_key=SUPABASE_KEY \
+            --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            | grep -E '^(SUPABASE_URL|SUPABASE_KEY|SUPABASE_SERVICE_ROLE_KEY)=' \
+            | sed -E 's/^([A-Z_]+)="?([^"]*)"?$/\1=\2/' >> "$GITHUB_ENV"
+      # `playwright.config.ts` owns the dev server (webServer), the port, testDir and
+      # the setup project — nothing to wire here. It also blanks the service-role key
+      # out of the dev server's env; the test process keeps it for owner teardown.
       - run: npm run test:e2e
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
