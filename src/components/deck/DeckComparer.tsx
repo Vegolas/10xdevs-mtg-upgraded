@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RotateCw } from "lucide-react";
 import { generateUpgradePlan, applySuggestion, acceptAllSuggestions } from "@/lib/deck";
-import type { UpgradePlan, UnresolvedEntry } from "@/lib/deck";
+import type { UpgradePlan, UnresolvedEntry, DeckSide } from "@/lib/deck";
 import { useLatestRun } from "@/lib/async/useLatestRun";
 import { Button } from "@/components/ui/button";
 import { NotchButton } from "@/components/ui/NotchButton";
@@ -22,6 +22,7 @@ type View =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "ready"; plan: UpgradePlan; unresolved: UnresolvedEntry[] }
+  | { status: "no-cards"; sides: DeckSide[] }
   | { status: "error"; message: string };
 
 const textareaClasses =
@@ -32,6 +33,27 @@ const labelClasses = "mb-[6px] block text-[11px] font-bold tracking-[0.4px] text
 /** Non-empty lines — the base/target tallies shown in the collapsed strip. */
 function countCardLines(text: string): number {
   return text.split("\n").filter((line) => line.trim() !== "").length;
+}
+
+/**
+ * Name the box (or boxes) that parsed to nothing, using the wording of the visible
+ * `<label>` above each textarea so the sentence points at something the user can see.
+ *
+ * The verb belongs to the subject rather than to a shared template: "Neither deck" needs
+ * "has any", the single-side rows need "has no", and gluing one verb onto all three
+ * produces a double negative for the case hit most often — both boxes pasted from the
+ * same source. The trailing clause is the one the path builder uses verbatim, so the two
+ * surfaces explain the same rule the same way.
+ */
+function noCardsMessage(sides: DeckSide[]): string {
+  const subject =
+    sides.length === 2
+      ? "Neither deck has any card lines"
+      : sides[0] === "base"
+        ? "Base deck has no card lines"
+        : "Target deck has no card lines";
+
+  return `${subject} — comments, headers and blank lines aren't cards.`;
 }
 
 /**
@@ -90,8 +112,12 @@ export default function DeckComparer() {
             setView({ status: "error", message: outcome.message });
           };
         }
+        // `empty` used to map to `idle`, which reprints "Paste a deck list into each box."
+        // over two boxes the user can see are full: the outcome was computed and then
+        // thrown away (F-6). `generateUpgradePlan` already knows which side is at fault,
+        // and now says so — this branch renders what it knows.
         return () => {
-          setView({ status: "idle" });
+          setView({ status: "no-cards", sides: outcome.sides });
         };
       });
     },
@@ -225,6 +251,23 @@ export default function DeckComparer() {
           <p className="text-muted-foreground flex items-center gap-2 text-sm">
             <span className="border-muted-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
             Building plan…
+          </p>
+        ) : null}
+
+        {bothFilled && view.status === "no-cards" ? (
+          // INFORMATIONAL, not destructive: nothing failed. The text reached the parser and
+          // parsed cleanly to no cards, so the transport banner below — hardcoded to
+          // "Couldn't reach the card database." with a Retry CTA — would be actively wrong
+          // advice here, and re-running identical text would answer identically anyway.
+          // `role="alert"` announces the verdict; the `aria-label` is what tells a query
+          // which of this surface's two alerts it found (test-plan §6.7 items 1 and 27),
+          // because role and class string cannot.
+          <p
+            role="alert"
+            aria-label="No card lines"
+            className="border-border bg-card text-muted-foreground rounded-md border p-3 text-sm"
+          >
+            {noCardsMessage(view.sides)}
           </p>
         ) : null}
 

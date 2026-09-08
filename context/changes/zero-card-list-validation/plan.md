@@ -452,34 +452,34 @@ stops new ones from being created through the UI.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Type checking passes: `npm run typecheck`
-- [x] 2.3 Linting passes: `npm run lint`
-- [x] 2.4 The new specs pass: `npx playwright test tests/e2e/path-builder-zero-cards.spec.ts`
-- [x] 2.5 The existing path-builder specs still pass
-- [x] 2.6 No raw-text guard is left on a parse path
+- [x] 2.1 Unit tests pass: `npm test` — 4d00b08
+- [x] 2.2 Type checking passes: `npm run typecheck` — 4d00b08
+- [x] 2.3 Linting passes: `npm run lint` — 4d00b08
+- [x] 2.4 The new specs pass: `npx playwright test tests/e2e/path-builder-zero-cards.spec.ts` — 4d00b08
+- [x] 2.5 The existing path-builder specs still pass — 4d00b08
+- [x] 2.6 No raw-text guard is left on a parse path — 4d00b08
 
 #### Manual
 
-- [x] 2.7 Targeted break, full Check — spec (1) reddens on the missing banner
-- [x] 2.8 Targeted break, diff Check — spec (2) reddens, (1) and (3) stay green
-- [x] 2.9 Targeted break, add — spec (3) reddens on the reload assertion
-- [x] 2.10 Count-only `4x` still renders `UnresolvedNotice`
-- [x] 2.11 Typing a real card line clears the banner on the first keystroke
+- [x] 2.7 Targeted break, full Check — spec (1) reddens on the missing banner — 4d00b08
+- [x] 2.8 Targeted break, diff Check — spec (2) reddens, (1) and (3) stay green — 4d00b08
+- [x] 2.9 Targeted break, add — spec (3) reddens on the reload assertion — 4d00b08
+- [x] 2.10 Count-only `4x` still renders `UnresolvedNotice` — 4d00b08
+- [x] 2.11 Typing a real card line clears the banner on the first keystroke — 4d00b08
 
 ### Phase 3: DeckComparer's no-cards verdict
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass, including the updated outcome assertion: `npm test`
-- [ ] 3.2 Type checking passes: `npm run typecheck`
-- [ ] 3.3 Linting passes: `npm run lint`
-- [ ] 3.4 The new spec passes: `npx playwright test tests/e2e/comparer-zero-cards.spec.ts`
-- [ ] 3.5 The existing comparer specs still pass
-- [ ] 3.6 Full suite green: `npm test && npm run test:integration && npx playwright test`
+- [x] 3.1 Unit tests pass, including the updated outcome assertion: `npm test`
+- [x] 3.2 Type checking passes: `npm run typecheck`
+- [x] 3.3 Linting passes: `npm run lint`
+- [x] 3.4 The new spec passes: `npx playwright test tests/e2e/comparer-zero-cards.spec.ts`
+- [x] 3.5 The existing comparer specs still pass
+- [x] 3.6 Full suite green: `npm test && npm run test:integration && npx playwright test`
 
 #### Manual
 
-- [ ] 3.7 Targeted break — the comparer spec reddens on the missing banner
-- [ ] 3.8 The transport-failure banner and its Retry CTA are unaffected
-- [ ] 3.9 A comment-only box paired with a real deck names only the offending side
+- [x] 3.7 Targeted break — the comparer spec reddens on the missing banner
+- [x] 3.8 The transport-failure banner and its Retry CTA are unaffected
+- [x] 3.9 A comment-only box paired with a real deck names only the offending side
