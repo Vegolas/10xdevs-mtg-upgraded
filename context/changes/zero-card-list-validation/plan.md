@@ -471,15 +471,15 @@ stops new ones from being created through the UI.
 
 #### Automated
 
-- [x] 3.1 Unit tests pass, including the updated outcome assertion: `npm test`
-- [x] 3.2 Type checking passes: `npm run typecheck`
-- [x] 3.3 Linting passes: `npm run lint`
-- [x] 3.4 The new spec passes: `npx playwright test tests/e2e/comparer-zero-cards.spec.ts`
-- [x] 3.5 The existing comparer specs still pass
-- [x] 3.6 Full suite green: `npm test && npm run test:integration && npx playwright test`
+- [x] 3.1 Unit tests pass, including the updated outcome assertion: `npm test` — 4093a23
+- [x] 3.2 Type checking passes: `npm run typecheck` — 4093a23
+- [x] 3.3 Linting passes: `npm run lint` — 4093a23
+- [x] 3.4 The new spec passes: `npx playwright test tests/e2e/comparer-zero-cards.spec.ts` — 4093a23
+- [x] 3.5 The existing comparer specs still pass — 4093a23
+- [x] 3.6 Full suite green: `npm test && npm run test:integration && npx playwright test` — 4093a23
 
 #### Manual
 
-- [x] 3.7 Targeted break — the comparer spec reddens on the missing banner
-- [x] 3.8 The transport-failure banner and its Retry CTA are unaffected
-- [x] 3.9 A comment-only box paired with a real deck names only the offending side
+- [x] 3.7 Targeted break — the comparer spec reddens on the missing banner — 4093a23
+- [x] 3.8 The transport-failure banner and its Retry CTA are unaffected — 4093a23
+- [x] 3.9 A comment-only box paired with a real deck names only the offending side — 4093a23

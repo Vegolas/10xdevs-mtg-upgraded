@@ -1,9 +1,9 @@
 ---
 change_id: zero-card-list-validation
 title: Zero card list validation
-status: implementing
+status: implemented
 created: 2026-09-07
-updated: 2026-09-07
+updated: 2026-09-08
 archived_at: null
 ---
 
