@@ -568,30 +568,30 @@ visible delta is sign-out's `Set-Cookie` on a failure path that has never been o
 
 #### Automated
 
-- [x] 1.1 Unit suite passes: `npm test`
-- [x] 1.2 Type checking passes: `npm run typecheck`
-- [x] 1.3 Linting passes with exactly one new justified exemption: `npm run lint`
-- [x] 1.4 `audit.test.ts` covers all four `auditSideEffect` combinations and the exact line format
+- [x] 1.1 Unit suite passes: `npm test` — f901e8e
+- [x] 1.2 Type checking passes: `npm run typecheck` — f901e8e
+- [x] 1.3 Linting passes with exactly one new justified exemption: `npm run lint` — f901e8e
+- [x] 1.4 `audit.test.ts` covers all four `auditSideEffect` combinations and the exact line format — f901e8e
 
 #### Manual
 
-- [x] 1.5 `audit.ts` imports nothing from `astro:*` or `@/lib/supabase`, directly or transitively
+- [x] 1.5 `audit.ts` imports nothing from `astro:*` or `@/lib/supabase`, directly or transitively — f901e8e
 
 ### Phase 2: Wire the three evidence sites
 
 #### Automated
 
-- [ ] 2.1 Unit suite passes: `npm test`
-- [ ] 2.2 Type checking passes: `npm run typecheck`
-- [ ] 2.3 Linting passes: `npm run lint`
-- [ ] 2.4 Integration suite passes, including the two new `updatedAt` assertions: `npm run test:integration`
+- [x] 2.1 Unit suite passes: `npm test`
+- [x] 2.2 Type checking passes: `npm run typecheck`
+- [x] 2.3 Linting passes: `npm run lint`
+- [x] 2.4 Integration suite passes, including the two new `updatedAt` assertions: `npm run test:integration`
 
 #### Manual
 
-- [ ] 2.5 A successful bump reports `count === 1`, proving the miss branch is reachable
-- [ ] 2.6 Per-site deliberate break reddens only that site's own signal
-- [ ] 2.7 An anonymous request to a public page emits no `[api] degraded` line
-- [ ] 2.8 A corrupt snapshot logs once per mapper and the path still loads
+- [x] 2.5 A successful bump reports `count === 1`, proving the miss branch is reachable
+- [x] 2.6 Per-site deliberate break reddens only that site's own signal
+- [x] 2.7 An anonymous request to a public page emits no `[api] degraded` line
+- [x] 2.8 A corrupt snapshot logs once per mapper and the path still loads
 
 ### Phase 3: Fault-injection harness and the sign-out spec
 

@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { auditSideEffect } from "@/lib/api/audit";
 import { errorResponse, jsonResponse, parsePathId, requireUser, serverError, toPathStep } from "@/lib/api/paths";
 import type { PathStep } from "@/lib/api/contract";
 import { parseSnapshot, parseStepInput, serializeSnapshot, verifyDerived } from "@/lib/path";
@@ -187,7 +188,17 @@ export const POST: APIRoute = async (context) => {
     return serverError(error);
   }
 
-  await auth.supabase.from("upgrade_paths").update({ updated_at: new Date().toISOString() }).eq("id", id);
+  // The parent bump is deliberately fire-and-forget: the checkpoint itself is
+  // already persisted, so failing the request here would make a retry manufacture
+  // a duplicate (POST) or destroy a second checkpoint (DELETE). The failure still
+  // has to leave evidence — `{ count: "exact" }` is what makes a zero-row match
+  // visible, since RLS refusal and a path deleted mid-request both report
+  // `error === null`.
+  const bump = await auth.supabase
+    .from("upgrade_paths")
+    .update({ updated_at: new Date().toISOString() }, { count: "exact" })
+    .eq("id", id);
+  auditSideEffect({ op: "steps.append.bump", subject: { path: id }, error: bump.error, count: bump.count });
 
   return jsonResponse<PathStep>(toPathStep(data), 201);
 };
@@ -231,7 +242,17 @@ export const DELETE: APIRoute = async (context) => {
     return serverError(error);
   }
 
-  await auth.supabase.from("upgrade_paths").update({ updated_at: new Date().toISOString() }).eq("id", id);
+  // The parent bump is deliberately fire-and-forget: the checkpoint itself is
+  // already persisted, so failing the request here would make a retry manufacture
+  // a duplicate (POST) or destroy a second checkpoint (DELETE). The failure still
+  // has to leave evidence — `{ count: "exact" }` is what makes a zero-row match
+  // visible, since RLS refusal and a path deleted mid-request both report
+  // `error === null`.
+  const bump = await auth.supabase
+    .from("upgrade_paths")
+    .update({ updated_at: new Date().toISOString() }, { count: "exact" })
+    .eq("id", id);
+  auditSideEffect({ op: "steps.deleteLast.bump", subject: { path: id }, error: bump.error, count: bump.count });
 
   return new Response(null, { status: 204 });
 };

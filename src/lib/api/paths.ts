@@ -18,8 +18,9 @@ import type { APIContext } from "astro";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { logDegraded } from "./audit";
 import { overallPathSummary, parseSnapshot } from "@/lib/path";
-import type { PathStep, PathSummary, UpgradePath } from "@/lib/path";
+import type { PathStep, PathSummary, StepSnapshot, UpgradePath } from "@/lib/path";
 import type { ApiError, ApiServerError } from "./contract";
 
 /** The non-null cookie-bound client type, derived so it tracks `createClient`'s return. */
@@ -124,6 +125,27 @@ export function toUpgradePath(row: PathRow): UpgradePath {
   };
 }
 
+/**
+ * The corruption fallback both mappers below share — an empty snapshot, plus a line
+ * on the `[api] degraded` channel naming the step whose stored snapshot would not
+ * parse.
+ *
+ * The degrading itself is deliberate and stays: snapshots are validated on write,
+ * so a bad row means data corruption, and failing the whole path load over one
+ * unreadable checkpoint is worse for the user than rendering it empty. What was
+ * missing is that it left **no trace anywhere** — filed as F-2 in
+ * `context/archive/2026-08-11-testing-api-contract-pinning/findings.md:51-80` with
+ * exactly this ruling ("keep degrading, but log the step id") and never executed.
+ *
+ * Note the grid mapper runs once per step per listed path, so one corrupt row logs
+ * once per render rather than once ever. Accepted: this branch does not execute in
+ * normal operation at all, and a repeated line is a better failure than silence.
+ */
+function emptySnapshot(op: string, stepId: string): StepSnapshot {
+  logDegraded({ op, subject: { step: stepId }, cause: "snapshot-corrupt" });
+  return { cards: [], unresolved: [] };
+}
+
 /** A listed path paired with its computed base→final {@link PathSummary} (grid metadata). */
 export interface PathWithSummary {
   path: UpgradePath;
@@ -139,7 +161,7 @@ export interface PathWithSummary {
 export function toPathWithSummary(row: PathRow, stepRows: StepRow[]): PathWithSummary {
   const snapshots = [...stepRows]
     .sort((a, b) => a.position - b.position)
-    .map((step) => parseSnapshot(step.snapshot) ?? { cards: [], unresolved: [] });
+    .map((step) => parseSnapshot(step.snapshot) ?? emptySnapshot("paths.toPathWithSummary.snapshot", step.id));
   return { path: toUpgradePath(row), summary: overallPathSummary(snapshots) };
 }
 
@@ -156,7 +178,7 @@ export function toPathStep(row: StepRow): PathStep {
     position: row.position,
     name: row.name,
     listText: row.list_text,
-    snapshot: parseSnapshot(row.snapshot) ?? { cards: [], unresolved: [] },
+    snapshot: parseSnapshot(row.snapshot) ?? emptySnapshot("paths.toPathStep.snapshot", row.id),
     deltaText: row.delta_text,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
