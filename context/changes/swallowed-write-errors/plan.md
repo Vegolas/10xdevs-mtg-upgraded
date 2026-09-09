@@ -581,33 +581,33 @@ visible delta is sign-out's `Set-Cookie` on a failure path that has never been o
 
 #### Automated
 
-- [x] 2.1 Unit suite passes: `npm test`
-- [x] 2.2 Type checking passes: `npm run typecheck`
-- [x] 2.3 Linting passes: `npm run lint`
-- [x] 2.4 Integration suite passes, including the two new `updatedAt` assertions: `npm run test:integration`
+- [x] 2.1 Unit suite passes: `npm test` — 83da84a
+- [x] 2.2 Type checking passes: `npm run typecheck` — 83da84a
+- [x] 2.3 Linting passes: `npm run lint` — 83da84a
+- [x] 2.4 Integration suite passes, including the two new `updatedAt` assertions: `npm run test:integration` — 83da84a
 
 #### Manual
 
-- [x] 2.5 A successful bump reports `count === 1`, proving the miss branch is reachable
-- [x] 2.6 Per-site deliberate break reddens only that site's own signal
-- [x] 2.7 An anonymous request to a public page emits no `[api] degraded` line
-- [x] 2.8 A corrupt snapshot logs once per mapper and the path still loads
+- [x] 2.5 A successful bump reports `count === 1`, proving the miss branch is reachable — 83da84a
+- [x] 2.6 Per-site deliberate break reddens only that site's own signal — 83da84a
+- [x] 2.7 An anonymous request to a public page emits no `[api] degraded` line — 83da84a
+- [x] 2.8 A corrupt snapshot logs once per mapper and the path still loads — 83da84a
 
 ### Phase 3: Fault-injection harness and the sign-out spec
 
 #### Automated
 
-- [ ] 3.1 Integration suite passes with the new spec annotated `it.fails()`: `npm run test:integration`
-- [ ] 3.2 Every pre-existing integration suite passes unchanged
-- [ ] 3.3 Type checking passes: `npm run typecheck`
-- [ ] 3.4 Linting passes: `npm run lint`
+- [x] 3.1 Integration suite passes with the new spec annotated `it.fails()`: `npm run test:integration`
+- [x] 3.2 Every pre-existing integration suite passes unchanged
+- [x] 3.3 Type checking passes: `npm run typecheck`
+- [x] 3.4 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.5 With the annotation removed, the failure is the missing `Set-Cookie`, not a harness error
-- [ ] 3.6 All setup is in `beforeAll`, nothing load-bearing inside the inverted body
-- [ ] 3.7 The proxy's logout hit count is non-zero, proving the fault server used the proxy
-- [ ] 3.8 Total integration run time is still acceptable with the second boot
+- [x] 3.5 With the annotation removed, the failure is the missing `Set-Cookie`, not a harness error
+- [x] 3.6 All setup is in `beforeAll`, nothing load-bearing inside the inverted body
+- [x] 3.7 The proxy's logout hit count is non-zero, proving the fault server used the proxy
+- [x] 3.8 Total integration run time is still acceptable with the second boot
 
 ### Phase 4: The sign-out fix
 
