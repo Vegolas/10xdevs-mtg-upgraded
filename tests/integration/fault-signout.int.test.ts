@@ -15,24 +15,20 @@ import { createOwner, signIn } from "./helpers/owners";
  * regardless. The user is told they signed out while their session is fully
  * intact.
  *
- * ## Why this spec is annotated `it.fails()`
+ * ## This spec was born inverted
  *
- * It asserts the behavior Phase 4 will produce, so it is red on today's code.
- * Annotated, the suite stays green now and Playwright's/Vitest's "expected to
- * fail, but passed" reddens the moment the fix lands, at which point the
- * annotation comes off (Phase 4 step 3). See `context/foundation/lessons.md`,
- * "Pin a live defect with `test.fail()`".
+ * It landed one phase ahead of the fix, annotated `it.fails()` so the suite
+ * stayed green while the defect was still live. The fix is in now and the
+ * annotation is off, so it is an ordinary regression test. Its setup stays in
+ * `beforeAll` regardless — that is where it belongs whether or not a body is
+ * inverted, and it is what kept the inverted run honest (`context/foundation/lessons.md`,
+ * "Pin a live defect with `test.fail()`", trap 1).
  *
- * Both traps that entry names apply here:
- *
- * 1. **The annotation inverts the whole body**, so a broken harness inside it
- *    would report as an expected failure and cover nothing. Every piece of
- *    setup — the owner, the sign-in, the baseline hit count — is therefore in
- *    `beforeAll`, where a failure is a *hook* failure and stays real.
- * 2. **A red body proves nothing about which line was red.** Manual
- *    verification for this phase is: run once with the annotation removed and
- *    confirm the error is the missing clearing `Set-Cookie` and not a sign-in,
- *    a 403 or a proxy that was never reached.
+ * Verified before the annotation came off, per trap 2: with it removed against
+ * the *unfixed* route, the failure was
+ * `no clearing Set-Cookie for sb-127-auth-token` — reached only after the 302,
+ * the `location`, and the hit-count assertion had all passed. So the red was
+ * the defect, not a sign-in, a CSRF 403 or a proxy that was never hit.
  *
  * ## Why the hit count is asserted
  *
@@ -68,7 +64,7 @@ describe("fault — POST /api/auth/signout with a failing revoke", () => {
     await deleteOwners(ownerIds);
   });
 
-  it.fails("clears every sb-* cookie so the user is signed out locally", async () => {
+  it("clears every sb-* cookie so the user is signed out locally", async () => {
     await armLogoutFailure(500);
 
     const res = await fetch(`${FAULT_BASE_URL}/api/auth/signout`, {
@@ -104,6 +100,16 @@ describe("fault — POST /api/auth/signout with a failing revoke", () => {
     for (const name of sent) {
       expect(cleared, `no clearing Set-Cookie for ${name}`).toContain(name);
     }
+
+    // The documented tradeoff, asserted rather than left as prose: this is a
+    // LOCAL sign-out. The revoke failed, so the refresh token is still valid
+    // server-side and a client that kept the cookie is still authenticated.
+    // Accepted (see the plan's "What We're NOT Doing"), and pinned here so a
+    // future move to a global revoke has to edit this assertion deliberately
+    // instead of silently changing behavior.
+    const replay = await fetch(`${FAULT_BASE_URL}/api/paths`, { headers: { Cookie: cookieHeader } });
+    await assertStatus(replay, 200, "GET /api/paths replaying the cookie a local sign-out cleared");
+    expect(Array.isArray(await replay.json())).toBe(true);
   });
 });
 

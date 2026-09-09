@@ -138,14 +138,59 @@ interface DevServer {
 }
 
 /**
- * Spawn one `astro dev`, wait for it to answer, and return its teardown thunk.
+ * Spawn one `astro dev`, wait for it to answer, and return its teardown thunk —
+ * retrying once if the first attempt never answers.
  *
  * Extracted because the boot is needed twice now. On failure it kills the child
  * itself and throws with the captured log — the caller still owns everything
  * booted before it.
+ *
+ * **Why the retry.** Both servers share one `node_modules/.vite` deps cache, so
+ * a change to the dependency graph makes the next boot re-optimize inside its
+ * own readiness window. Observed 2026-09-09, on the first run after
+ * `src/lib/api/authCookies.ts` added an `@supabase/ssr` import: the fault server
+ * logged `optimized dependencies changed. reloading` → `program reload` →
+ * `error while updating dependencies: The service was stopped` (esbuild), then
+ * never answered again and timed out the whole suite. The immediate re-run was
+ * green — the cache was warm by then.
+ *
+ * A respawn recovers it because the second attempt starts against the cache the
+ * first one finished writing. Deliberately recovery rather than prevention: the
+ * exact invalidation trigger was not pinned down (new dependency, the two
+ * servers' differing `SUPABASE_URL`, or both), and a guess at cache layout that
+ * is wrong would be worse than a retry that works whatever the trigger was.
+ * A genuinely broken boot — a busy port, a syntax error — now takes two
+ * timeouts to report, which is the price.
  */
 async function bootDevServer(options: BootOptions): Promise<DevServer> {
-  process.stderr.write(`[integration] booting ${options.label} dev server on port ${options.port}\n`);
+  const first = await attemptBoot(options, 1);
+  if (first.server) {
+    return first.server;
+  }
+
+  process.stderr.write(
+    `[integration] ${options.label} dev server did not answer; respawning once ` +
+      `(usually a vite dep re-optimize during boot — see bootDevServer)\n`,
+  );
+
+  const second = await attemptBoot(options, 2);
+  if (second.server) {
+    return second.server;
+  }
+
+  throw new Error(
+    `astro dev (${options.label}) did not become ready at ${options.readyUrl} within ` +
+      `${BOOT_TIMEOUT_MS}ms, on either of 2 attempts.\n` +
+      `--- attempt 1 log ---\n${first.log}\n--- attempt 2 log ---\n${second.log}`,
+  );
+}
+
+/** One spawn-and-poll cycle. Returns the server on success, or the captured log for the error. */
+async function attemptBoot(options: BootOptions, attempt: number): Promise<{ server?: DevServer; log: string }> {
+  process.stderr.write(
+    `[integration] booting ${options.label} dev server on port ${options.port}` +
+      `${attempt === 1 ? "" : ` (attempt ${attempt})`}\n`,
+  );
 
   const isWindows = process.platform === "win32";
   const child = spawn(
@@ -192,17 +237,16 @@ async function bootDevServer(options: BootOptions): Promise<DevServer> {
   }
 
   if (!ready) {
-    await killServer(child);
-    // A busy port is the likely cause of a silent miss: `astro dev` falls
+    // A busy port is the other likely cause of a silent miss: `astro dev` falls
     // forward to the next free port, so it is running — just not where we look.
-    throw new Error(
-      `astro dev (${options.label}) did not become ready at ${options.readyUrl} within ${BOOT_TIMEOUT_MS}ms.\n` +
-        `--- dev server log ---\n${log}`,
-    );
+    // That one a respawn will not fix, which is why the log is handed back.
+    await killServer(child);
+    return { log };
   }
 
   return {
-    stop: () => killServer(child),
+    server: { stop: () => killServer(child) },
+    log,
   };
 }
 

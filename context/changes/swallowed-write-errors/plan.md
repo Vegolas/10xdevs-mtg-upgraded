@@ -597,32 +597,32 @@ visible delta is sign-out's `Set-Cookie` on a failure path that has never been o
 
 #### Automated
 
-- [x] 3.1 Integration suite passes with the new spec annotated `it.fails()`: `npm run test:integration`
-- [x] 3.2 Every pre-existing integration suite passes unchanged
-- [x] 3.3 Type checking passes: `npm run typecheck`
-- [x] 3.4 Linting passes: `npm run lint`
+- [x] 3.1 Integration suite passes with the new spec annotated `it.fails()`: `npm run test:integration` — 3e4c304
+- [x] 3.2 Every pre-existing integration suite passes unchanged — 3e4c304
+- [x] 3.3 Type checking passes: `npm run typecheck` — 3e4c304
+- [x] 3.4 Linting passes: `npm run lint` — 3e4c304
 
 #### Manual
 
-- [x] 3.5 With the annotation removed, the failure is the missing `Set-Cookie`, not a harness error
-- [x] 3.6 All setup is in `beforeAll`, nothing load-bearing inside the inverted body
-- [x] 3.7 The proxy's logout hit count is non-zero, proving the fault server used the proxy
-- [x] 3.8 Total integration run time is still acceptable with the second boot
+- [x] 3.5 With the annotation removed, the failure is the missing `Set-Cookie`, not a harness error — 3e4c304
+- [x] 3.6 All setup is in `beforeAll`, nothing load-bearing inside the inverted body — 3e4c304
+- [x] 3.7 The proxy's logout hit count is non-zero, proving the fault server used the proxy — 3e4c304
+- [x] 3.8 Total integration run time is still acceptable with the second boot — 3e4c304
 
 ### Phase 4: The sign-out fix
 
 #### Automated
 
-- [ ] 4.1 `fault-signout.int.test.ts` passes un-annotated: `npm run test:integration`
-- [ ] 4.2 Unit suite passes, including `authCookies.test.ts`: `npm test`
-- [ ] 4.3 Type checking passes: `npm run typecheck`
-- [ ] 4.4 Linting passes: `npm run lint`
+- [x] 4.1 `fault-signout.int.test.ts` passes un-annotated: `npm run test:integration`
+- [x] 4.2 Unit suite passes, including `authCookies.test.ts`: `npm test`
+- [x] 4.3 Type checking passes: `npm run typecheck`
+- [x] 4.4 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.5 Reverting only the cookie-clearing reddens `fault-signout.int.test.ts`
-- [ ] 4.6 Sign-out through both UI entry points still works on the happy path
-- [ ] 4.7 The happy path emits no `[api] degraded` line
+- [x] 4.5 Reverting only the cookie-clearing reddens `fault-signout.int.test.ts`
+- [x] 4.6 Sign-out through both UI entry points still works on the happy path
+- [x] 4.7 The happy path emits no `[api] degraded` line
 
 ### Phase 5: Registration
 
