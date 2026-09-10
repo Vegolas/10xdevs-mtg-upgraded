@@ -628,11 +628,11 @@ visible delta is sign-out's `Set-Cookie` on a failure path that has never been o
 
 #### Automated
 
-- [x] 5.1 Formatting passes on every edited document: `npm run lint`
+- [x] 5.1 Formatting passes on every edited document: `npm run lint` — b31970f
 
 #### Manual
 
-- [x] 5.2 `contract-surfaces.md` documents the `[api] degraded` prefix and a `POST /api/auth/signout` row
-- [x] 5.3 `test-plan.md` carries risk row `#11` and its rating paragraph
-- [x] 5.4 `lessons.md` carries the discarded-result entry
-- [x] 5.5 `change.md` records F-2 as executed and the two frame corrections
+- [x] 5.2 `contract-surfaces.md` documents the `[api] degraded` prefix and a `POST /api/auth/signout` row — b31970f
+- [x] 5.3 `test-plan.md` carries risk row `#11` and its rating paragraph — b31970f
+- [x] 5.4 `lessons.md` carries the discarded-result entry — b31970f
+- [x] 5.5 `change.md` records F-2 as executed and the two frame corrections — b31970f
