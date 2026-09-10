@@ -41,6 +41,14 @@ export default defineConfig({
   // overrides this to 0 — a genuine out-of-order bug must never retry its way to green.
   retries: process.env.CI ? 1 : 0,
 
+  // Above Playwright's 30s default because the FIRST test to reach a route pays for
+  // `astro dev` compiling that route's island module graph through Vite, and that happens
+  // AFTER `load` fires — so it lands on `gotoHydrated`'s barrier rather than inside
+  // `page.goto`. 30s left the barrier and the test budget competing for the same seconds.
+  // This does NOT slacken any assertion: `expect` keeps its 5s default, so a real product
+  // failure still reddens in 5s.
+  timeout: 60_000,
+
   forbidOnly: Boolean(process.env.CI),
   reporter: process.env.CI ? [["html", { open: "never" }], ["list"]] : [["list"]],
 
