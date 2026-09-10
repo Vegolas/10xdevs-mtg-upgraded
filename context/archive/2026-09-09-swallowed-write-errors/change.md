@@ -1,10 +1,10 @@
 ---
 change_id: swallowed-write-errors
 title: Discarded failure results on four server paths
-status: implemented
+status: archived
 created: 2026-09-09
 updated: 2026-09-10
-archived_at: null
+archived_at: 2026-09-10T06:22:43Z
 ---
 
 ## Notes
