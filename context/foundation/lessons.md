@@ -310,3 +310,60 @@ passed.`
      not. Pass `exact: true` whenever a short accessible name could be contained in another one
      on the same surface.
 - **Applies to**: plan, plan-review, implement, impl-review
+
+## A discarded write result is a decision — and `error === null` does not mean it landed
+
+- **Context**: any server-side write or side effect whose result the handler does not act on.
+  Recorded 2026-09-10 by `swallowed-write-errors`, which found five in one sweep — two
+  fire-and-forget `updated_at` bumps (`src/pages/api/paths/[id]/steps.ts`), two read-path
+  snapshot fallbacks (`src/lib/api/paths.ts`), one discarded token revoke
+  (`src/pages/api/auth/signout.ts`) — plus a sixth, `src/middleware.ts`, where the discard
+  turned out to be **correct**. The shape is general: a `const { error } = await …` never
+  written, or an `await` whose return value is thrown away.
+- **Problem**: none of these was an open question. The convention already existed in-repo,
+  three times over — the same `upgrade_paths.update({updated_at})` is error-checked at
+  `src/pages/api/paths/[id].ts:71-80` and discarded at `steps.ts`; the same `parseSnapshot`
+  failure is a logged `500` on the write path (`steps.ts:98-101`) and a silent fallback on the
+  read path; `signin.ts:15-19` and `signup.ts:15-19` both route their `error` to `?error=` and
+  `signout.ts` alone did not. So they were omissions, not judgements, and nothing in the code
+  said which. **They were also already found once and lost**:
+  `context/archive/2026-08-11-testing-api-contract-pinning/research.md:123` records the
+  discarded bumps verbatim and reached no plan, test or registry, while F-2 in that folder's
+  `findings.md:51-80` was filed **with a ruling** ("keep degrading, but log the step id") and
+  never executed. A discard that nobody wrote a decision against is re-discovered, not fixed.
+- **Rule**: a write whose result you do not act on is a decision, and it needs one of exactly
+  three things at the call site: an error check that changes the answer, a line on an evidence
+  channel, or a comment saying why neither. "It cannot fail" is not one of them.
+- **Half the rule is which check, and `error` alone is the wrong one.** An RLS refusal, or a
+  row deleted between the primary write and the supplementary one, matches **zero rows with
+  `error === null`** (confirmed against `supabase/tests/rls_paths.sql:38-48`). So a fix that
+  destructures `error` and stops there closes the loud half and leaves the silent half open —
+  and reads, in review, exactly like a complete fix. Proving a write landed needs rows matched:
+  `update(values, { count: "exact" })`, then `count === 0` as its own cause. The inverse trap is
+  as bad: `count === null` means the caller never asked for a count, and treating that as a miss
+  turns every success into a line and floods the channel into uselessness.
+- **The other half is which channel, and there are two.** `serverError`
+  (`src/lib/api/paths.ts`) is `ref`-keyed **because its `500` body carries the same `ref`** —
+  that pairing is the whole point, and `docs/reference/contract-surfaces.md` registers it. A
+  `201`, a `204` or a redirect has no body to put a handle in, so a `ref` there correlates to
+  nothing. Those sites go to `[api] degraded` (`src/lib/api/audit.ts`), keyed on the **entity**
+  so a reader greps the path or step id. Picking by reflex rather than by "what correlates this
+  line to its request" is how a channel ends up unusable while looking present.
+- **And propagating to the caller is usually the wrong fix — check the retry, not the status.**
+  Three of the five status codes here were already right, and the frame proved it in client
+  code: a POST answered `500` after its INSERT committed leaves the user retrying, and the
+  retry re-reads `max(position)` and manufactures a **duplicate** checkpoint; a DELETE answered
+  `500` after its delete committed leaves a retry **destroying a second checkpoint**, because
+  the route removes the highest-position step per call. Same trap as "A finding's suggested FIX
+  needs the same verification against the code as its symptom" above: read the route's own
+  semantics under retry before deciding the caller should be told. The one site where
+  propagation was right was the one where the **primary** operation failed — `signout.ts`,
+  which told the user they had signed out while their session stayed fully live.
+- **Silence can be the correct answer, and that also has to be a decision.** `middleware.ts`
+  drops `getUser()`'s error, and it should: `getUser` returns a populated
+  `AuthSessionMissingError` for every ordinary anonymous visitor, so logging indiscriminately
+  fires on every public request. The gap there was not the discard but the missing
+  **discrimination** — `isAuthSessionMissingError(error)` is exported and separates an outage
+  from a visitor. A log that fires on the happy path is worse than no log, so "should this be
+  silent?" is a real branch of the rule, not an escape from it.
+- **Applies to**: frame, research, plan, plan-review, implement, impl-review

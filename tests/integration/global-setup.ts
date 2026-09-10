@@ -2,12 +2,21 @@ import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { BASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, TEST_PORT } from "./helpers/env";
+import { FAULT_BASE_URL, FAULT_PORT, FAULT_PROXY_URL, startFaultProxy, type FaultProxy } from "./helpers/faultProxy";
 
 /**
- * Vitest `globalSetup`: boot a real `astro dev` server pointed at local Supabase
- * before the suite, tear it down after. Every test then issues real HTTP that
+ * Vitest `globalSetup`: boot real `astro dev` servers pointed at local Supabase
+ * before the suite, tear them down after. Every test then issues real HTTP that
  * runs the actual middleware (`getUser()`) + handlers (`requireUser`) + RLS —
  * there is nothing in-process to mock without bypassing the thing under test.
+ *
+ * TWO servers now:
+ *
+ * - the **main** server on `TEST_PORT`, talking straight to local Supabase —
+ *   every pre-existing suite uses only this one and is unaffected;
+ * - the **fault** server on `FAULT_PORT`, whose `SUPABASE_URL` points at
+ *   `helpers/faultProxy.ts` so a single route's failure can be armed on demand.
+ *   Only `fault-*.int.test.ts` uses it.
  *
  * Prerequisite: local Supabase is already running (`npx supabase start`). CI
  * boots it explicitly (Phase 4). No DB reset here — tests self-clean.
@@ -43,16 +52,20 @@ async function assertPrerequisites(): Promise<void> {
 }
 
 /**
- * Point the dev server at LOCAL Supabase by overriding `.dev.vars`, which the
- * @astrojs/cloudflare adapter parses and assigns over `process.env` — that
- * assignment is why it wins over the env we inject when spawning. We snapshot
- * the contributor's real `.dev.vars` to a sidecar and restore it on teardown.
+ * Move the contributor's real `.dev.vars` out of the way for the whole run.
+ *
+ * The @astrojs/cloudflare adapter parses `.dev.vars` and assigns it over
+ * `process.env` — that assignment is why the file wins over the env we inject
+ * when spawning. So a server that must read an env-injected `SUPABASE_URL` (the
+ * fault server, pointed at the proxy) can only do so while no `.dev.vars`
+ * exists. We rename rather than copy for exactly that reason; `.dev.vars` is
+ * *absent* between this call and {@link writeLocalDevVars}.
  *
  * Crash-safe: a leftover `.dev.vars.intbak` from a previously killed run means
  * `.dev.vars` currently holds OUR local copy, so we restore the original first.
  * Returns the restore thunk.
  */
-function overrideDevVars(): () => void {
+function stashDevVars(): () => void {
   // Recover from a prior crashed run before taking a fresh snapshot.
   if (fs.existsSync(DEV_VARS_BACKUP)) {
     fs.renameSync(DEV_VARS_BACKUP, DEV_VARS);
@@ -60,9 +73,8 @@ function overrideDevVars(): () => void {
 
   const hadOriginal = fs.existsSync(DEV_VARS);
   if (hadOriginal) {
-    fs.copyFileSync(DEV_VARS, DEV_VARS_BACKUP);
+    fs.renameSync(DEV_VARS, DEV_VARS_BACKUP);
   }
-  fs.writeFileSync(DEV_VARS, `SUPABASE_URL=${SUPABASE_URL}\nSUPABASE_KEY=${SUPABASE_KEY}\n`);
 
   return () => {
     if (fs.existsSync(DEV_VARS_BACKUP)) {
@@ -71,6 +83,18 @@ function overrideDevVars(): () => void {
       fs.rmSync(DEV_VARS);
     }
   };
+}
+
+/**
+ * Point the main dev server at LOCAL Supabase via the file the adapter reads.
+ *
+ * Belt and braces: the spawn env already carries the local URL, but the file
+ * overwrites `process.env` at `astro:config:done`, so writing it here means the
+ * main server lands on local Supabase even if something else repoints the
+ * environment mid-run.
+ */
+function writeLocalDevVars(): void {
+  fs.writeFileSync(DEV_VARS, `SUPABASE_URL=${SUPABASE_URL}\nSUPABASE_KEY=${SUPABASE_KEY}\n`);
 }
 
 /** Cross-platform process-tree kill so no orphaned `astro dev` survives the run. */
@@ -99,20 +123,83 @@ function killServer(child: ChildProcess): Promise<void> {
   });
 }
 
-export default async function setup(): Promise<() => Promise<void>> {
-  await assertPrerequisites();
+interface BootOptions {
+  /** Appears only in the boot announcement and the timeout error. */
+  label: string;
+  port: number;
+  /** Polled until it answers. Separate from `port` so `TEST_BASE_URL` keeps overriding the main server's. */
+  readyUrl: string;
+  /** Layered over `process.env` for this server only — this is how the fault server gets the proxy URL. */
+  env: Record<string, string>;
+}
 
-  // Repoint the dev server at local Supabase, then guarantee restoration.
-  const restoreDevVars = overrideDevVars();
+interface DevServer {
+  stop: () => Promise<void>;
+}
+
+/**
+ * Spawn one `astro dev`, wait for it to answer, and return its teardown thunk —
+ * retrying once if the first attempt never answers.
+ *
+ * Extracted because the boot is needed twice now. On failure it kills the child
+ * itself and throws with the captured log — the caller still owns everything
+ * booted before it.
+ *
+ * **Why the retry.** Both servers share one `node_modules/.vite` deps cache, so
+ * a change to the dependency graph makes the next boot re-optimize inside its
+ * own readiness window. Observed 2026-09-09, on the first run after
+ * `src/lib/api/authCookies.ts` added an `@supabase/ssr` import: the fault server
+ * logged `optimized dependencies changed. reloading` → `program reload` →
+ * `error while updating dependencies: The service was stopped` (esbuild), then
+ * never answered again and timed out the whole suite. The immediate re-run was
+ * green — the cache was warm by then.
+ *
+ * A respawn recovers it because the second attempt starts against the cache the
+ * first one finished writing. Deliberately recovery rather than prevention: the
+ * exact invalidation trigger was not pinned down (new dependency, the two
+ * servers' differing `SUPABASE_URL`, or both), and a guess at cache layout that
+ * is wrong would be worse than a retry that works whatever the trigger was.
+ * A genuinely broken boot — a busy port, a syntax error — now takes two
+ * timeouts to report, which is the price.
+ */
+async function bootDevServer(options: BootOptions): Promise<DevServer> {
+  const first = await attemptBoot(options, 1);
+  if (first.server) {
+    return first.server;
+  }
+
+  process.stderr.write(
+    `[integration] ${options.label} dev server did not answer; respawning once ` +
+      `(usually a vite dep re-optimize during boot — see bootDevServer)\n`,
+  );
+
+  const second = await attemptBoot(options, 2);
+  if (second.server) {
+    return second.server;
+  }
+
+  throw new Error(
+    `astro dev (${options.label}) did not become ready at ${options.readyUrl} within ` +
+      `${BOOT_TIMEOUT_MS}ms, on either of 2 attempts.\n` +
+      `--- attempt 1 log ---\n${first.log}\n--- attempt 2 log ---\n${second.log}`,
+  );
+}
+
+/** One spawn-and-poll cycle. Returns the server on success, or the captured log for the error. */
+async function attemptBoot(options: BootOptions, attempt: number): Promise<{ server?: DevServer; log: string }> {
+  process.stderr.write(
+    `[integration] booting ${options.label} dev server on port ${options.port}` +
+      `${attempt === 1 ? "" : ` (attempt ${attempt})`}\n`,
+  );
 
   const isWindows = process.platform === "win32";
   const child = spawn(
     isWindows ? "npx.cmd" : "npx",
-    ["astro", "dev", "--port", String(TEST_PORT), "--host", "127.0.0.1"],
+    ["astro", "dev", "--port", String(options.port), "--host", "127.0.0.1"],
     {
       cwd: ROOT_DIR,
-      // The dev server gets only the local URL + anon key — never the service-role key.
-      env: { ...process.env, SUPABASE_URL, SUPABASE_KEY },
+      // The dev server gets only a Supabase URL + anon key — never the service-role key.
+      env: { ...process.env, ...options.env },
       stdio: ["ignore", "pipe", "pipe"],
       detached: !isWindows,
       shell: isWindows,
@@ -124,6 +211,9 @@ export default async function setup(): Promise<() => Promise<void>> {
   // diagnosable now that the response body is redacted: `serverError` logs the
   // correlation `ref` plus the Postgres detail server-side, and without this the
   // dev server's stdout is captured and discarded, so that line would go nowhere.
+  // The same passthrough carries `[api] degraded` lines. Chunks are written
+  // through unmodified — no label prefix — so a log line is byte-identical to
+  // what the server emitted; the boot announcement above is what separates them.
   let log = "";
   child.stdout.on("data", (chunk: Buffer) => {
     log += chunk.toString();
@@ -138,7 +228,7 @@ export default async function setup(): Promise<() => Promise<void>> {
   let ready = false;
   while (Date.now() < deadline) {
     try {
-      await fetch(BASE_URL, { signal: AbortSignal.timeout(2000) });
+      await fetch(options.readyUrl, { signal: AbortSignal.timeout(2000) });
       ready = true;
       break;
     } catch {
@@ -147,15 +237,77 @@ export default async function setup(): Promise<() => Promise<void>> {
   }
 
   if (!ready) {
+    // A busy port is the other likely cause of a silent miss: `astro dev` falls
+    // forward to the next free port, so it is running — just not where we look.
+    // That one a respawn will not fix, which is why the log is handed back.
     await killServer(child);
-    restoreDevVars();
-    throw new Error(
-      `astro dev did not become ready at ${BASE_URL} within ${BOOT_TIMEOUT_MS}ms.\n` + `--- dev server log ---\n${log}`,
-    );
+    return { log };
   }
 
-  return async () => {
-    await killServer(child);
-    restoreDevVars();
+  return {
+    server: { stop: () => killServer(child) },
+    log,
   };
+}
+
+export default async function setup(): Promise<() => Promise<void>> {
+  await assertPrerequisites();
+
+  const stops: (() => Promise<void>)[] = [];
+  let proxy: FaultProxy | undefined;
+  let restoreDevVars: (() => void) | undefined;
+
+  const teardown = async (): Promise<void> => {
+    for (const stop of [...stops].reverse()) {
+      await stop();
+    }
+    restoreDevVars?.();
+    await proxy?.stop();
+  };
+
+  try {
+    proxy = await startFaultProxy();
+
+    // Order is load-bearing, see `stashDevVars`: the fault server must boot
+    // while no `.dev.vars` exists, so that the proxy URL we inject through the
+    // spawn env is what it actually resolves. The file goes back only after it
+    // is up. `helpers/faultProxy.ts` counts logout hits precisely because a
+    // config reload here would be silent.
+    restoreDevVars = stashDevVars();
+
+    stops.push(
+      (
+        await bootDevServer({
+          label: "fault",
+          port: FAULT_PORT,
+          // An API route, not `/`: the two dev servers share one
+          // `node_modules/.vite` deps cache, and SSR-rendering a React island
+          // during this server's cold `optimizeDeps` churn mixes two optimizer
+          // generations and throws "Invalid hook call" — a flood of noise from
+          // a page no fault spec ever requests. `/api/paths` answers 401 JSON
+          // through the real middleware with no React in the graph.
+          readyUrl: `${FAULT_BASE_URL}/api/paths`,
+          env: { SUPABASE_URL: FAULT_PROXY_URL, SUPABASE_KEY },
+        })
+      ).stop,
+    );
+
+    writeLocalDevVars();
+
+    stops.push(
+      (
+        await bootDevServer({
+          label: "main",
+          port: TEST_PORT,
+          readyUrl: BASE_URL,
+          env: { SUPABASE_URL, SUPABASE_KEY },
+        })
+      ).stop,
+    );
+  } catch (cause) {
+    await teardown();
+    throw cause;
+  }
+
+  return teardown;
 }

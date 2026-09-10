@@ -5,7 +5,8 @@ import { createSignedInOwner } from "./helpers/owners";
 import { deleteOwners } from "./helpers/cleanup";
 import { addStep, createPath } from "./helpers/paths";
 import { realisticSnapshot } from "./helpers/snapshot";
-import { expectApiError, expectExactKeys, expectPathStep } from "./helpers/shape";
+import { expectApiError, expectExactKeys, expectPathStep, expectUpgradePath } from "./helpers/shape";
+import type { UpgradePath } from "@/lib/api/contract";
 
 /**
  * Risk #3 (contract drift), `/api/paths/[id]/steps` — plus the three value-drift
@@ -113,6 +114,20 @@ async function deleteStep(cookie: string, pathId: string): Promise<Response> {
   });
 }
 
+/**
+ * Read the parent `UpgradePath` back through the contract's own read route.
+ *
+ * The sibling of {@link readSteps}, which discards `.path`. Needed because the
+ * parent's `updatedAt` is the only externally visible evidence that either verb's
+ * fire-and-forget bump actually landed.
+ */
+async function readPath(cookie: string, pathId: string, label: string): Promise<UpgradePath> {
+  const res = await fetch(`${BASE_URL}/api/paths/${pathId}`, { headers: { Cookie: cookie } });
+  await assertStatus(res, 200, label);
+  const envelope = expectExactKeys(await res.json(), ["path", "steps"], label);
+  return expectUpgradePath(envelope.path, `${label} .path`);
+}
+
 /** Read a path's steps back through the contract's own read route. */
 async function readSteps(cookie: string, pathId: string, label: string): Promise<unknown[]> {
   const res = await fetch(`${BASE_URL}/api/paths/${pathId}`, { headers: { Cookie: cookie } });
@@ -157,6 +172,25 @@ describe("contract — POST /api/paths/[id]/steps", () => {
     expect(step.name).toBe("base");
     expect(step.listText).toBe("4 Forest");
     expect(step.snapshot).toEqual({ cards: [], unresolved: [] });
+  });
+
+  // **decided (swallowed-write-errors)**: the parent's `updated_at` bump is part of
+  // the append's contract, not an implementation detail — `PathEditor.tsx:255` and
+  // `VisitorView.tsx:79` render it as `Saved <date>`. It was asserted only for
+  // `PATCH` (`contract-paths.int.test.ts:223`), which is exactly why a fire-and-forget
+  // bump discarding its result survived a whole contract-pinning change.
+  //
+  // Compared as parsed ISO instants, deliberately NOT as `formatSavedDate` output:
+  // that formatter is day-granular (`src/components/path/metadata.ts:16`), so it reads
+  // unchanged across every same-day bump and would pass with the bump removed entirely.
+  it("advances the parent path's updatedAt", async () => {
+    const created = await createPath(BASE_URL, aCookie, `contract-step-bump-post-${Date.now()}`);
+
+    const res = await postStep(aCookie, created.id, stepBody("base"));
+    await assertStatus(res, 201, "POST steps (parent bump)");
+
+    const parent = await readPath(aCookie, created.id, "GET path after POST steps");
+    expect(Date.parse(parent.updatedAt)).toBeGreaterThan(Date.parse(created.updatedAt));
   });
 
   // documented (`position = max+1`, base is 0) + contract-wide decision 3
@@ -397,6 +431,25 @@ describe("contract — DELETE /api/paths/[id]/steps", () => {
     const remaining = expectPathStep(steps[0], "GET path .steps[0] after DELETE steps");
     expect(remaining.position).toBe(0);
     expect(remaining.name).toBe("base");
+  });
+
+  // **decided (swallowed-write-errors)**: the delete verb's own parent bump, the
+  // twin of the POST assertion above. Both bumps are separate call sites and a
+  // change can break one without the other, so neither covers the other.
+  it("advances the parent path's updatedAt", async () => {
+    const created = await createPath(BASE_URL, aCookie, `contract-step-bump-delete-${Date.now()}`);
+    await addStep(BASE_URL, aCookie, created.id, "base");
+
+    // Read the parent AFTER the seeding append, so the value this compares against
+    // is the one the POST bump already advanced — otherwise a passing assertion
+    // could be crediting the append's bump for the delete's.
+    const before = await readPath(aCookie, created.id, "GET path before DELETE steps");
+
+    const res = await deleteStep(aCookie, created.id);
+    await assertStatus(res, 204, "DELETE steps (parent bump)");
+
+    const after = await readPath(aCookie, created.id, "GET path after DELETE steps");
+    expect(Date.parse(after.updatedAt)).toBeGreaterThan(Date.parse(before.updatedAt));
   });
 
   // **decided**: an empty path answers 404 `{error: "No steps to delete"}`.

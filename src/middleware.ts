@@ -1,4 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
+import { isAuthSessionMissingError } from "@supabase/supabase-js";
+import { logDegraded } from "@/lib/api/audit";
 import { createClient } from "@/lib/supabase";
 
 // `/paths` pages require a session and redirect to sign-in. The `/api/paths/*`
@@ -12,8 +14,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (supabase) {
     const {
       data: { user },
+      error,
     } = await supabase.auth.getUser();
     context.locals.user = user ?? null;
+    // Degrading to anonymous is correct and stays — `getUser` catches every
+    // `AuthError` and answers `{user: null, error}` rather than throwing, so a
+    // signed-in user during an auth outage is still redirected to sign-in below.
+    // What was missing is the ability to tell that outage apart from an ordinary
+    // anonymous visitor, whose "no session" error is the expected case on every
+    // public request. Logging it indiscriminately would fire on all of them.
+    if (error && !isAuthSessionMissingError(error)) {
+      logDegraded({
+        op: "middleware.getUser",
+        subject: { route: context.url.pathname },
+        cause: "auth-unavailable",
+        detail: error,
+      });
+    }
   } else {
     context.locals.user = null;
   }

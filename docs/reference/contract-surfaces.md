@@ -72,6 +72,7 @@ a deliberate test edit rather than a silent pass.
 | ↳ diff append (`deltaText`)    | route | `src/pages/api/paths/[id]/steps.ts` | Fixed order **after** the ownership check, each step its own body: no prior step → `400 {error: "Diff checkpoint needs a previous step"}`; no `priorStepId` → `400 {error: "Diff checkpoint must name the step it derives from"}`; `priorStepId` is not the last step → `409 {error: "Path changed since you started"}`; `verifyDerived` refuses → `400` with `VIOLATION_MESSAGE[reason] + ": " + detail`. Full paste (`deltaText === null`) skips all of it and keeps its single `position` read. |
 | `DELETE /api/paths/[id]/steps` | route | `src/pages/api/paths/[id]/steps.ts` | Deletes only the highest-`position` step (delete-last invariant) → `204`, empty. No visible steps → `404 {error: "No steps to delete"}`. Never queries `upgrade_paths`, so a cross-owner call is answered by RLS alone and is indistinguishable from an empty own path.                                                                                                                                                                                                                            |
 | `POST /api/auth/signin`        | route | `src/pages/api/auth/signin.ts`      | Form POST → `302` with `Location: /paths` and chunked `sb-*` `Set-Cookie` parts. The integration harness's own foundation — `tests/integration/helpers/owners.ts` reassembles the chunks — so this is load-bearing for every DB-backed suite. Failure stays on the `?error=` redirect channel.                                                                                                                                                                                                     |
+| `POST /api/auth/signout`       | route | `src/pages/api/auth/signout.ts`     | Form POST → `302` `Location: /` **in both cases** — no `?error=` channel, and neither form (`Sidebar.astro`, `/dashboard`) carries JS, so the caller is told nothing. On a **failed revoke** the route clears the session itself: a `Set-Cookie` expiring every `sb-*` chunk read off the request (`authCookieNames`), plus one `[api] degraded … cause=revoke-failed` line. A **local** sign-out — the refresh token stays valid until expiry, pinned by `fault-signout.int.test.ts`.             |
 
 Error bodies, every `/api/paths/*` route:
 
@@ -89,6 +90,41 @@ stderr to the parent (`tests/integration/global-setup.ts`).
 
 **Denial is `404`, never `403`.** RLS makes another owner's rows invisible, so a handler
 cannot distinguish "absent" from "not yours."
+
+**There is a second server log contract, and it is deliberately not `ref`-keyed.** A failure
+the handler **absorbs** — the caller still gets its `201`, `204` or redirect — goes to
+`[api] degraded`, defined once in `src/lib/api/audit.ts` (`logDegraded` / `auditSideEffect`).
+One line per event:
+
+```
+[api] degraded op=<op> <k>=<v>… cause=<cause>
+```
+
+with the raw cause as `console.error`'s second argument, exactly as `serverError` passes its
+detail — never on the wire. It is keyed on the **entity** (`path=`, `step=`, `route=`, `user=`)
+rather than on a `ref` **because no response body carries a handle**: a `201` or a `204` has
+nowhere to put one, so a `ref` here would correlate to nothing and a reader greps the id
+instead. Three properties are the contract, not formatting:
+
+- **A line on this channel never implies a non-2xx answer.** Its whole purpose is to record a
+  failure the handler deliberately answered success over. Do not wire an alert to it that
+  assumes otherwise.
+- **The `DegradedCause` set is closed** (`write-failed`, `write-missed`, `snapshot-corrupt`,
+  `auth-unavailable`, `revoke-failed`). A new cause is an edit to `audit.ts` **and** to this
+  entry, not a free-text string invented at a call site.
+- **`write-missed` exists because destructuring `error` is not enough.** An RLS refusal, or a
+  row deleted mid-request, matches zero rows with `error === null`, so `auditSideEffect`
+  requires `update(values, { count: "exact" })`. `count === null` is **silence, not a miss** —
+  reporting it would flood the channel on every success.
+
+The prefix and the `op=`/`cause=` key order are pinned by `src/lib/api/audit.test.ts`.
+Emitters today: `steps.append.bump` and `steps.deleteLast.bump`
+(`src/pages/api/paths/[id]/steps.ts`), `paths.toPathStep.snapshot` and
+`paths.toPathWithSummary.snapshot` (`src/lib/api/paths.ts`), `middleware.getUser`
+(`src/middleware.ts`, silent on `AuthSessionMissingError` — otherwise it fires on every
+anonymous request), and `auth.signOut.revoke` (`src/pages/api/auth/signout.ts`). Like
+`serverError`'s log, this channel only reaches CI if the integration harness keeps piping the
+dev server's stderr to the parent (`tests/integration/global-setup.ts`).
 
 ### Types and plumbing
 

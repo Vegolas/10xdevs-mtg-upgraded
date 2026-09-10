@@ -6,22 +6,30 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-09-07 (**§2's open set is empty for the first time.** Risk
-> #9 — the path builder reporting on deck text the user has already changed or
-> cleared — was **repaired**, not just pinned, and moved to the protected table;
-> risk **#10** entered already protected, covering the same surface's
-> mutations. Both were carried there by `shared-stale-response-guard`, a repair
-> change that opened **no §3 rollout phase**, so the protected table's last
-> column now names whatever holds the proof rather than assuming a phase does.
-> §6.7 gained items 28–29. Read §2's own note above the empty open table before
-> concluding there is nothing left: F-6 is still live and sits in that change's
-> `findings.md`, at the unit layer, where it never earned a row. §3 Phases 1–5
-> all remain `complete` and the rollout has had no open front since 2026-09-06.
-> §7 was re-read and deliberately left unchanged — see §8. Prior baseline
-> 2026-09-02, which split §2 into two tables, opened Phase 5, and narrowed §7's
-> path-builder exclusion to that surface's **render** while stating outright the
-> boundary that makes a browser phase admissible; component render and pixel
-> tests stay out. See §8 for the rest.)
+> Last updated: 2026-09-10 (**Risk #11 joined §2's protected table already
+> covered** — a write or side-effect failure the handler absorbs leaving no
+> trace on any channel — promoted by `swallowed-write-errors` from a proactive
+> sweep rather than from an incident. It carries the map's **first `Partial`
+> cell**: four of its five sites have a standing spec, the two `updated_at`
+> bump sites have no seam to fail a write on demand and rest on a one-time
+> deliberate break, and §2 states that in its own paragraph rather than here.
+> The open set is still empty and #1 is still the only High × High row. A
+> second server log contract, `[api] degraded`, is now registered in
+> `docs/reference/contract-surfaces.md` beside `serverError`'s redacted `500`,
+> which gives §6.2's stderr-passthrough rule a second consumer. §3 Phases 1–5
+> all remain `complete` and the rollout has had no open front since 2026-09-06;
+> §3, §4, §5, §6 and §7 were re-read and deliberately left unchanged — see §8.
+> Prior baseline 2026-09-07: §2's open set emptied for the first time, when
+> risk #9 was **repaired** rather than merely pinned and risk **#10** entered
+> already protected — both carried by `shared-stale-response-guard`, a repair
+> change that opened **no §3 rollout phase**, which is why the protected
+> table's last column names whatever holds the proof rather than assuming a
+> phase does; §6.7 gained items 28–29; and F-6 is still live in that change's
+> `findings.md`, at the unit layer, where it never earned a row. Baseline
+> before that 2026-09-02, which split §2 into two tables, opened Phase 5, and
+> narrowed §7's path-builder exclusion to that surface's **render** while
+> stating outright the boundary that makes a browser phase admissible;
+> component render and pixel tests stay out. See §8 for the rest.)
 
 ## 1. Strategy
 
@@ -73,7 +81,8 @@ research's job, see §1 principle #3). The map reads as two tables: a
 **protected** set, where a passing spec already proves the row's failure
 cannot happen, and an **open** set, which is the list a reader still has to
 act on. For #1–#8 that proof is a `complete` §3 phase; #9 and #10 were
-carried there by a repair change instead, so the protected table's last
+carried there by a repair change instead, and #11 by an evidence change that
+declares a **residual** in the same cell — so the protected table's last
 column names whatever holds the proof rather than assuming a phase does. The
 open set has been empty since 2026-09-07 — read the note above it before
 concluding there is nothing left to do.
@@ -84,6 +93,16 @@ route — a **repair change** that opened no §3 phase — so the last column na
 carries the proof rather than assuming a phase does. The distinction matters to a reader
 acting on this table: a phase is a budgeted slice of the rollout, a repair change is not, and
 #9 is the row that proved a risk can leave this list without one.
+
+**#11 is the first row in this table whose cell reads `Partial`, and the heading above means
+what it says, so the qualifier is load-bearing rather than hedging.** Four of that row's five
+sites are covered by a standing spec; the two `updated_at` bump sites have **no seam** to fail
+a Supabase write on demand, so what their wiring rests on is a one-time deliberate break, not
+a spec that reddens tomorrow. That is a residual a reader may have to act on, which is what
+the open table is for — but the row as a whole is not open, because there is nothing to act on
+for the other four sites. Rather than split one class across two tables, the cell declares the
+gap and the paragraph below names it. A future row may do the same; a row with **no** standing
+spec at all still belongs in the open table.
 
 | #   | Risk (failure scenario)                                                                                                                                                                                                                                                                     | Impact | Likelihood | Source (evidence — not anchor)                                                                                                                                                                                                                                                                                                                                                                                             | Protected by                                                                                                                                                                                                               |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -97,6 +116,7 @@ acting on this table: a phase is a budgeted slice of the rollout, a repair chang
 | 8   | A slow earlier comparison resolves **after** a newer one and clobbers it, so the user reads an upgrade plan built from deck text they have already replaced                                                                                                                                 | Medium | Low        | interview 2026-08-25 (comparer is the live surface); hot-spot dir `src/components/deck` (2 commits/30d, 19 commits/90d); §4 listed no browser or render layer when this risk was surfaced; guard stable since first commit ⇒ Low                                                                                                                                                                                           | Phase 4 `complete`                                                                                                                                                                                                         |
 | 9   | In the **path builder**, a pre-save Check verdict, a diff preview, or an error banner describes deck text the user has already edited or cleared — a slow earlier resolve lands after the input moved on, so the user decides whether to save on a verdict about text that no longer exists | Medium | Medium     | archived §3 Phase 4 slice `context/archive/2026-08-27-testing-comparer-failure-surfacing/` and the lessons register it created (four verified divergences across the path builder's hand-copied stale-response guards, two of them still live); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02)                                                                                     | `shared-stale-response-guard` (2026-09-07) — F-1 through F-4 repaired, the four `test.fail()` annotations off, `tests/e2e/path-builder-stale-ordering.spec.ts` green at `retries: 0`. No §3 phase; see the paragraph below |
 | 10  | In the **path builder**, a mutation's superseded response leaves the rendered path disagreeing with the server — two overlapping deletes, renames or creates settle in an order the UI did not account for, so the user acts on a checkpoint list or a title the server does not hold       | Medium | Low        | F-5 in `context/archive/2026-09-06-testing-path-builder-error-and-mode/findings.md` (three mutation flows verified 2026-09-06 to carry no guard at all), plus the two corrections `shared-stale-response-guard` had to make to that entry before it was testable at all (its `findings.md` C-1, C-2); hot-spot dir `src/components/path` (2 commits/30d, 9 commits/90d, measured 2026-09-02, re-read unchanged 2026-09-07) | `shared-stale-response-guard` (2026-09-07) — enters the map already protected: `tests/e2e/path-builder-mutation-ordering.spec.ts` green at `retries: 0`, both disciplines driven                                           |
+| 11  | A **write or side-effect failure the handler absorbs** leaves no trace on any channel — a supplementary write, a stored-snapshot parse, or a token revoke fails; the caller is answered `201` / `204` / a redirect; and nothing anywhere records it, so the next occurrence is unlearnable  | Medium | Low        | proactive code sweep prompted by lesson M3L5 on 2026-09-09 (`swallowed-write-errors`) — not a ticket, not an incident, none ever observed. Recorded once before at `2026-08-11-testing-api-contract-pinning/research.md:123`, reaching no plan, test or registry; F-2 in that folder’s `findings.md:51-80` was filed and never executed. Hot-spot `src/pages/api` 2/30d, `src/lib/api` 3/30d (2026-09-09, pre-change)      | `swallowed-write-errors` (2026-09-10) — enters already protected: `audit.test.ts`, the two `updatedAt` assertions in `contract-steps.int.test.ts`, and `fault-signout.int.test.ts`. **Partial** — see the paragraph below  |
 
 **Open — empty as of 2026-09-07, for the first time since this map was written.** Every risk
 in the map now carries a passing spec. This is a state to read carefully rather than to
@@ -125,7 +145,7 @@ rather than corrupting a saved step. **Medium** likelihood because the divergenc
 verified present in code rather than hypothesized — which is what separated #9 from #8's
 Low — but it had produced no reported incident and `src/components/path` was touched only
 occasionally (2 commits/30d, 9 commits/90d, measured 2026-09-02).
-#1 remains the only High × High row in the map, and neither #9 nor #10 changes that.
+#1 remains the only High × High row in the map, and none of #9, #10 or #11 changes that.
 
 **Risk #10's rating against that rubric.** **Medium** impact, matching #9's for the same
 reason inverted: a mutation's stale response cannot corrupt a saved step either — `path_steps`
@@ -138,6 +158,38 @@ at once on a surface with no debounce and one trigger per action — reachable, 
 browser, but requiring a double-click or a second click inside a single request's window. It
 enters the map already protected, so the rating is recorded to justify the row rather than to
 schedule work.
+
+**Risk #11's rating against that rubric, and what it is honestly protected against.**
+**Medium** impact, and the reasoning is unusual for this map because the row's damage is
+epistemic rather than functional: on four of the five sites the handler's answer to the caller
+is **already correct** — the frame traced both propagation variants and each is worse than the
+discard (a POST retry re-reads `max(position)` and manufactures a duplicate; a DELETE retry
+destroys a second checkpoint). What the failure costs is the ability to learn that it
+happened, which is why the row sits above Low: a stale `Saved <date>` is cosmetic, but a
+Worker↔Supabase write failing repeatedly and silently is the kind of thing a team discovers
+from a user rather than from a log. It stays out of High because nothing is lost or exposed,
+and the one site where the caller **was** told a lie — `signout.ts`, where a failed revoke
+redirected the user with a live session — is fixed rather than merely logged. **Low**
+likelihood, and this is the weakest evidence base in the map: unlike every other row, #11 came
+from a proactive sweep with **no observed occurrence at all**. The realistic failure modes are
+narrow but real (PostgREST transport failure, a transient 503, a missing table privilege — the
+last historically hit in this repo, per
+`supabase/migrations/20260811081145_grant_table_privileges.sql:5-11`).
+
+**What defends it, and what does not.** Defended: the channel's own branch selection, at the
+unit layer in `src/lib/api/audit.test.ts` — including the two inputs that must emit **nothing**,
+which is the branch that decides whether the channel is usable or noise; the `updated_at` bump
+actually landing on both verbs, pinned by two raw-ISO assertions in
+`contract-steps.int.test.ts` (day-granular `formatSavedDate` would have passed unchanged);
+and a failed revoke clearing the session, pinned end-to-end by `fault-signout.int.test.ts`
+against a second dev server behind a fault proxy, with the proxy's hit count asserted so a run
+that never routed through it fails rather than measuring the happy path. **Not defended:** that
+a _failed_ bump actually emits its line. There is no seam between the Worker and Supabase — the
+integration suite runs a real local stack and the browser layer can only intercept Scryfall and
+the app's own `/api/**` — so the two `steps.ts` sites and both `paths.ts` snapshot fallbacks
+rest on a per-site deliberate break run once during implementation, not on a standing spec. A
+future change that buys such a seam should retire this sentence; until then a reviewer touching
+those call sites has to re-run the break by hand.
 
 **Why #9 moved to the protected table on 2026-09-07, and why a change rather than a phase
 carried it there.** This row is the one the two-table split was built to handle, and it has now
@@ -269,6 +321,7 @@ deliberate degrade path changes.
 | #8   | Two overlapping comparisons resolve out of order and the rendered plan matches the newest input, never the superseded one                                                                                                                                                         | "the token guard exists, so ordering is safe"; "the newer request always resolves last"                                                                                                                                                                                                                                                                            | the ordering guarantee: what marks a resolution stale, and where an out-of-order arrival is dropped before it reaches the rendered plan                                                                                                                                                                                                                                          | browser E2E (§3 Phase 4) — rides Phase 4's harness; needs two real in-flight resolutions to overlap                                                                                                     | a test that passes because it never actually overlaps two runs — sequential awaits cannot reproduce an out-of-order arrival                                                                                                                                                                                                      |
 | #9   | Every path-builder surface that reports on deck text — the pre-save Check verdict, the diff preview, the error banner — matches the text currently in the box, and a superseded resolve leaves no trace on any of them, including when the box was cleared while it was in flight | "this flow is safe because it mirrors the one next to it"; "clearing an input cannot race — there is nothing left in flight"                                                                                                                                                                                                                                       | each flow's own guard checkpoints and how many it has; which counter each flow advances and which flows share one; whether the empty-input path invalidates work already in flight; and which state atom each guarded write targets versus which counter guards it                                                                                                               | browser E2E (§3 Phase 5) — the drop is a silent return that never reaches the DOM, so no cheaper layer can observe whether it happened                                                                  | driving the overlap by typing — the debounce coalesces keystrokes into a single run, so the second run never starts and the test passes without overlapping anything                                                                                                                                                             |
 | #10  | Two overlapping path-builder mutations settle out of order and the rendered path still agrees with the server: one delete removes exactly one checkpoint and reports **no** error, and a superseded rename never restores the title it asked for                                  | "one discipline fits all three mutations" — a latest-wins token on delete-last is verified to make it **worse** than no guard, because it drops the successful 204 and keeps the 404's error; "the filed symptom is the failure" — F-5's was wrong, and both its symptom and its suggested fix had to be re-derived from the route before anything could be tested | each route's own **per-call** semantics (`DELETE /steps` removes the highest-position step per call, so two overlapping deletes delete two rows and the client's count is not the divergence); which flows share an error atom versus which lane guards each write; and whether the trigger or the run is the right thing to gate — no input event may ever invalidate a persist | browser E2E — the divergence exists nowhere but the rendered result, and §4 carries no component-render layer that could see it; the client-side ordering is not reachable from integration or contract | a spec whose parked mutation never reaches the server, so the second half of the overlap answers success too, no divergence is ever produced, and the spec passes with its guard reverted — and its sibling, signalling "in flight" on the request's arrival rather than the server's answer, which leaves the two halves racing |
+| #11  | Every absorbed failure emits exactly one actionable line, and no successful or ordinary-anonymous request emits any — proven by the channel’s own branch coverage, by the `updated_at` bump actually landing on both verbs, and by a failed revoke clearing the session           | “the error is destructured, so the failure is caught” — an RLS refusal or a row deleted mid-request matches **zero rows with `error === null`**, which no error check can see; “a `console.error` exists, so there is a channel” — a line CI never pipes out, or one that fires on every anonymous request, is worse than silence                                  | which failures the route is **right** to absorb (propagating the two bumps manufactures a duplicate checkpoint on a POST retry and destroys a second on a DELETE retry) versus the one that is a live behavior defect; what correlates a line to its request when the response body carries no `ref`; and which of the sites has an injectable seam at all — most do not         | unit for the channel’s branch selection, the only layer that can see it; integration for the persisted effect and for the one site with a seam — the auth endpoint, behind a proxy                      | asserting the response status, which is already correct on every one of these sites and stays green through the defect; a fault spec that never actually routed through the proxy, so it measures the happy path and passes with the fix reverted; treating `count === null` as a miss, flooding the channel on every success    |
 
 ## 3. Phased Rollout
 
@@ -1452,7 +1505,15 @@ against.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-09-07 — **§2 only**, by
+- Strategy (§1–§5) last reviewed: 2026-09-10 — **§2 only**, by `swallowed-write-errors` (see
+  the dated entry below): risk **#11** appended to the protected table already covered, with
+  the first `Partial` cell this map has carried, its Risk Response Guidance row, and two
+  paragraphs — one rating it, one stating what it is not protected against. The map's intro
+  and the protected table's preamble were both widened to admit that cell, and the High × High
+  sentence re-stamped. **§1**'s header block was re-stamped in the same pass. §3, §4, §5, §6
+  and §7 re-read 2026-09-10 as still current and unchanged — this change opened no rollout
+  phase, added no runner and no CI job, and taught §6 nothing its patterns do not already
+  cover. The 2026-09-07 review is the prior baseline: **§2 only**, by
   `shared-stale-response-guard` (see the dated entry below): risk #9 moved to the protected
   table, risk #10 appended already protected with its response row, the protected table's
   preamble widened to admit a row protected by a change rather than a `complete` §3 phase,
@@ -1754,6 +1815,33 @@ against.
   state. The other two are general rather than surface-specific: a finding's suggested **fix**
   needs the same verification against the code as its symptom, and a repair covering N findings
   needs a targeted break per finding rather than one green suite.
+- **Risk #11 was promoted, already covered, on 2026-09-10** through
+  `context/changes/swallowed-write-errors/` — a swallowed-error sweep prompted by lesson M3L5,
+  not by an incident. What it changed in §2: **risk #11** appended to the **protected** table
+  (Medium × Low) with its Risk Response Guidance row, its rating paragraph, and a second
+  paragraph stating outright what the row is _not_ protected against; the map's intro sentence
+  and the protected table's preamble both widened to admit a row whose last column reads
+  `Partial`; and the High × High sentence re-stamped. §1's header block was re-stamped in the
+  same pass, per the rule this ledger recorded on 2026-09-07 — a header that enumerates §2's
+  contents is a live claim.
+- **What made #11 admissible as `Partial` rather than open, recorded so a future row is not
+  argued from scratch.** The row's five sites split: four carry a standing spec, and the two
+  `updated_at` bump sites carry only a deliberate break run once during implementation, because
+  **no seam exists** between the Worker and Supabase — the integration suite runs a real local
+  stack and the browser layer can intercept only Scryfall and the app's own `/api/**`. Putting
+  the whole row in the open table would have told a reader to act on four sites that are
+  genuinely defended; leaving the gap unstated would have made the protected heading false for
+  the fifth. Splitting one class across both tables was considered and declined — risk numbers
+  are append-only and two half-rows would each claim the other's coverage, the exact defect §2
+  records against #9's and #10's frozen cells. So the cell declares the residual and the
+  paragraph names it. **The bar for a future `Partial`**: at least one standing spec, a named
+  and structural reason the rest has none, and the residual written where the reader lands.
+- **The `[api] degraded` channel is a second contract surface as of 2026-09-10**, registered at
+  `docs/reference/contract-surfaces.md` beside `serverError`'s redacted `500`. Relevant to this
+  document because §6.2's rule that the harness pipes the dev server's stderr to the parent now
+  carries a second consumer: without it, neither channel reaches CI. The same pass added a
+  `POST /api/auth/signout` row to that file's route table — the route's failure path now emits
+  a clearing `Set-Cookie`, so it is a wire contract and not just an internal fix.
 - Stack versions last verified: 2026-09-02 — every declared-versus-installed pair
   re-read and unchanged: `astro ^6.3.1` resolves to 6.4.8, `vitest ^4.1.9` to 4.1.9 and
   `@playwright/test ^1.62.1` to 1.62.1, so §4's rows and its "Vitest 4 / Astro 6"
