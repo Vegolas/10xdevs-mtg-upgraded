@@ -613,26 +613,26 @@ visible delta is sign-out's `Set-Cookie` on a failure path that has never been o
 
 #### Automated
 
-- [x] 4.1 `fault-signout.int.test.ts` passes un-annotated: `npm run test:integration`
-- [x] 4.2 Unit suite passes, including `authCookies.test.ts`: `npm test`
-- [x] 4.3 Type checking passes: `npm run typecheck`
-- [x] 4.4 Linting passes: `npm run lint`
+- [x] 4.1 `fault-signout.int.test.ts` passes un-annotated: `npm run test:integration` — c9e7708
+- [x] 4.2 Unit suite passes, including `authCookies.test.ts`: `npm test` — c9e7708
+- [x] 4.3 Type checking passes: `npm run typecheck` — c9e7708
+- [x] 4.4 Linting passes: `npm run lint` — c9e7708
 
 #### Manual
 
-- [x] 4.5 Reverting only the cookie-clearing reddens `fault-signout.int.test.ts`
-- [x] 4.6 Sign-out through both UI entry points still works on the happy path
-- [x] 4.7 The happy path emits no `[api] degraded` line
+- [x] 4.5 Reverting only the cookie-clearing reddens `fault-signout.int.test.ts` — c9e7708
+- [x] 4.6 Sign-out through both UI entry points still works on the happy path — c9e7708
+- [x] 4.7 The happy path emits no `[api] degraded` line — c9e7708
 
 ### Phase 5: Registration
 
 #### Automated
 
-- [ ] 5.1 Formatting passes on every edited document: `npm run lint`
+- [x] 5.1 Formatting passes on every edited document: `npm run lint`
 
 #### Manual
 
-- [ ] 5.2 `contract-surfaces.md` documents the `[api] degraded` prefix and a `POST /api/auth/signout` row
-- [ ] 5.3 `test-plan.md` carries risk row `#11` and its rating paragraph
-- [ ] 5.4 `lessons.md` carries the discarded-result entry
-- [ ] 5.5 `change.md` records F-2 as executed and the two frame corrections
+- [x] 5.2 `contract-surfaces.md` documents the `[api] degraded` prefix and a `POST /api/auth/signout` row
+- [x] 5.3 `test-plan.md` carries risk row `#11` and its rating paragraph
+- [x] 5.4 `lessons.md` carries the discarded-result entry
+- [x] 5.5 `change.md` records F-2 as executed and the two frame corrections
